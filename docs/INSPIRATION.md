@@ -1,35 +1,32 @@
 # From Vector to Vouch
 
-## What we are borrowing
+Vector (Devpost `vector-l89mzu`, xAI hackathon winner; reel by @vardy.mov): public complaints on X → embed + cluster → severity from count/likes/retweets → developer approves → agent clones the repo in a sandbox → PR with test/build/lint results. Stack: Flask, Next.js, Supabase, Grok.
 
-The Devpost project **Vector** is an AI-powered feedback-to-code pipeline. It collects public feedback, clusters similar requests, prioritizes them, creates an issue, generates a plan and tests, writes the change, runs verification, and opens a pull request.
+## What we keep, 1:1
 
-The Instagram reel linked with the brief is a short post-hackathon update from Vardhan Agnihotri about winning the xAI hackathon with Vector. It reinforces the useful product lesson: the workflow is easy to understand when shown as a visible pipeline.
+| Vector | Vouch |
+|---|---|
+| Complaints on X | MessagePack GitHub issues + comments, plus a live "post a complaint" box |
+| Embed + cluster | fastembed + **Aiven pgvector** |
+| Severity = count + likes + retweets | Severity = reports + 👍 reactions + comments |
+| Cluster board you can click | Same: the cluster board is the dashboard's first screen |
+| Agent writes the fix in a sandbox | Tieto's agent-written `ju26` branches (live agent = stretch) |
+| PR with test/build/lint results | Evidence pack: tests run in a git worktree, results per claim |
+| Supabase | Aiven PostgreSQL + Kafka |
 
-## What Vouch changes
+## What we add (the Tieto part)
 
 ```text
 Vector: feedback -> cluster -> code -> tests -> pull request
-Vouch:  feedback -> requirement -> AI change -> evidence -> human sign-off -> trust history
+Vouch:  feedback -> cluster -> code -> EVIDENCE -> RISK ROUTE -> HUMAN SIGN-OFF -> TRUST LEVEL
 ```
 
-The input can still be a GitHub issue, chat message, or user complaint. The key change is the output: Vouch does not pretend that a model's confidence is approval. It produces a small, inspectable decision pack.
-
-## Why this fits Tieto
-
-Tieto's supplied branches create a perfect demo because they vary in risk:
-
-- a bug fix can earn a focused read;
-- generated files can be released by deterministic checks;
-- a public API or analyzer contract must stay on a human's full-read list;
-- unavailable test evidence must fail closed.
-
-That gives the judges a visible answer to the core question: **when should an AI-generated change be trusted, and who makes the final call?**
+1. Claims must quote the requirement or a real user, and cite real lines. Code checks this.
+2. Route by what can break, not by size.
+3. A named human signs the residual risk.
+4. Trust per code area: 🔴 full read → 🟡 focused read → 🟢 light check. Earned with clean sign-offs, lost on one escaped bug.
+5. Closed loop: after a fix merges, does the cluster go quiet?
 
 ## What we will not copy
 
-- no copied code from Vector;
-- no copied wording or implementation from public Tieto projects;
-- no claim that an AI score is a safety guarantee;
-- no automatic merge in the demo.
-
+No code or text from Vector or from other Junction teams, no competitor numbers, no auto-merge, no "AI score = safe".

@@ -81,14 +81,25 @@ CREATE TABLE IF NOT EXISTS trust_ledger (
     PRIMARY KEY (project_id, code_area)
 );
 
+-- Vector part: similar feedback grouped into one cluster with a severity score.
+CREATE TABLE IF NOT EXISTS clusters (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    label TEXT NOT NULL,
+    severity NUMERIC(8, 2) NOT NULL DEFAULT 0,  -- reports + reactions + comments, weighted
+    requirement_id UUID REFERENCES requirements(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 CREATE TABLE IF NOT EXISTS feedback (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     source TEXT NOT NULL,
     external_id TEXT NOT NULL,
     body TEXT NOT NULL,
-    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
-    embedding vector(1536),
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,  -- author, url, reactions, comments
+    cluster_id UUID REFERENCES clusters(id) ON DELETE SET NULL,
+    embedding vector(384),  -- fastembed BAAI/bge-small-en-v1.5, runs locally, no API key
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE (project_id, source, external_id)
 );

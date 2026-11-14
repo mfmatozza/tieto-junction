@@ -1,22 +1,21 @@
 # Two-minute demo
 
-## The hook
+## Hook (10 s)
 
-"An AI can write a pull request in seconds. The expensive part is deciding whether to trust it. Vouch turns that decision into evidence a human can sign."
+"Vector showed AI can turn user complaints into pull requests. The hard part was never writing the code. It's deciding whether to trust it. Vouch makes the AI earn that."
 
 ## Click path
 
-1. Open the review list. Four Tieto branches appear with different routes.
-2. Open `ju26-issue-2283`. Show the requirement, changed lines, claims, passing tests, and the focused reading list.
-3. Open `ju26-issue-2129`. Show that a new public API triggers a refusal and a full read even though the model is confident.
-4. Open the evidence timeline. Point out PostgreSQL as the current state and Kafka as the event history.
-5. Sign `2283` as the named owner. Write one residual risk.
-6. Show the trust ledger: source generation earned focused review; analyzers remain full read.
-7. End with the Vector connection: user feedback can be clustered into requirements, but no request reaches merge without proof and human accountability.
+1. **Cluster board** (Vector moment). Type a complaint live → it lands in the "closed generic struct crash" cluster, severity goes up, Kafka feed ticks.
+2. Open the cluster → its requirement (#2283) → the agent-written PR.
+3. **PR 2283**: claims, each tagged 🧪/📏/🤖/⚪. A claim with a fake quote is red. Reading list: the human reads only the lines without proof.
+4. **PR 2129**: AI confidence 95%, greyed out, "not used". New public API → refused → full read.
+5. **Sign 2283** as the named owner, write one residual risk → trust level of `source-generation` moves 🔴 → 🟡.
+6. **Audit**: planted bugs, caught X of Y. One escape → area drops back to 🔴.
+7. Close: "Every line of AI code traces back to a real user and forward to a named human."
 
 ## If something breaks
 
-- Aiven is unavailable: run the seeded local fixture and say the same schema is deployed on Aiven PostgreSQL.
-- Model API is unavailable: use saved claims and show the deterministic citation/test checks.
-- Time is short: demo only `2283` and `2129`. The contrast is enough.
-
+- Aiven down: run on the local fixture, say the same schema runs on Aiven.
+- Model API down: show saved claims; citation and test checks are deterministic.
+- Short on time: show only steps 1, 3, 4, 5.
