@@ -3,388 +3,533 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vouch</title>
+<title>Vouch · EasyReview</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 26 26%27%3E%3Crect width=%2726%27 height=%2726%27 rx=%277%27 fill=%27%23111d42%27/%3E%3Cpath d=%27M7 7.5 13 18.5 19 7.5%27 fill=%27none%27 stroke=%27%2386efac%27 stroke-width=%272.4%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
 <style>
-  :root {
-    --bg: #f6f7f9; --card: #fff; --ink: #1d2430; --muted: #5d6675; --line: #dfe3e8;
-    --blue: #1f4e8c; --blue-soft: #e8eef7; --green: #1e7b45; --green-soft: #e7f4ec;
-    --red: #a8322d; --red-soft: #fbeceb; --amber: #8a5a00; --amber-soft: #fdf4e0;
-    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 "Segoe UI", system-ui, sans-serif; }
-  header { background: var(--card); border-bottom: 1px solid var(--line); padding: 14px 28px; display: flex; align-items: center; gap: 16px; }
-  header b { font-size: 20px; letter-spacing: .5px; }
-  header .tag { color: var(--muted); }
-  header .me { margin-left: auto; color: var(--muted); cursor: pointer; }
-  main { max-width: 1280px; margin: 0 auto; padding: 24px 28px 80px; }
-  a { color: var(--blue); }
-  h1 { font-size: 24px; margin: 0 0 4px; }
-  h2 { font-size: 20px; margin: 0 0 12px; }
-  .muted { color: var(--muted); }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 20px 24px; }
-  table { border-collapse: collapse; width: 100%; }
-  th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { font-size: 13px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
-  tr.row { cursor: pointer; } tr.row:hover td { background: var(--blue-soft); }
-  .pill { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: 13px; font-weight: 600; white-space: nowrap; }
-  .p-ok { background: var(--green-soft); color: var(--green); } .p-bad { background: var(--red-soft); color: var(--red); }
-  .p-warn { background: var(--amber-soft); color: var(--amber); } .p-info { background: var(--blue-soft); color: var(--blue); }
+:root {
+  --bg: #060b1c; --bg-2: #0a1230; --surface: #0d1736; --surface-2: #111d42;
+  --line: rgba(160,178,230,.12); --line-2: rgba(160,178,230,.2);
+  --text: #eef2fb; --muted: #94a0c2; --dim: #66719a;
+  --green: #86efac; --green-ink: #052e16; --green-soft: rgba(134,239,172,.1);
+  --red: #fda4af; --red-soft: rgba(253,164,175,.1); --amber: #fcd34d; --amber-soft: rgba(252,211,77,.1);
+  --sans: "Geist", ui-sans-serif, system-ui, sans-serif; --mono: "Geist Mono", ui-monospace, monospace;
+  --ease: cubic-bezier(.16,1,.3,1);
+}
+* { box-sizing: border-box; margin: 0; }
+body { background: var(--bg); color: var(--text); font: 15px/1.55 var(--sans); -webkit-font-smoothing: antialiased; min-height: 100dvh; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+code { font: 12.5px var(--mono); background: rgba(160,178,230,.08); padding: 1px 6px; border-radius: 5px; }
+.g { color: var(--green); } .r { color: var(--red); } .a { color: var(--amber); } .m { color: var(--muted); } .d { color: var(--dim); }
 
-  .numbers { display: flex; gap: 12px; margin: 18px 0; flex-wrap: wrap; }
-  .num { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 14px 18px; min-width: 180px; flex: 1; }
-  .num .v { font-size: 30px; font-weight: 700; line-height: 1.1; }
-  .num .l { color: var(--muted); font-size: 14px; }
-  .num.key { border-color: var(--blue); }
-  .num.key .v { color: var(--blue); }
+/* Header (same as the board) */
+header.bar { border-bottom: 1px solid var(--line); background: rgba(6,11,28,.85); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 10; }
+header.bar .in { height: 60px; display: flex; align-items: center; gap: 14px; padding: 0 24px; max-width: 1440px; margin: 0 auto; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.crumb { color: var(--dim); display: flex; align-items: center; gap: 12px; font-size: 14px; min-width: 0; }
+.crumb a { color: var(--muted); white-space: nowrap; }
+.crumb a:hover { color: var(--text); }
+.crumb .cur { color: var(--text); white-space: nowrap; }
+.right { margin-left: auto; display: flex; align-items: center; gap: 14px; font-size: 14px; color: var(--muted); }
+.avs { display: flex; }
+.av { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font: 600 10.5px var(--sans); color: #0a1230; border: 2px solid var(--bg); margin-left: -6px; flex: none; }
+.avs .av:first-child { margin-left: 0; }
 
-  .layout { display: grid; grid-template-columns: 320px 1fr; gap: 20px; align-items: start; }
-  .steps { position: sticky; top: 16px; padding: 8px 0; }
-  .step { display: flex; gap: 10px; padding: 10px 16px; cursor: pointer; border-left: 4px solid transparent; align-items: flex-start; }
-  .step:hover { background: var(--bg); }
-  .step.on { background: var(--blue-soft); border-left-color: var(--blue); }
-  .step .mark { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); flex: none; display: grid; place-items: center; font-size: 13px; font-weight: 700; margin-top: 1px; }
-  .mark.ok { background: var(--green); border-color: var(--green); color: #fff; }
-  .mark.problem { background: var(--red); border-color: var(--red); color: #fff; }
-  .mark.question { background: var(--amber); border-color: var(--amber); color: #fff; }
-  .step .t { font-size: 14px; line-height: 1.35; }
-  .who { display: inline-flex; gap: 3px; margin-left: 6px; }
-  .av { width: 22px; height: 22px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 11px; font-weight: 700; display: inline-grid; place-items: center; }
-  .progress { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin: 6px 16px 12px; }
-  .progress div { height: 100%; background: var(--green); transition: width .4s; }
+.btn { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px; border-radius: 999px; font: 500 14px/1 var(--sans); white-space: nowrap; border: 1px solid transparent; transition: transform .15s var(--ease), background .2s, border-color .2s, color .2s; }
+.btn:active { transform: scale(.97); }
+.btn i { font-size: 16px; }
+.btn-primary { background: var(--green); color: var(--green-ink); }
+.btn-primary:hover { background: #a7f3c0; }
+.btn-ghost { border-color: var(--line-2); }
+.btn-ghost:hover { background: rgba(160,178,230,.06); border-color: rgba(160,178,230,.35); }
+.btn-ghost.on-problem { border-color: rgba(253,164,175,.5); color: var(--red); }
+.btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+.icon-btn { width: 36px; padding: 0; justify-content: center; }
 
-  .claim-text { font-size: 21px; font-weight: 600; margin: 4px 0 12px; }
-  .quote { border-left: 4px solid var(--line); padding: 4px 14px; color: var(--muted); margin: 0 0 14px; font-style: italic; }
-  .checks { list-style: none; padding: 0; margin: 0 0 14px; }
-  .checks li { padding: 4px 0; display: flex; gap: 10px; }
-  .checks .y { color: var(--green); font-weight: 700; } .checks .n { color: var(--red); font-weight: 700; }
-  .conf { color: var(--muted); font-size: 14px; margin-bottom: 14px; }
-  .conf s { opacity: .7; }
+/* Page */
+.page { max-width: 1440px; margin: 0 auto; padding: 28px 24px 120px; }
+.top h1 { font-size: 24px; font-weight: 600; letter-spacing: -.02em; max-width: 60ch; }
+.top h1 .id { color: var(--dim); font-weight: 400; font-family: var(--mono); font-size: 18px; margin-right: 10px; }
+.meta { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px 26px; font-size: 14px; color: var(--muted); }
+.meta b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.prog { margin-top: 18px; height: 2px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.prog span { display: block; height: 100%; background: var(--green); transition: width .5s var(--ease); }
 
-  .file { border: 1px solid var(--line); border-radius: 6px; margin: 12px 0; overflow: hidden; }
-  .file .fh { background: var(--bg); padding: 8px 12px; font: 13px var(--mono); display: flex; gap: 10px; align-items: center; }
-  .code { font: 13px/1.55 var(--mono); overflow-x: auto; }
-  .ln { display: grid; grid-template-columns: 54px 18px 1fr; white-space: pre; opacity: 0; animation: in .25s forwards; }
-  @keyframes in { to { opacity: 1; } }
-  .ln .n { color: #9aa3ae; text-align: right; padding-right: 8px; user-select: none; }
-  .ln.add { background: #eef8f1; } .ln.del { background: #fcf0ef; color: #8b6b69; text-decoration: line-through; text-decoration-color: #d9a9a5; }
-  .ln.read { background: #fff6d6; box-shadow: inset 4px 0 0 #e0a800; }
-  .gap { color: var(--muted); font-size: 12px; padding: 2px 12px; background: var(--bg); }
-  .fold { padding: 12px 14px; background: var(--green-soft); color: var(--green); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-  .legend { font-size: 13px; color: var(--muted); display: flex; gap: 16px; margin: 6px 0; }
-  .legend i { display: inline-block; width: 12px; height: 12px; vertical-align: -1px; margin-right: 4px; border-radius: 2px; }
+.layout { margin-top: 24px; display: grid; grid-template-columns: 300px minmax(0,1fr); gap: 32px; align-items: start; }
+.rail { position: sticky; top: 84px; max-height: calc(100dvh - 100px); overflow: auto; }
+.step { width: 100%; text-align: left; display: grid; grid-template-columns: 20px minmax(0,1fr) auto; gap: 10px; align-items: start; padding: 9px 12px; border-left: 2px solid transparent; color: var(--muted); font-size: 14px; line-height: 1.4; transition: color .2s, border-color .2s, background .2s; }
+.step:hover { color: var(--text); background: rgba(160,178,230,.04); }
+.step.on { color: var(--text); border-left-color: var(--green); background: rgba(160,178,230,.05); }
+.step i { font-size: 17px; margin-top: 1px; color: var(--dim); }
+.step i.ok { color: var(--green); } .step i.problem { color: var(--red); } .step i.question { color: var(--amber); }
+.step > span:nth-child(2) { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.step .avs .av { width: 20px; height: 20px; font-size: 9px; border-width: 1.5px; margin-left: -4px; }
+.rail-h { font-size: 13px; color: var(--dim); padding: 0 12px 10px; display: flex; justify-content: space-between; }
 
-  .actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; align-items: center; border-top: 1px solid var(--line); padding-top: 16px; }
-  button { font: inherit; padding: 10px 18px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); cursor: pointer; }
-  button:hover { border-color: var(--blue); }
-  button.primary { background: var(--green); border-color: var(--green); color: #fff; font-weight: 600; }
-  button.blue { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 600; }
-  button:disabled { opacity: .45; cursor: not-allowed; }
-  .spacer { flex: 1; }
-  .box { padding: 14px 18px; border-radius: 6px; margin: 12px 0; }
-  .box.red { background: var(--red-soft); color: var(--red); } .box.green { background: var(--green-soft); color: var(--green); }
-  .box.amber { background: var(--amber-soft); color: var(--amber); } .box.blue { background: var(--blue-soft); color: var(--blue); }
-  .big { font-size: 22px; font-weight: 700; }
-  .thread { margin-top: 14px; }
-  .msg { border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; margin: 8px 0; background: var(--card); }
-  .msg .h { font-size: 13px; color: var(--muted); }
-  textarea, input[type=text] { font: inherit; width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; }
-  details summary { cursor: pointer; color: var(--blue); }
-  pre.req { white-space: pre-wrap; font: 13px/1.5 var(--mono); background: var(--bg); padding: 14px; border-radius: 6px; max-height: 360px; overflow: auto; }
-  .kbd { font-size: 12px; color: var(--muted); }
-  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .steps { position: static; } }
+.pane { min-width: 0; animation: fade .35s var(--ease); }
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } }
+.kicker { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.tag { display: inline-flex; align-items: center; gap: 6px; font: 500 12.5px var(--sans); padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.tag.ok { background: var(--green-soft); color: var(--green); }
+.tag.warn { background: var(--amber-soft); color: var(--amber); }
+.tag.bad { background: var(--red-soft); color: var(--red); }
+.tag.dim { background: rgba(160,178,230,.08); color: var(--muted); }
+.pane h2 { font-size: 22px; font-weight: 600; letter-spacing: -.02em; margin-top: 12px; max-width: 60ch; line-height: 1.3; }
+.pane p.lead { color: var(--muted); font-size: 15.5px; margin-top: 10px; max-width: 70ch; }
+.sec { margin-top: 26px; }
+.sec-h { font-size: 13px; color: var(--dim); margin-bottom: 10px; }
+
+.quote { margin-top: 16px; padding: 2px 0 2px 16px; border-left: 2px solid var(--line-2); color: var(--muted); max-width: 75ch; }
+.quote small { display: block; color: var(--dim); font-size: 12.5px; margin-bottom: 2px; }
+.checks { list-style: none; padding: 0; display: grid; gap: 8px; }
+.checks li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; font-size: 14.5px; color: var(--muted); }
+.checks i { font-size: 17px; margin-top: 2px; }
+.conf { margin-top: 14px; font-size: 13.5px; color: var(--dim); }
+.conf s { text-decoration-color: var(--dim); }
+
+.stats2 { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin-top: 20px; }
+.stats2 > div { padding: 18px 20px; }
+.stats2 > div + div { border-left: 1px solid var(--line); }
+.stats2 b { display: block; font: 600 28px/1.1 var(--sans); letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.stats2 span { font-size: 13px; color: var(--muted); }
+
+.rows { border-top: 1px solid var(--line); }
+.rows > div { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 16px; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+.rows > div > :first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+.note { margin-top: 16px; padding: 12px 16px; border-radius: 12px; font-size: 14.5px; }
+.note.ok { background: var(--green-soft); color: var(--green); }
+.note.warn { background: var(--amber-soft); color: var(--amber); }
+.note.bad { background: var(--red-soft); color: var(--red); }
+.note.info { background: rgba(160,178,230,.07); color: var(--muted); }
+details.issue { margin-top: 18px; }
+details.issue summary { cursor: pointer; color: var(--muted); font-size: 14px; list-style: none; display: inline-flex; align-items: center; gap: 6px; }
+details.issue summary::-webkit-details-marker { display: none; }
+details.issue[open] summary i { transform: rotate(90deg); }
+details.issue summary i { transition: transform .2s; }
+pre.req { white-space: pre-wrap; font: 12.5px/1.6 var(--mono); color: var(--muted); background: var(--bg-2); border: 1px solid var(--line); padding: 16px; border-radius: 12px; max-height: 380px; overflow: auto; margin-top: 10px; }
+
+/* Code */
+.file { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-top: 12px; background: var(--bg-2); }
+.fh { display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-bottom: 1px solid var(--line); font: 12.5px var(--mono); color: var(--muted); }
+.fh .p { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.fh .c { margin-left: auto; white-space: nowrap; color: var(--dim); }
+.fh .c b { color: var(--amber); font-weight: 500; }
+.code { font: 12.5px/1.7 var(--mono); overflow-x: auto; }
+.ln { display: grid; grid-template-columns: 52px 16px 1fr; white-space: pre; color: #c8d2f0; }
+.ln.anim { opacity: 0; animation: lnin .3s forwards; }
+@keyframes lnin { to { opacity: 1; } }
+.ln .n { color: var(--dim); text-align: right; padding-right: 10px; user-select: none; }
+.ln .s { color: var(--dim); user-select: none; }
+.ln.add { background: rgba(134,239,172,.06); }
+.ln.add .s { color: var(--green); }
+.ln.del { background: rgba(253,164,175,.06); color: #8f95ab; text-decoration: line-through; text-decoration-color: rgba(253,164,175,.4); }
+.ln.read { background: rgba(252,211,77,.09); box-shadow: inset 2px 0 0 var(--amber); }
+.gap { color: var(--dim); font: 12px var(--mono); padding: 2px 14px; background: rgba(160,178,230,.03); }
+.fold { display: flex; align-items: center; gap: 10px; padding: 11px 14px; color: var(--green); font-size: 14px; }
+.fold button { margin-left: auto; color: var(--muted); font-size: 13px; border-bottom: 1px solid var(--line-2); }
+.fold button:hover { color: var(--text); }
+.legend { display: flex; gap: 18px; font-size: 12.5px; color: var(--dim); margin-top: 18px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+
+/* Thread + forms */
+.thread { margin-top: 24px; display: grid; gap: 10px; }
+.msg { border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; font-size: 14.5px; }
+.msg .h { font-size: 12.5px; color: var(--dim); margin-bottom: 4px; display: flex; gap: 8px; align-items: center; }
+.msg.ai { background: rgba(160,178,230,.04); }
+.compose { margin-top: 16px; border: 1px solid var(--line-2); border-radius: 12px; padding: 12px; display: grid; gap: 10px; animation: fade .25s var(--ease); }
+.compose label { font-size: 13px; color: var(--muted); }
+textarea, input[type=text] { width: 100%; font: 14.5px/1.5 var(--sans); color: var(--text); background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 10px; padding: 10px 12px; resize: vertical; }
+textarea::placeholder, input::placeholder { color: var(--dim); }
+textarea:focus, input:focus { outline: none; border-color: rgba(134,239,172,.55); }
+.compose .row { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* Action bar */
+.actbar { position: sticky; bottom: 0; margin-top: 32px; padding: 14px 0 18px; background: linear-gradient(180deg, rgba(6,11,28,0), var(--bg) 30%); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.actbar .sp { flex: 1; }
+.keys { font-size: 12.5px; color: var(--dim); margin-right: 6px; }
+.keys kbd { font: 11.5px var(--mono); border: 1px solid var(--line-2); border-radius: 5px; padding: 1px 6px; color: var(--muted); }
+.err { margin-top: 14px; padding: 10px 14px; border-radius: 10px; background: var(--red-soft); color: var(--red); font-size: 14px; }
+
+/* Name gate */
+.gate { max-width: 420px; margin: 18vh auto 0; padding: 0 24px; }
+.gate h1 { font-size: 24px; font-weight: 600; letter-spacing: -.02em; }
+.gate p { color: var(--muted); margin: 8px 0 18px; }
+.gate form { display: flex; gap: 8px; }
+
+.skel { height: 14px; border-radius: 6px; background: linear-gradient(90deg, var(--surface) 0%, var(--surface-2) 50%, var(--surface) 100%); background-size: 200% 100%; animation: sh 1.4s infinite; }
+@keyframes sh { to { background-position: -200% 0; } }
+
+@media (prefers-reduced-motion: reduce) { .pane, .compose, .ln.anim { animation: none; opacity: 1; } .skel { animation: none; } }
+@media (max-width: 980px) {
+  .layout { grid-template-columns: 1fr; }
+  .rail { position: static; max-height: none; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+  .stats2 { grid-template-columns: 1fr 1fr; }
+  .stats2 > div:nth-child(3) { border-left: 0; }
+  .stats2 > div:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .crumb .repo { display: none; }
+  .keys { display: none; }
+}
+@media (max-width: 560px) { .page { padding: 20px 16px 120px; } header.bar .in { padding: 0 16px; } .right .name { display: none; } }
 </style>
 </head>
 <body>
-<header>
-  <b>Vouch</b><span class="tag">Review AI-written changes in minutes, without breaking anything.</span>
-  <span class="me" id="me" title="Change your name"></span>
+<header class="bar">
+  <div class="in">
+    <a class="brand" href="/app#/repo">
+      <svg width="24" height="24" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" fill="#111d42" stroke="rgba(160,178,230,.25)"/><path d="M7 7.5 13 18.5 19 7.5" fill="none" stroke="#86efac" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Vouch
+    </a>
+    <div class="crumb" id="crumb"></div>
+    <div class="right" id="right"></div>
+  </div>
 </header>
 <main id="app"></main>
 
 <script>
-window.onerror = (m, u, l) => { document.getElementById("app").insertAdjacentHTML("afterbegin", `<div class="box red">Error: ${m} (line ${l})</div>`); };
-window.onunhandledrejection = (e) => window.onerror(e.reason && e.reason.stack || e.reason, "", 0);
-const $ = (s) => document.querySelector(s);
-const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const initials = (n) => n.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-let me = new URLSearchParams(location.search).get("as") || localStorage.getItem("vouch-name");
-if (!me) me = (prompt("Your name (teammates will see it)") || "").trim() || "Reviewer";
-localStorage.setItem("vouch-name", me);
-$("#me").textContent = "Signed in as " + me;
-$("#me").onclick = () => { const n = prompt("Your name", me); if (n) { localStorage.setItem("vouch-name", n.trim()); location.reload(); } };
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const initials = (n) => String(n).split(/[\s._-]+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("") || "?";
+const COLORS = ["#86efac", "#93c5fd", "#fcd34d", "#f9a8d4", "#a5b4fc", "#5eead4"];
+const color = (n) => COLORS[[...String(n)].reduce((a, c) => a + c.charCodeAt(0), 0) % COLORS.length];
+const avatar = (u, title) => `<span class="av" style="background:${color(u)}" title="${esc(title || u)}">${esc(initials(u))}</span>`;
+const fmt = (n) => Number(n).toLocaleString("en-US");
+const REPO = "te-industry-tech-office/junction26-messagepack-csharp";
+const ROUTE = { blocked: ["Blocked: something broke", "bad"], full: ["Read everything", "warn"], focused: ["Focused review", "dim"], light: ["Quick check", "ok"] };
+const VOTE_WORD = { ok: "approved", question: "asked", problem: "reported a problem" };
 
 const api = async (path, body) => {
-  const r = await fetch(path, body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {});
-  const j = await r.json();
-  if (!r.ok) throw new Error(j.detail || "Request failed");
+  const r = await fetch(path, body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : { credentials: "same-origin" });
+  let j = {}; try { j = await r.json(); } catch {}
+  if (!r.ok) { const e = new Error(j.detail || `Request failed (${r.status})`); e.status = r.status; throw e; }
   return j;
 };
 
-const ROUTE = {
-  blocked: ["Blocked: something broke", "p-bad"],
-  full: ["Read everything", "p-warn"],
-  focused: ["Focused review", "p-info"],
-  light: ["Quick check", "p-ok"],
-};
-
-// ------------------------------------------------------------ list
-async function showList() {
-  stopLive();
-  const prs = await api("/api/prs");
-  $("#app").innerHTML = `
-    <h1>Changes waiting for review</h1>
-    <p class="muted">Each change was written by an AI agent from a backlog issue. Vouch has already run the tests and checked the AI's explanation. You only read what is not proven.</p>
-    <div class="card" style="padding:0">
-    <table>
-      <tr><th>Issue</th><th>Written by</th><th>Lines changed</th><th>You read</th><th>Existing tests</th><th>Review</th><th>Status</th></tr>
-      ${prs.map((p) => {
-        const g = p.guard;
-        const guard = !g.ran ? `<span class="pill p-warn">not run</span>`
-          : g.regression ? `<span class="pill p-bad">${g.regression} broken</span>`
-          : `<span class="pill p-ok">${g.kept} of ${g.existing} still pass</span>`;
-        const status = p.signed ? `<span class="pill p-ok">Signed</span>` : `<span class="pill ${ROUTE[p.route][1]}">${ROUTE[p.route][0]}</span>`;
-        return `<tr class="row" onclick="location.hash='#/pr/${p.id}'">
-          <td><b>#${p.id}</b><br><span class="muted">${esc(p.title.replace(/^#?\d+\s*/, ""))}</span></td>
-          <td>AI agent<br><span class="muted">for ${esc(p.author)}</span></td>
-          <td>${p.stats.changed_lines}</td>
-          <td><b>${p.stats.lines_to_read}</b> <span class="muted">(~${p.stats.minutes} min)</span></td>
-          <td>${guard}</td>
-          <td>${p.done} of ${p.total} steps ${p.reviewers.map((r) => `<span class="av" title="${esc(r)}">${initials(r)}</span>`).join("")}</td>
-          <td>${status}</td></tr>`;
-      }).join("")}
-    </table></div>`;
+// ------------------------------------------------------------ who am I
+let me = null, ME = null;
+async function identify() {
+  const asParam = new URLSearchParams(location.search).get("as");
+  try { ME = await api("/api/me"); } catch { ME = null; }
+  if (asParam && !(ME && ME.demo)) return asParam;          // link from the board
+  if (ME && !ME.demo) return ME.login;                     // real GitHub user
+  try { const n = localStorage.getItem("vouch-name"); if (n) return n; } catch {}
+  return null;                                             // demo login: ask for a name once
+}
+function nameGate() {
+  $("#app").innerHTML = `<div class="gate"><h1>What should your team call you?</h1>
+    <p>Your name shows next to the steps you review and the votes you cast.</p>
+    <form id="nf"><input type="text" id="nm" placeholder="Your name" maxlength="40" required autofocus><button class="btn btn-primary" type="submit">Continue</button></form></div>`;
+  $("#nf").onsubmit = (e) => {
+    e.preventDefault(); const n = $("#nm").value.trim(); if (!n) return;
+    try { localStorage.setItem("vouch-name", n); } catch {}
+    me = n; start();
+  };
+}
+function renderRight() {
+  const here = S ? Object.keys(S.presence).filter((u) => u !== me) : [];
+  $("#right").innerHTML = `${here.length ? `<span class="avs" title="Reviewing now">${here.map((u) => avatar(u, u + " is here")).join("")}</span>` : ""}
+    ${avatar(me)}<span class="name">${esc(me)}</span>`;
 }
 
-// ------------------------------------------------------------ review
-let P, S, cur = 0, live, beat, prId;
+// ------------------------------------------------------------ review state
+let P, S, cur = 0, live, beat, prId, compose = null, lastStep = null;
 
-function stopLive() { live && live.close(); clearInterval(beat); live = beat = null; }
+function stopLive() { if (live) live.close(); clearInterval(beat); live = beat = null; }
 
 async function showPR(id) {
   stopLive();
   prId = id;
-  const r = await api(`/api/prs/${id}`);
+  $("#app").innerHTML = `<div class="page"><div class="skel" style="width:40%;height:26px"></div><div class="skel" style="width:60%;margin-top:14px"></div><div class="skel" style="height:300px;margin-top:28px;border-radius:14px"></div></div>`;
+  let r;
+  try { r = await api(`/api/prs/${id}`); }
+  catch (e) { $("#app").innerHTML = `<div class="page"><div class="err">Could not load pull request #${esc(id)}. ${esc(e.message)}</div><p style="margin-top:14px"><a class="g" href="/app#/repo">Back to pull requests</a></p></div>`; return; }
   P = r.pack; S = r.state;
-  cur = Math.min(cur, P.steps.length - 1);
-  render();
+  cur = Math.max(0, Math.min(cur, P.steps.length - 1));
+  render(true);
   live = new EventSource(`/api/prs/${id}/stream`);
-  live.onmessage = async (e) => { if (e.data === "changed") { S = (await api(`/api/prs/${id}`)).state; render(false); } };
-  const ping = () => api(`/api/prs/${id}/presence`, { user: me, step: P.steps[cur].id }).catch(() => {});
-  ping(); beat = setInterval(ping, 5000);
+  live.onmessage = async (e) => { if (e.data === "changed") refresh(); };
+  const ping = () => api(`/api/prs/${id}/presence`, { user: me, step: P.steps[cur].id }).then(() => {}).catch(() => {});
+  ping(); beat = setInterval(() => { ping(); refresh(); }, 5000);  // poll too: on serverless the push may come from another instance
+}
+async function refresh() {
+  try {
+    const st = (await api(`/api/prs/${prId}`)).state;
+    if (JSON.stringify(st) === JSON.stringify(S)) return;
+    S = st;
+    if (document.activeElement?.matches("textarea,input")) { renderRight(); return; }  // never steal focus mid-typing
+    render(false);
+  } catch {}
 }
 
 function go(i) {
-  cur = Math.max(0, Math.min(P.steps.length - 1, i));
-  history.replaceState(null, "", `#/pr/${prId}/${cur + 1}`);
-  render();
+  const n = Math.max(0, Math.min(P.steps.length - 1, i));
+  if (n === cur) return;
+  cur = n; compose = null;
+  history.replaceState(null, "", `${location.pathname}${location.search}#/pr/${prId}/${cur + 1}`);
+  render(true);
   api(`/api/prs/${prId}/presence`, { user: me, step: P.steps[cur].id }).catch(() => {});
   window.scrollTo({ top: 0 });
 }
 
-function render(animate = true) {
-  const st = P.stats, g = P.guard;
-  const guardNum = !g.ran ? ["—", "existing tests not run"]
-    : g.regression ? [`${g.regression}`, `existing tests now FAIL`] : [`${g.kept} / ${g.existing}`, "existing tests still pass"];
-  const here = (sid) => Object.entries(S.presence).filter(([, s]) => s === sid).map(([u]) => `<span class="av" title="${esc(u)} is here">${initials(u)}</span>`).join("");
-  $("#app").innerHTML = `
-    <p><a href="#/">← All changes</a></p>
-    <h1>#${P.id} ${esc(P.requirement.title.replace(/^#?\d+\s*/, ""))}</h1>
-    <div class="muted">Written by an AI agent, committed by ${esc(P.author)} · <span class="pill ${ROUTE[P.route][1]}">${ROUTE[P.route][0]}</span>
-      ${S.signoff ? ` · <span class="pill p-ok">Signed by ${esc(S.signoff.user)}</span>` : ""}</div>
-    <div class="numbers">
-      <div class="num"><div class="v">${st.changed_lines}</div><div class="l">lines changed · ~${st.minutes_full} min to read all</div></div>
-      <div class="num key"><div class="v">${st.lines_to_read}</div><div class="l">lines you need to read · ~${st.minutes} min</div></div>
-      <div class="num"><div class="v" style="color:${g.regression ? "var(--red)" : "var(--green)"}">${guardNum[0]}</div><div class="l">${guardNum[1]}</div></div>
-      <div class="num"><div class="v">${S.done} / ${S.total}</div><div class="l">steps approved by the team</div></div>
+function render(animate) {
+  const st = P.stats, g = P.guard, step = P.steps[cur];
+  const draft = $("#draft")?.value, risk = $("#risk")?.value;   // keep what the user is typing across live refreshes
+  $("#crumb").innerHTML = `<span>/</span><a class="repo" href="/app#/repo">${esc(REPO)}</a><span>/</span><span class="cur">#${esc(P.id)}</span>`;
+  renderRight();
+  const here = (sid) => Object.entries(S.presence).filter(([u, s]) => s === sid && u !== me).map(([u]) => avatar(u, u + " is here")).join("");
+  const icon = (s, i) => {
+    const m = S.status[s.id];
+    if (s.kind === "sign") return S.signoff ? `<i class="ph-fill ph-seal-check ok"></i>` : `<i class="ph ph-signature"></i>`;
+    return m === "ok" ? `<i class="ph-fill ph-check-circle ok"></i>` : m === "problem" ? `<i class="ph-fill ph-x-circle problem"></i>`
+      : m === "question" ? `<i class="ph-fill ph-question question"></i>` : `<i class="ph ph-circle"></i>`;
+  };
+  const guardTxt = !g.ran ? `<span class="a">existing tests not run</span>` : g.regression ? `<b class="r">${g.regression}</b> existing tests now fail` : `<b>${g.kept}/${g.existing}</b> existing tests still pass`;
+  const route = ROUTE[P.route] || ["Review", "dim"];
+  $("#app").innerHTML = `<div class="page">
+    <div class="top">
+      <h1><span class="id">#${esc(P.id)}</span>${esc(P.requirement.title.replace(/^#?\d+\s*/, ""))}</h1>
+      <div class="meta">
+        <span><b>${fmt(st.changed_lines)}</b> lines changed</span>
+        <span>you read <b class="g">${fmt(st.lines_to_read)}</b>, about ${st.minutes} min</span>
+        <span>${guardTxt}</span>
+        <span><b>${S.done}/${S.total}</b> steps approved</span>
+        <span class="tag ${route[1]}">${route[0]}</span>
+        ${S.signoff ? `<span class="tag ${S.signoff.decision === "accept" ? "ok" : "bad"}">${S.signoff.decision === "accept" ? "Signed" : "Rejected"} by ${esc(S.signoff.user)}</span>` : ""}
+      </div>
+      <div class="prog"><span style="width:${S.total ? (100 * S.done) / S.total : 0}%"></span></div>
     </div>
     <div class="layout">
-      <div class="card steps">
-        <div class="muted" style="padding:4px 16px 0;font-size:13px">REVIEW STEPS</div>
-        <div class="progress"><div style="width:${(100 * S.done) / S.total}%"></div></div>
-        ${P.steps.map((s, i) => {
-          const m = S.status[s.id];
-          const mark = { ok: "✓", problem: "!", question: "?" }[m] || i + 1;
-          return `<div class="step ${i === cur ? "on" : ""}" onclick="go(${i})">
-            <span class="mark ${m || ""}">${mark}</span>
-            <span class="t">${esc(s.title)}<span class="who">${here(s.id)}</span></span></div>`;
-        }).join("")}
-      </div>
-      <div class="card" id="pane">${stepView(P.steps[cur], animate)}</div>
-    </div>`;
+      <nav class="rail" aria-label="Review steps">
+        <div class="rail-h"><span>Steps</span><span>${cur + 1} of ${P.steps.length}</span></div>
+        ${P.steps.map((s, i) => `<button class="step ${i === cur ? "on" : ""}" onclick="go(${i})" title="${esc(s.title)}">${icon(s, i)}<span>${esc(s.title)}</span><span class="avs">${here(s.id)}</span></button>`).join("")}
+      </nav>
+      <section class="pane" ${animate ? "" : 'style="animation:none"'}>${stepView(step, animate && lastStep !== step.id)}</section>
+    </div>
+  </div>`;
+  lastStep = step.id;
+  if (draft != null && $("#draft")) $("#draft").value = draft;
+  if (risk != null && $("#risk")) $("#risk").value = risk;
 }
 
 // ------------------------------------------------------------ step views
 function stepView(s, animate) {
   const body = { guard: vGuard, story: vStory, claim: vClaim, refusal: vRefusal, generated: vGenerated, leftovers: vLeftovers, sign: vSign }[s.kind](s, animate);
-  return body + (s.kind === "sign" ? "" : actions(s));
+  return body + (s.kind === "sign" ? "" : thread(s) + actionBar(s));
 }
 
 function vGuard() {
   const g = P.guard;
-  if (!g.ran) return `<h2>Nothing that worked before is broken?</h2><div class="box amber big">Not checked</div><p>${esc(g.why)} Treat this change as unproven: read all of it.</p>`;
-  if (g.regression) return `<h2>Something that worked before is now broken</h2>
-    <div class="box red big">${g.regression} existing test${g.regression > 1 ? "s" : ""} passed before this change and fail after it.</div>
-    <p>Vouch blocks this change. No one needs to review it until this is fixed.</p>
-    <table><tr><th>Test</th><th>Before</th><th>After</th></tr>${g.regressions.map((r) => `<tr><td><code>${esc(r.test)}</code></td><td>${r.before}</td><td>${r.after}</td></tr>`).join("")}</table>`;
-  return `<h2>Nothing that worked before is broken</h2>
-    <div class="box green big">${g.kept} of ${g.existing} existing tests pass before and after this change.</div>
-    <table>
-      <tr><td>Existing tests run on the code <b>before</b> the change</td><td><b>${g.existing}</b></td></tr>
-      <tr><td>The same tests run on the code <b>after</b> the change</td><td><b>${g.kept}</b> still pass</td></tr>
-      <tr><td>Broken by this change</td><td><b style="color:${g.regression ? "var(--red)" : "var(--green)"}">${g.regression}</b></td></tr>
-      <tr><td>New tests added by the AI</td><td><b>${g.new_tests}</b></td></tr>
-    </table>
-    <p class="muted">Test project: ${g.projects.map(esc).join(", ")}. Run by Vouch, not by the AI.</p>`;
+  if (!g.ran) return `<div class="kicker">Guardrail</div><h2>Existing tests were not run</h2>
+    <div class="note warn">${esc(g.why || "")} Treat this change as unproven and read all of it.</div>`;
+  if (g.regression) return `<div class="kicker">Guardrail</div><h2>Something that worked before is now broken</h2>
+    <div class="note bad">${g.regression} existing test${g.regression > 1 ? "s" : ""} passed before this change and fail${g.regression > 1 ? "" : "s"} after it. Vouch blocks this change until it is fixed.</div>
+    <div class="sec"><div class="sec-h">Broken tests</div><div class="rows">${g.regressions.map((r) => `<div><span>${esc(r.test)}</span><span>${esc(r.before)} <span class="d">→</span> <span class="r">${esc(r.after)}</span></span></div>`).join("")}</div></div>`;
+  return `<div class="kicker">Guardrail</div><h2>Nothing that worked before is broken</h2>
+    <p class="lead">Vouch ran the existing tests on the code before the change and on the agent's branch. The AI did not run them.</p>
+    <div class="stats2">
+      <div><b>${g.existing}</b><span>existing tests, before</span></div>
+      <div><b class="g">${g.kept}</b><span>still pass after</span></div>
+      <div><b class="${g.regression ? "r" : "g"}">${g.regression}</b><span>broken by this change</span></div>
+      <div><b>${g.new_tests}</b><span>new tests added</span></div>
+    </div>
+    <p class="conf">Test project: ${g.projects.map((p) => `<code>${esc(p.split("/").pop())}</code>`).join(", ")}</p>`;
 }
 
 function vStory() {
   const st = P.stats;
-  return `<h2>What this change does</h2>
-    <p style="font-size:18px">${esc(P.summary || "The AI gave no explanation. Read every line.")}</p>
-    <div class="box blue">${st.changed_lines} lines changed in ${st.files} files. Lines backed by a passing test are folded away. <b>You read ${st.lines_to_read}.</b></div>
-    ${P.missing.length ? `<div class="box amber">Part of the review is missing: ${P.missing.map(esc).join(", ")}. Nothing was folded away for that part.</div>` : ""}
-    <details><summary>Read the original issue (${esc(P.requirement.key)})</summary><pre class="req">${esc(P.requirement.text)}</pre></details>
-    <h2 style="margin-top:18px">Files</h2>
-    <table>${P.files.filter((f) => f.kind !== "generated").map((f) => `<tr><td><code>${esc(f.path)}</code></td><td class="muted">${f.kind}</td><td>${f.hunks.reduce((n, h) => n + h.lines.filter((l) => l.t === "+").length, 0)} lines</td></tr>`).join("")}
-    ${P.generated ? `<tr><td>${P.generated.files} generated files</td><td class="muted">generated</td><td>${P.generated.lines} lines</td></tr>` : ""}</table>`;
+  const files = P.files.filter((f) => f.kind !== "generated");
+  return `<div class="kicker">The change</div><h2>What this change does</h2>
+    <p class="lead" style="color:var(--text)">${esc(P.summary || "The AI gave no explanation. Read every line.")}</p>
+    <div class="note info">${fmt(st.changed_lines)} lines changed in ${st.files} files. Lines backed by a passing test are folded away. <b style="color:var(--text)">You read ${fmt(st.lines_to_read)}.</b></div>
+    ${P.missing.length ? `<div class="note warn">Part of the review is missing: ${P.missing.map(esc).join(", ")}. Nothing was folded away for that part.</div>` : ""}
+    <details class="issue"><summary><i class="ph ph-caret-right"></i>Read the original issue</summary><pre class="req">${esc(P.requirement.text)}</pre></details>
+    <div class="sec"><div class="sec-h">Files</div><div class="rows">
+      ${files.map((f) => `<div><span>${esc(f.path)}</span><span>${f.hunks.reduce((n, h) => n + h.lines.filter((l) => l.t === "+").length, 0)} lines <span class="d">· ${esc(f.kind)}</span></span></div>`).join("")}
+      ${P.generated ? `<div><span>${P.generated.files} generated files</span><span>${fmt(P.generated.lines)} lines <span class="d">· generated</span></span></div>` : ""}
+    </div></div>`;
 }
 
 function vClaim(s, animate) {
   const c = P.claims.find((x) => x.id === s.claim);
-  const label = { proven: ["Proven by a passing test", "p-ok"], unproven: ["Not proven: read it", "p-warn"], disputed: ["Check failed: read it", "p-bad"] }[c.status];
-  const folded = c.status === "proven";
-  return `<div><span class="pill ${label[1]}">${label[0]}</span></div>
-    <div class="claim-text">${esc(c.text)}</div>
-    <div class="quote">From the issue: “${esc(c.requirement_quote)}”</div>
-    <ul class="checks">${c.checks.map((k) => `<li><span class="${k.ok ? "y" : "n"}">${k.ok ? "✓" : "✗"}</span><span>${esc(k.msg)}</span></li>`).join("")}</ul>
-    ${c.tests.length ? `<div class="muted" style="margin-bottom:10px">Tests: ${c.tests.map((t) => `<code>${esc(t)}</code>`).join(", ")}</div>` : ""}
-    <div class="conf">The AI says it is ${Math.round(c.confidence * 100)}% sure. <s>Not used.</s> Only the checks above count.</div>
+  const label = { proven: ["Proven by a passing test", "ok", "ph-seal-check"], unproven: ["Not proven: read it", "warn", "ph-warning"], disputed: ["A check failed: read it", "bad", "ph-x-circle"] }[c.status];
+  return `<div class="kicker"><span class="tag ${label[1]}"><i class="ph ${label[2]}"></i>${label[0]}</span></div>
+    <h2>${esc(c.title || c.text)}</h2>
+    ${c.title ? `<p class="lead">${esc(c.text)}</p>` : ""}
+    ${c.requirement_quote ? `<div class="quote"><small>From the issue</small>${esc(c.requirement_quote)}</div>` : ""}
+    <div class="sec"><div class="sec-h">Checked by code</div><ul class="checks">
+      ${c.checks.map((k) => `<li><i class="ph-fill ${k.ok ? "ph-check-circle g" : "ph-x-circle r"}"></i><span>${esc(k.msg)}</span></li>`).join("")}
+    </ul>
+    ${c.tests.length ? `<p class="conf">Tests: ${c.tests.map((t) => `<code>${esc(t)}</code>`).join(" ")}</p>` : ""}
+    <p class="conf">The AI says it is ${Math.round(c.confidence * 100)}% sure. <s>Not used.</s> Only the checks above count.</p></div>
     ${legend()}
-    ${[...new Set(c.cites.map((x) => x.path))].map((path) => fileView(path, c.cites.filter((x) => x.path === path).map((x) => [x.start, x.end]), folded, animate)).join("")}`;
+    ${[...new Set(c.cites.map((x) => x.path))].map((path) => fileView(path, c.cites.filter((x) => x.path === path).map((x) => [x.start, x.end]), c.status === "proven", animate)).join("")}`;
 }
 
 function vRefusal(s, animate) {
   const r = P.refusals[s.refusal];
-  return `<h2>A person must decide this</h2>
-    <div class="box red"><b>${esc(r.why)}</b><br>Vouch never folds this away, even if every test passes.</div>
+  return `<div class="kicker"><span class="tag bad"><i class="ph ph-lock-key"></i>Never folds</span></div>
+    <h2>A person must decide this</h2>
+    <div class="note bad">${esc(r.why)} Vouch keeps this open even when every test passes.</div>
     ${legend()}${fileView(r.path, r.ranges, false, animate)}`;
 }
 
 function vGenerated(s, animate) {
   const g = P.generated;
-  return `<h2>${g.files} generated files</h2>
-    <div class="box ${g.ok ? "green" : "amber"}">${g.ok ? `<b>${g.same} of ${g.files}</b> files got exactly the same edit. Checked by code. Nothing to read there.` : "These generated files all differ. Read them."}</div>
-    <p>The shared edit:</p><pre class="req">${g.distinct_edits.map(esc).join("<br>")}</pre>
-    ${g.odd.length && g.ok ? `<div class="box amber">${g.odd.length} file${g.odd.length > 1 ? "s differ" : " differs"} from the others. Read ${g.odd.length > 1 ? "them" : "it"}:</div>${legend()}${g.odd.map((p) => fileView(p, [[1, 99999]], false, animate)).join("")}` : ""}`;
+  return `<div class="kicker">Generated code</div><h2>${g.files} generated files</h2>
+    <div class="note ${g.ok ? "ok" : "warn"}">${g.ok ? `${g.same} of ${g.files} files got exactly the same edit. Checked by code, nothing to read there.` : "These generated files all differ. Read them."}</div>
+    <div class="sec"><div class="sec-h">The shared edit</div><pre class="req" style="margin-top:0">${g.distinct_edits.map(esc).join("\n")}</pre></div>
+    ${g.odd.length && g.ok ? `<div class="note warn">${g.odd.length} file${g.odd.length > 1 ? "s differ" : " differs"} from the others. Read ${g.odd.length > 1 ? "them" : "it"}.</div>${legend()}${g.odd.map((p) => fileView(p, [[1, 99999]], false, animate)).join("")}` : ""}`;
 }
 
 function vLeftovers(s, animate) {
-  return `<h2>Changes nobody explained</h2>
-    <div class="box amber">The AI did not mention these lines. They may be outside the issue. Read them.</div>
+  return `<div class="kicker">Unexplained</div><h2>Changes nobody explained</h2>
+    <div class="note warn">The AI did not mention these lines. They may be outside the issue. Read them.</div>
     ${legend()}${s.items.map((it) => fileView(it.path, it.ranges, false, animate)).join("")}`;
 }
 
 function vSign() {
-  if (S.signoff) return `<h2>Signed</h2><div class="box green big">${S.signoff.decision === "accept" ? "Accepted" : "Rejected"} by ${esc(S.signoff.user)}</div>
-    <p><b>Risk accepted:</b> ${esc(S.signoff.risk)}</p><button onclick="resetReview()">Start the review again (demo)</button>`;
   const left = S.total - S.done;
-  return `<h2>Sign off</h2>
-    ${P.route === "blocked" ? `<div class="box red">This change broke an existing test. It cannot be accepted.</div>` : ""}
-    ${left ? `<div class="box amber">${left} step${left > 1 ? "s" : ""} still need${left > 1 ? "" : "s"} a ✓ from someone on the team.</div>` : `<div class="box green">Every step has been approved by the team.</div>`}
-    <p>Who reviewed what:</p>
-    <table>${P.steps.filter((x) => x.kind !== "sign").map((x) => {
-      const v = Object.values(S.votes[x.id] || {});
-      return `<tr><td>${esc(x.title)}</td><td>${v.map((y) => `${esc(y.user)}: ${{ ok: "✓", question: "?", problem: "✗" }[y.vote]}`).join(", ") || '<span class="muted">nobody yet</span>'}</td></tr>`;
-    }).join("")}</table>
-    <p style="margin-top:16px"><b>The risk you accept</b>, in one sentence:</p>
-    <textarea id="risk" rows="2" placeholder="e.g. Only tested on .NET 8; the third crash site in the issue is unchanged."></textarea>
-    <div class="actions">
-      <button class="primary" ${left || P.route === "blocked" ? "disabled" : ""} onclick="sign('accept')">Accept and sign as ${esc(me)}</button>
-      <button onclick="sign('reject')">Reject</button>
+  const who = P.steps.filter((x) => x.kind !== "sign").map((x) => {
+    const v = Object.values(S.votes[x.id] || {});
+    return `<div><span>${esc(x.title)}</span><span>${v.length ? v.map((y) => `${esc(y.user)} <span class="${y.vote === "ok" ? "g" : y.vote === "problem" ? "r" : "a"}">${VOTE_WORD[y.vote]}</span>`).join(", ") : '<span class="d">nobody yet</span>'}</span></div>`;
+  }).join("");
+  if (S.signoff) return `<div class="kicker">Sign-off</div><h2>${S.signoff.decision === "accept" ? "Accepted" : "Rejected"} by ${esc(S.signoff.user)}</h2>
+    <div class="note ${S.signoff.decision === "accept" ? "ok" : "bad"}"><b>Risk accepted:</b> ${esc(S.signoff.risk)}</div>
+    <div class="sec"><div class="sec-h">Who reviewed what</div><div class="rows">${who}</div></div>
+    <div class="actbar"><button class="btn btn-ghost" onclick="resetReview()"><i class="ph ph-arrow-counter-clockwise"></i>Start the review again</button></div>`;
+  return `<div class="kicker">Sign-off</div><h2>Sign this change</h2>
+    ${P.route === "blocked" ? `<div class="note bad">An existing test broke. This change cannot be accepted.</div>` : ""}
+    ${left ? `<div class="note warn">${left} step${left > 1 ? "s" : ""} still need${left > 1 ? "" : "s"} an approval from someone on the team.</div>` : `<div class="note ok">Every step has been approved by the team.</div>`}
+    <div class="sec"><div class="sec-h">Who reviewed what</div><div class="rows">${who}</div></div>
+    <div class="sec"><label class="sec-h" for="risk" style="display:block">The risk you accept, in one sentence</label>
+      <textarea id="risk" rows="2" placeholder="For example: only tested on .NET 8, and the third crash site in the issue is unchanged."></textarea></div>
+    <div id="signErr"></div>
+    <div class="actbar">
+      <button class="btn btn-primary" ${left || P.route === "blocked" ? "disabled" : ""} onclick="sign('accept')"><i class="ph ph-signature"></i>Accept and sign as ${esc(me)}</button>
+      <button class="btn btn-ghost" onclick="sign('reject')">Reject</button>
+      <span class="sp"></span>
+      <button class="btn btn-ghost icon-btn" onclick="go(cur-1)" aria-label="Previous step"><i class="ph ph-arrow-left"></i></button>
     </div>`;
 }
 
-function actions(s) {
-  const mine = (S.votes[s.id] || {})[me];
+function thread(s) {
   const asks = S.asks.filter((a) => a.step === s.id);
   const notes = Object.values(S.votes[s.id] || {}).filter((v) => v.note);
-  return `<div class="thread">
-      ${notes.map((v) => `<div class="msg"><div class="h">${esc(v.user)} · ${{ ok: "approved", question: "question", problem: "problem" }[v.vote]}</div>${esc(v.note)}</div>`).join("")}
-      ${asks.map((a) => `<div class="msg"><div class="h">${esc(a.user)} asked</div>${esc(a.question)}</div>
-        <div class="msg" style="background:var(--bg)"><div class="h">AI answer · this is not evidence</div>${esc(a.answer)}</div>`).join("")}
-    </div>
-    <div class="actions">
-      <button class="primary" onclick="vote('ok')">${mine?.vote === "ok" ? "✓ You approved this" : "Looks right"}</button>
-      <button onclick="askAI()">Ask a question</button>
-      <button onclick="vote('problem')">Report a problem</button>
-      <span class="spacer"></span>
-      <span class="kbd">Keys: A approve · → next</span>
-      <button class="blue" onclick="go(cur+1)">Next step →</button>
-    </div>`;
+  const items = notes.map((v) => `<div class="msg"><div class="h">${avatar(v.user)}${esc(v.user)} ${VOTE_WORD[v.vote]}</div>${esc(v.note)}</div>`).join("")
+    + asks.map((a) => `<div class="msg"><div class="h">${avatar(a.user)}${esc(a.user)} asked</div>${esc(a.question)}</div>
+      <div class="msg ai"><div class="h"><i class="ph ph-sparkle"></i>AI answer, not evidence</div>${esc(a.answer)}</div>`).join("");
+  const box = compose === "ask" ? `<div class="compose"><label for="draft">Ask the AI about this step. The answer is shown to the team and never counts as evidence.</label>
+      <textarea id="draft" rows="2" placeholder="Why is the third crash site not changed?"></textarea>
+      <div class="row"><button class="btn btn-ghost" onclick="closeCompose()">Cancel</button><button class="btn btn-primary" id="sendBtn" onclick="sendAsk()">Ask</button></div></div>`
+    : compose === "problem" ? `<div class="compose"><label for="draft">What is wrong with this step?</label>
+      <textarea id="draft" rows="2" placeholder="The filter also drops diagnostics we need."></textarea>
+      <div class="row"><button class="btn btn-ghost" onclick="closeCompose()">Cancel</button><button class="btn btn-primary" onclick="sendProblem()">Report problem</button></div></div>` : "";
+  return `${items ? `<div class="thread">${items}</div>` : ""}${box}<div id="actErr"></div>`;
+}
+
+function actionBar(s) {
+  const mine = (S.votes[s.id] || {})[me];
+  return `<div class="actbar">
+    <button class="btn btn-primary" onclick="vote('ok')"><i class="ph ph-check"></i>${mine?.vote === "ok" ? "Approved" : "Looks right"}</button>
+    <button class="btn btn-ghost" onclick="openCompose('ask')"><i class="ph ph-question"></i>Ask</button>
+    <button class="btn btn-ghost ${mine?.vote === "problem" ? "on-problem" : ""}" onclick="openCompose('problem')"><i class="ph ph-flag"></i>Problem</button>
+    <span class="sp"></span>
+    <span class="keys"><kbd>A</kbd> approve <kbd>←</kbd> <kbd>→</kbd> move</span>
+    <button class="btn btn-ghost icon-btn" onclick="go(cur-1)" aria-label="Previous step" ${cur === 0 ? "disabled" : ""}><i class="ph ph-arrow-left"></i></button>
+    <button class="btn btn-ghost" onclick="go(cur+1)">Next<i class="ph ph-arrow-right"></i></button>
+  </div>`;
 }
 
 function legend() {
-  return `<div class="legend"><span><i style="background:#fff6d6;box-shadow:inset 3px 0 0 #e0a800"></i>Read this</span><span><i style="background:#eef8f1"></i>Added</span><span><i style="background:#fcf0ef"></i>Removed</span></div>`;
+  return `<div class="legend"><span><i style="background:rgba(252,211,77,.35)"></i>Read this</span><span><i style="background:rgba(134,239,172,.3)"></i>Added</span><span><i style="background:rgba(253,164,175,.3)"></i>Removed</span></div>`;
 }
 
-// Shows a file's changed lines in the given ranges (plus 3 lines around). Proven code starts folded.
+// A file's changed lines in the given ranges (plus 3 lines of context). Proven code starts folded.
 function fileView(path, rngs, folded, animate) {
   const f = P.files.find((x) => x.path === path);
-  if (!f) return `<div class="box amber">The AI cited <code>${esc(path)}</code>, which this change does not touch.</div>`;
+  if (!f) return `<div class="note bad">The AI cited <code>${esc(path)}</code>, which this change does not touch.</div>`;
   const want = (n) => n != null && rngs.some(([a, b]) => n >= a - 3 && n <= b + 3);
   const reading = new Set((P.reading[path] || []).flatMap(([a, b]) => Array.from({ length: b - a + 1 }, (_, i) => a + i)));
-  let rows = [], last = null, k = 0, count = 0, toRead = 0;
+  const rows = []; let last = null, k = 0, count = 0, toRead = 0;
   for (const h of f.hunks) for (const l of h.lines) {
     const n = l.new ?? l.old;
-    const keep = want(l.t === "-" ? nearNew(h, l) : l.new);
-    if (!keep) continue;
-    if (last !== null && n > last + 1 && l.t !== "-") rows.push(`<div class="gap">⋯</div>`);
+    if (!want(l.t === "-" ? nearNew(h, l) : l.new)) continue;
+    if (last !== null && n > last + 1 && l.t !== "-") rows.push(`<div class="gap">···</div>`);
     if (l.t === "+") { count++; if (reading.has(l.new)) toRead++; }
     const cls = l.t === "+" ? (reading.has(l.new) ? "add read" : "add") : l.t === "-" ? "del" : "";
-    rows.push(`<div class="ln ${cls}" style="animation-delay:${animate ? Math.min(k++ * 12, 600) : 0}ms${animate ? "" : ";opacity:1;animation:none"}"><span class="n">${l.new ?? ""}</span><span>${l.t === " " ? "" : l.t}</span><span>${esc(l.text)}</span></div>`);
+    rows.push(`<div class="ln ${cls}${animate ? " anim" : ""}"${animate ? ` style="animation-delay:${Math.min(k++ * 10, 500)}ms"` : ""}><span class="n">${l.new ?? ""}</span><span class="s">${l.t === " " ? "" : l.t}</span><span>${esc(l.text)}</span></div>`);
     if (l.t !== "-") last = l.new;
   }
-  const id = "f" + Math.random().toString(36).slice(2);
-  const head = `<div class="fh"><span>${esc(path)}</span><span class="muted">${count} line${count === 1 ? "" : "s"}${toRead ? ` · ${toRead} to read` : ""}</span></div>`;
-  if (folded && !toRead) return `<div class="file">${head}<div class="fold"><span>✓ ${count} line${count === 1 ? "" : "s"} backed by passing tests. No need to read.</span>
-    <button onclick="document.getElementById('${id}').hidden=false;this.parentElement.remove()">Show anyway</button></div>
-    <div class="code" id="${id}" hidden>${rows.join("")}</div></div>`;
+  const short = path.length > 70 ? "…" + path.slice(-69) : path;
+  const head = `<div class="fh"><span class="p" title="${esc(path)}">${esc(short)}</span><span class="c">${count} line${count === 1 ? "" : "s"}${toRead ? ` · <b>${toRead} to read</b>` : ""}</span></div>`;
+  if (folded && !toRead) {
+    const id = "f" + Math.random().toString(36).slice(2);
+    return `<div class="file">${head}<div class="fold"><i class="ph-fill ph-check-circle"></i><span>${count} line${count === 1 ? "" : "s"} backed by passing tests. No need to read.</span>
+      <button onclick="document.getElementById('${id}').hidden=false;this.parentElement.remove()">Show anyway</button></div>
+      <div class="code" id="${id}" hidden>${rows.join("")}</div></div>`;
+  }
   return `<div class="file">${head}<div class="code">${rows.join("")}</div></div>`;
 }
 function nearNew(h, l) { const i = h.lines.indexOf(l); for (let j = i; j < h.lines.length; j++) if (h.lines[j].new != null) return h.lines[j].new; return null; }
 
 // ------------------------------------------------------------ actions
-async function vote(v) {
-  let note = "";
-  if (v === "problem") { note = prompt("What is the problem?") || ""; if (!note.trim()) return; }
-  try { await api(`/api/prs/${prId}/vote`, { user: me, step: P.steps[cur].id, vote: v, note }); if (v === "ok") go(cur + 1); } catch (e) { alert(e.message); }
+const showErr = (where, e) => { const el = $(where); if (el) el.innerHTML = `<div class="err">${esc(e.message || e)}</div>`; };
+function openCompose(kind) { compose = compose === kind ? null : kind; render(false); $("#draft")?.focus(); }
+function closeCompose() { compose = null; render(false); }
+async function vote(v, note = "") {
+  try {
+    await api(`/api/prs/${prId}/vote`, { user: me, step: P.steps[cur].id, vote: v, note });
+    if (v === "ok") { S.status[P.steps[cur].id] = "ok"; go(cur + 1); } else refresh();
+  } catch (e) { showErr("#actErr", e); }
 }
-async function askAI() {
-  const q = prompt("Your question about this step");
-  if (!q) return;
-  $("#pane").insertAdjacentHTML("beforeend", `<div class="box blue">Asking the AI…</div>`);
-  try { await api(`/api/prs/${prId}/ask`, { user: me, step: P.steps[cur].id, question: q }); } catch (e) { alert(e.message); }
+async function sendProblem() {
+  const note = $("#draft").value.trim();
+  if (!note) { $("#draft").focus(); return; }
+  compose = null; await vote("problem", note);
+}
+async function sendAsk() {
+  const q = $("#draft").value.trim();
+  if (!q) { $("#draft").focus(); return; }
+  const b = $("#sendBtn"); b.disabled = true; b.textContent = "Asking…";
+  try { await api(`/api/prs/${prId}/ask`, { user: me, step: P.steps[cur].id, question: q }); compose = null; await refresh(); render(false); }
+  catch (e) { b.disabled = false; b.textContent = "Ask"; showErr("#actErr", e); }
 }
 async function sign(decision) {
-  const risk = $("#risk").value;
-  try { await api(`/api/prs/${prId}/signoff`, { user: me, decision, risk }); } catch (e) { alert(e.message); }
+  try { await api(`/api/prs/${prId}/signoff`, { user: me, decision, risk: $("#risk").value }); await refresh(); }
+  catch (e) { showErr("#signErr", e); }
 }
-async function resetReview() { if (confirm("Clear all votes for this change?")) await api(`/api/prs/${prId}/reset`, {}); }
+async function resetReview() {
+  if (!confirm("Clear every vote and the sign-off for this change?")) return;
+  try { await api(`/api/prs/${prId}/reset`, {}); await refresh(); } catch (e) { alert(e.message); }
+}
 
 document.addEventListener("keydown", (e) => {
-  if (!P || !location.hash.startsWith("#/pr/") || e.target.closest("textarea,input")) return;
+  if (!P || e.target.closest("textarea,input") || e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.key === "ArrowRight") go(cur + 1);
   if (e.key === "ArrowLeft") go(cur - 1);
-  if (e.key === "a") vote("ok");
+  if (e.key === "a" && P.steps[cur].kind !== "sign") vote("ok");
 });
 
 function route() {
   const m = location.hash.match(/^#\/pr\/(\w+)(?:\/(\d+))?/);
-  if (m) { cur = m[2] ? +m[2] - 1 : m[1] !== prId ? 0 : cur; showPR(m[1]); } else { prId = null; showList(); }
+  if (!m) { location.href = "/app#/repo"; return; }
+  const step = m[2] ? +m[2] - 1 : 0;
+  if (m[1] !== prId) { cur = step; showPR(m[1]); }
+  else if (step !== cur) { cur = step; render(true); }
 }
-window.addEventListener("hashchange", route);
-route();
+async function start() {
+  window.addEventListener("hashchange", route);
+  route();
+}
+(async () => {
+  me = await identify();
+  if (!me) return nameGate();
+  start();
+})();
 </script>
 </body>
 </html>
