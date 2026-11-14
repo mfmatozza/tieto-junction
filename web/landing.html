@@ -50,56 +50,43 @@ nav.top .right { margin-left: auto; }
 .btn i { font-size: 17px; }
 
 .hero { position: relative; padding: 80px 0 24px; text-align: center; isolation: isolate; }
-.hero::before { content: ""; position: absolute; inset: -120px 0 auto; height: 760px; z-index: -1; background: radial-gradient(60% 50% at 50% 0%, rgba(56,89,196,.34), transparent 70%), radial-gradient(30% 30% at 50% 30%, rgba(134,239,172,.07), transparent 70%); }
+.hero::before { content: ""; position: absolute; inset: -120px 0 auto; height: 640px; z-index: -1; background: radial-gradient(55% 45% at 50% 0%, rgba(56,89,196,.2), transparent 70%); }
 .hero h1 { font-size: clamp(40px, 6vw, 66px); line-height: 1.04; letter-spacing: -.035em; font-weight: 600; max-width: 15ch; margin: 0 auto; }
 .hero p.sub { max-width: 580px; margin: 20px auto 0; color: var(--muted); font-size: 18px; line-height: 1.55; }
 .hero .ctas { margin-top: 30px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
-/* Simulation */
-.sim { margin: 56px auto 0; text-align: left; border: 1px solid var(--line-2); border-radius: 20px; background: linear-gradient(180deg, rgba(17,29,66,.75), rgba(10,18,48,.6)); box-shadow: 0 40px 120px -40px rgba(20,40,120,.65), inset 0 1px 0 rgba(255,255,255,.04); overflow: hidden; }
-.sim-top { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-.live { display: inline-flex; align-items: center; gap: 8px; font: 500 12.5px var(--mono); color: var(--green); }
-.live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 1.8s infinite; }
-@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(134,239,172,.6); } 70%, 100% { box-shadow: 0 0 0 7px rgba(134,239,172,0); } }
-.sim-top .repo { font: 12.5px var(--mono); color: var(--muted); }
-.sim-top .acts { margin-left: auto; display: flex; gap: 8px; }
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--line); }
-.stats div { padding: 14px 18px; }
-.stats div + div { border-left: 1px solid var(--line); }
-.stats b { display: block; font: 500 24px/1.15 var(--mono); letter-spacing: -.02em; }
-.stats span { font-size: 12.5px; color: var(--muted); }
-.sim-body { display: grid; grid-template-columns: minmax(0,1fr) 310px; }
-.sim-road { padding: 8px 8px 4px 14px; }
+/* Simulation: flat, quiet, the moving parts carry it */
+.sim { margin: 56px auto 0; text-align: left; border: 1px solid var(--line); border-radius: 16px; background: var(--bg-2); overflow: hidden; }
+.sim-top { display: flex; align-items: center; gap: 28px; padding: 16px 22px; border-bottom: 1px solid var(--line); flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+.sim-top b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.sim-top .acts { margin-left: auto; display: flex; gap: 18px; }
+.textbtn { font-size: 14px; color: var(--muted); border-bottom: 1px solid var(--line-2); padding-bottom: 1px; transition: color .2s, border-color .2s; }
+.textbtn:hover { color: var(--text); border-color: var(--text); }
+.textbtn.bug:hover { color: var(--red); border-color: var(--red); }
+.sim-body { display: grid; grid-template-columns: minmax(0,1fr) 280px; }
+.sim-road { padding: 12px 10px 6px 18px; }
 .sim-road svg { display: block; width: 100%; height: auto; }
-.log { border-left: 1px solid var(--line); padding: 14px 14px 10px; display: flex; flex-direction: column; gap: 9px; height: 372px; overflow: hidden; }
-.log h4 { font: 500 12px var(--mono); color: var(--dim); }
-.ev { display: grid; grid-template-columns: 18px 1fr; gap: 8px; font-size: 12.5px; line-height: 1.4; color: var(--muted); animation: evin .45s var(--ease) both; }
-.ev i { font-size: 15px; margin-top: 1px; }
+.log { border-left: 1px solid var(--line); padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; height: 300px; overflow: hidden; }
+.ev { font-size: 13px; line-height: 1.45; color: var(--muted); animation: evin .4s var(--ease) both; }
+.ev:nth-child(n+4) { opacity: .55; } .ev:nth-child(n+7) { opacity: .3; }
 .ev b { color: var(--text); font-weight: 500; }
-@keyframes evin { from { opacity: 0; transform: translateY(-6px); } }
+.ev.bad b { color: var(--red); }
+@keyframes evin { from { opacity: 0; } }
 
-.lane-edge { stroke: rgba(160,178,230,.16); stroke-width: 1.2; fill: none; }
-.lane-mid { stroke: rgba(160,178,230,.24); stroke-width: 1.2; stroke-dasharray: 6 10; fill: none; animation: dash 1.4s linear infinite; }
-.trunk-edge { stroke: rgba(160,178,230,.3); stroke-width: 1.4; fill: none; }
-.trunk-mid { stroke: rgba(134,239,172,.4); stroke-width: 1.4; stroke-dasharray: 10 12; fill: none; animation: dash 1s linear infinite; }
-.ramp { stroke: rgba(253,164,175,.35); stroke-width: 1.4; stroke-dasharray: 5 7; fill: none; }
-@keyframes dash { to { stroke-dashoffset: -32; } }
-.lane-label { font: 11px var(--mono); fill: var(--dim); }
-.gate .post { stroke: rgba(160,178,230,.45); stroke-width: 3; stroke-linecap: round; transition: stroke .25s; }
-.gate.pass .post { stroke: var(--green); }
-.gate.fail .post { stroke: var(--red); }
-.gate.warn .post { stroke: var(--amber); }
-.gate rect { fill: var(--surface-2); stroke: var(--line-2); transition: stroke .25s, fill .25s; }
-.gate.pass rect { stroke: rgba(134,239,172,.6); }
-.gate.warn rect { stroke: rgba(252,211,77,.6); }
-.gate.fail rect { stroke: rgba(253,164,175,.7); fill: #2a1430; }
-.gate .nm { font: 600 12.5px var(--sans); fill: var(--text); }
-.gate .res { font: 11px var(--mono); fill: var(--muted); }
+.lane-edge { stroke: rgba(160,178,230,.14); stroke-width: 1; fill: none; }
+.lane-mid { stroke: rgba(160,178,230,.2); stroke-width: 1; stroke-dasharray: 4 8; fill: none; }
+.trunk-edge { stroke: rgba(160,178,230,.24); stroke-width: 1; fill: none; }
+.trunk-mid { stroke: rgba(160,178,230,.22); stroke-width: 1; stroke-dasharray: 4 8; fill: none; }
+.ramp { stroke: rgba(253,164,175,.3); stroke-width: 1; stroke-dasharray: 4 6; fill: none; }
+.lane-label { font: 12px var(--sans); fill: var(--dim); }
+.gate .post { stroke: rgba(160,178,230,.35); stroke-width: 2; transition: stroke .2s; }
+.gate.pass .post { stroke: var(--green); } .gate.fail .post { stroke: var(--red); } .gate.warn .post { stroke: var(--amber); }
+.gate .nm { font: 500 13px var(--sans); fill: var(--text); }
+.gate .res { font: 12px var(--sans); fill: var(--dim); transition: fill .2s; }
 .gate.pass .res { fill: var(--green); } .gate.fail .res { fill: var(--red); } .gate.warn .res { fill: var(--amber); }
-.pit rect { fill: rgba(253,164,175,.06); stroke: rgba(253,164,175,.35); stroke-dasharray: 4 4; }
-.pit text { font: 11.5px var(--mono); fill: var(--red); }
-.main-end text { font: 600 13px var(--sans); fill: var(--green); }
-.car text { font: 600 9.5px var(--mono); fill: #0a1230; }
+.pit text { font: 12px var(--sans); fill: var(--red); }
+.main-end text { font: 500 13px var(--sans); fill: var(--text); }
+.car text { font: 600 10px var(--sans); fill: #0a1230; }
 .car { transition: opacity .4s; }
 
 section { padding: 112px 0; }
@@ -117,27 +104,20 @@ section { padding: 112px 0; }
 
 /* How it works */
 .how { margin-top: 56px; display: grid; grid-template-columns: 380px minmax(0,1fr); gap: 32px; align-items: start; }
-.steps { display: grid; gap: 8px; }
-.step { text-align: left; width: 100%; border: 1px solid transparent; border-radius: 14px; padding: 16px 18px; display: grid; grid-template-columns: 40px 1fr; gap: 14px; transition: background .3s, border-color .3s; position: relative; overflow: hidden; }
-.step:hover { background: rgba(17,29,66,.5); }
-.step.on { background: var(--surface); border-color: var(--line-2); }
-.step .ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 20px; background: var(--surface-2); border: 1px solid var(--line-2); color: var(--dim); transition: all .3s; }
-.step.on .ic { color: var(--green-ink); background: var(--green); border-color: var(--green); }
-.step .nm { font-weight: 600; font-size: 17px; letter-spacing: -.01em; display: flex; align-items: baseline; gap: 10px; }
-.step .nm small { font: 400 12px var(--mono); color: var(--dim); }
-.step .q { display: block; color: var(--muted); font-size: 14px; margin-top: 2px; }
-.step .more { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .45s var(--ease); }
+.steps { display: grid; }
+.step { text-align: left; width: 100%; display: block; padding: 18px 0 18px 22px; border-left: 2px solid var(--line); transition: border-color .25s; }
+.step:hover { border-left-color: var(--line-2); }
+.step.on { border-left-color: var(--green); }
+.step .nm { font-weight: 600; font-size: 18px; letter-spacing: -.015em; color: var(--muted); transition: color .25s; }
+.step.on .nm, .step:hover .nm { color: var(--text); }
+.step .q { display: block; color: var(--dim); font-size: 14.5px; margin-top: 2px; }
+.step.on .q { color: var(--muted); }
+.step .more { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .4s var(--ease); }
 .step.on .more { grid-template-rows: 1fr; }
 .step .more > span { overflow: hidden; }
-.step .more p { color: var(--muted); font-size: 14px; padding-top: 8px; }
-.step .bar { position: absolute; left: 18px; right: 18px; bottom: 0; height: 2px; opacity: 0; }
-.step.on .bar { opacity: 1; }
-.step .bar span { display: block; height: 100%; width: 0; background: var(--green); }
-.step.on .bar span { animation: fillbar var(--dur, 7s) linear forwards; }
-.paused .step.on .bar span { animation-play-state: paused; }
-@keyframes fillbar { to { width: 100%; } }
+.step .more p { color: var(--muted); font-size: 14.5px; padding-top: 10px; max-width: 42ch; }
 
-.panel { position: sticky; top: 88px; border: 1px solid var(--line-2); border-radius: 18px; background: var(--bg-2); min-height: 480px; overflow: hidden; box-shadow: 0 50px 120px -50px rgba(30,60,160,.7); }
+.panel { position: sticky; top: 88px; border: 1px solid var(--line-2); border-radius: 18px; background: var(--bg-2); min-height: 480px; overflow: hidden; }
 .panel-top { display: flex; align-items: center; gap: 10px; padding: 13px 18px; border-bottom: 1px solid var(--line); font: 12.5px var(--mono); color: var(--muted); }
 .panel-top b { color: var(--text); font-weight: 500; font-family: var(--sans); font-size: 13.5px; }
 .panel-top .right { margin-left: auto; }
@@ -147,7 +127,7 @@ section { padding: 112px 0; }
 .pv-cap { color: var(--muted); font-size: 13.5px; margin-bottom: 16px; }
 
 .agents { display: grid; gap: 10px; }
-.agent { display: grid; grid-template-columns: 34px minmax(0,1fr) auto; gap: 12px; align-items: center; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(13,23,54,.6); }
+.agent { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px; align-items: center; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(13,23,54,.6); }
 .agent .av { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: 18px; background: var(--surface-2); color: var(--blue); }
 .agent .who { font-size: 14px; font-weight: 500; }
 .agent .file { font: 12px var(--mono); color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -252,13 +232,13 @@ footer .sp { margin-left: auto; }
 .reveal.in { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
   .reveal { opacity: 1; transform: none; transition: none; }
-  .lane-mid, .trunk-mid, .wire::before, .live::before { animation: none; }
+  .wire::before { animation: none; }
   html { scroll-behavior: auto; }
 }
 @media (max-width: 980px) {
   nav.top .links { display: none; }
   .sim-body { grid-template-columns: 1fr; }
-  .log { border-left: 0; border-top: 1px solid var(--line); height: 230px; }
+  .log { border-left: 0; border-top: 1px solid var(--line); height: 200px; }
   .how { grid-template-columns: 1fr; }
   .panel { position: relative; top: 0; }
   .arch { grid-template-columns: 1fr; }
@@ -273,10 +253,8 @@ footer .sp { margin-left: auto; }
 }
 @media (max-width: 640px) {
   .wrap { padding: 0 16px; }
-  .stats { grid-template-columns: 1fr 1fr; }
-  .stats div:nth-child(3) { border-left: 0; }
-  .stats div:nth-child(n+3) { border-top: 1px solid var(--line); }
-  .sim-top .repo { display: none; }
+  .sim-top { gap: 14px 20px; }
+  .sim-top .acts { margin-left: 0; width: 100%; }
   .trow { grid-template-columns: minmax(0,1fr) 48px 48px; }
   .er-num { font-size: 36px; }
 }
@@ -311,27 +289,23 @@ footer .sp { margin-left: auto; }
 
     <div class="sim" id="sim">
       <div class="sim-top">
-        <span class="live">Live simulation</span>
-        <span class="repo">real numbers from 4 AI pull requests in Tieto's MessagePack-CSharp</span>
+        <span><b id="sMerged">0</b> merged</span>
+        <span><b id="sBlocked">0</b> blocked</span>
+        <span><b id="sRead">0</b> of <span id="sChanged">0</span> lines read by a person</span>
+        <span hidden><b id="sLanes">0</b></span>
         <div class="acts">
-          <button class="btn btn-ghost btn-sm" id="addIssue"><i class="ph ph-plus"></i>Add an issue</button>
-          <button class="btn btn-ghost btn-sm" id="plantBug" style="color:var(--red);border-color:rgba(253,164,175,.35)"><i class="ph ph-bug"></i>Plant a bug</button>
+          <button class="textbtn" id="addIssue">Add an issue</button>
+          <button class="textbtn bug" id="plantBug">Plant a bug</button>
         </div>
-      </div>
-      <div class="stats">
-        <div><b id="sLanes">0</b><span>Agents in lanes</span></div>
-        <div><b class="r" id="sBlocked">0</b><span>Blocked by Guardrail</span></div>
-        <div><b class="g" id="sMerged">0</b><span>Merged to main</span></div>
-        <div><b><span class="g" id="sRead">0</span><span style="color:var(--dim);font-size:15px"> of </span><span id="sChanged" style="color:var(--dim)">0</span></b><span>Lines a human had to read</span></div>
       </div>
       <div class="sim-body">
         <div class="sim-road">
-          <svg viewBox="0 0 860 360" id="road" role="img" aria-label="Agent pull requests travel from four lanes through Guardrail, Checkpoint and EasyReview to main. Broken ones are sent to Blocked.">
+          <svg viewBox="0 100 860 250" id="road" role="img" aria-label="Agent pull requests travel from four lanes through Guardrail, Checkpoint and EasyReview to main. Broken ones are sent to Blocked.">
             <g id="roadBase"></g>
             <g id="cars"></g>
           </svg>
         </div>
-        <div class="log" id="log" aria-live="polite"><h4>What is happening</h4></div>
+        <div class="log" id="log" aria-live="polite"></div>
       </div>
     </div>
   </div>
@@ -351,33 +325,25 @@ footer .sp { margin-left: auto; }
 <section id="how">
   <div class="wrap">
     <h2 class="h2 reveal">Four stops between a backlog issue and main.</h2>
-    <p class="lead reveal">Each stop answers one question a reviewer used to answer by reading every line. Click a stop, or let it play.</p>
+    <p class="lead reveal">Each stop answers one question a reviewer used to answer by reading every line. Click a stop to see it work.</p>
 
     <div class="how reveal" id="how-ui">
       <div class="steps" role="tablist">
         <button class="step on" role="tab" data-i="0">
-          <span class="ic"><i class="ph ph-road-horizon"></i></span>
-          <span><span class="nm">Lanes <small>implement</small></span><span class="q">Can agents work in parallel safely?</span>
+          <span><span class="nm">Lanes</span><span class="q">Can agents work in parallel safely?</span>
             <span class="more"><span><p>Each agent claims the files it will edit. A second agent that wants the same file waits its turn, so nothing gets overwritten. Every commit records which agent and which issue wrote it.</p></span></span></span>
-          <span class="bar"><span></span></span>
         </button>
         <button class="step" role="tab" data-i="1">
-          <span class="ic"><i class="ph ph-shield-check"></i></span>
-          <span><span class="nm">Guardrail <small>protect</small></span><span class="q">Did anything that worked break?</span>
+          <span><span class="nm">Guardrail</span><span class="q">Did anything that worked break?</span>
             <span class="more"><span><p>Vouch runs the existing tests on the base and on the branch. A test that passed before and fails after blocks the change before a human sees it.</p></span></span></span>
-          <span class="bar"><span></span></span>
         </button>
         <button class="step" role="tab" data-i="2">
-          <span class="ic"><i class="ph ph-seal-check"></i></span>
-          <span><span class="nm">Checkpoint <small>prove</small></span><span class="q">Is the AI telling the truth?</span>
+          <span><span class="nm">Checkpoint</span><span class="q">Is the AI telling the truth?</span>
             <span class="more"><span><p>Claude explains the change as claims. Code checks each one: the cited lines exist, the quote is really in the issue, and the named test passed. Anything unproven stays open.</p></span></span></span>
-          <span class="bar"><span></span></span>
         </button>
         <button class="step" role="tab" data-i="3">
-          <span class="ic"><i class="ph-fill ph-flag-checkered"></i></span>
-          <span><span class="nm">EasyReview <small>approve</small></span><span class="q">What does a human still need to read?</span>
+          <span><span class="nm">EasyReview</span><span class="q">What does a human still need to read?</span>
             <span class="more"><span><p>Proven code folds away. The team reads what is left together, live, and a named owner signs and writes down the risk they accept.</p></span></span></span>
-          <span class="bar"><span></span></span>
         </button>
       </div>
 
@@ -387,9 +353,9 @@ footer .sp { margin-left: auto; }
         <div class="pv on" data-i="0">
           <p class="pv-cap">Three agents, three backlog issues, one codebase.</p>
           <div class="agents">
-            <div class="agent"><span class="av"><i class="ph ph-robot"></i></span><div><div class="who">claude-code · #2283</div><div class="file">src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs</div></div><span class="tag ok" id="laneA">editing</span></div>
-            <div class="agent"><span class="av"><i class="ph ph-robot"></i></span><div><div class="who">codex · #2297</div><div class="file">src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs</div></div><span class="tag wait" id="laneB">waiting for #2283</span></div>
-            <div class="agent"><span class="av"><i class="ph ph-robot"></i></span><div><div class="who">claude-code · #2234</div><div class="file">src/MessagePack.SourceGenerator/MsgPack00xMessagePackAnalyzer.cs</div></div><span class="tag ok">editing</span></div>
+            <div class="agent"><div><div class="who">claude-code · #2283</div><div class="file">src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs</div></div><span class="tag ok" id="laneA">editing</span></div>
+            <div class="agent"><div><div class="who">codex · #2297</div><div class="file">src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs</div></div><span class="tag wait" id="laneB">waiting for #2283</span></div>
+            <div class="agent"><div><div class="who">claude-code · #2234</div><div class="file">src/MessagePack.SourceGenerator/MsgPack00xMessagePackAnalyzer.cs</div></div><span class="tag ok">editing</span></div>
           </div>
           <div class="trailer">commit 9df83c3 &nbsp;fix closed generic struct crash<br><b>Lanes-Agent:</b> claude-code (session 3f9a12bc)<br><b>Lanes-Task:</b> #2283</div>
         </div>
@@ -555,7 +521,7 @@ const curve = (y, dy = 0) => `M ${LANE_X0} ${y + dy} C 190 ${y + dy}, 200 ${TRUN
 
 LANES_Y.forEach((y, i) => {
   mk("path", { class: "lane-mid", d: curve(y) }, base);
-  mk("text", { class: "lane-label", x: 0, y: y + 4 }, base).textContent = `lane ${i + 1}`;
+  mk("text", { class: "lane-label", x: 0, y: y + 4 }, base).textContent = `Lane ${i + 1}`;
 });
 mk("path", { class: "lane-edge", d: curve(LANES_Y[0], -14) }, base);
 mk("path", { class: "lane-edge", d: curve(LANES_Y[3], 14) }, base);
@@ -565,30 +531,27 @@ mk("line", { class: "trunk-mid", x1: MERGE_X, y1: TRUNK_Y, x2: END_X, y2: TRUNK_
 const RAMP = [[GATES[0].x, TRUNK_Y], [GATES[0].x + 10, TRUNK_Y + 80], [PIT.x - 70, PIT.y], [PIT.x - 30, PIT.y]];
 mk("path", { class: "ramp", d: `M ${RAMP[0]} C ${RAMP[1]}, ${RAMP[2]}, ${RAMP[3]}` }, base);
 const pit = mk("g", { class: "pit" }, base);
-mk("rect", { x: PIT.x - 30, y: PIT.y - 15, width: 130, height: 30, rx: 8 }, pit);
-const pitT = mk("text", { x: PIT.x + 35, y: PIT.y + 4, "text-anchor": "middle" }, pit); pitT.textContent = "Blocked: 0";
+const pitT = mk("text", { x: PIT.x - 20, y: PIT.y + 4 }, pit); pitT.textContent = "Blocked";
 const gateEls = GATES.map((g) => {
   const G = mk("g", { class: "gate" }, base);
-  mk("line", { x1: g.x, y1: 82, x2: g.x, y2: TRUNK_Y - 22, stroke: "rgba(160,178,230,.18)", "stroke-dasharray": "2 4" }, G);
-  mk("line", { class: "post", x1: g.x, y1: TRUNK_Y - 24, x2: g.x, y2: TRUNK_Y + 24 }, G);
-  mk("rect", { x: g.x - 62, y: 26, width: 124, height: 56, rx: 10 }, G);
-  mk("text", { class: "nm", x: g.x, y: 49, "text-anchor": "middle" }, G).textContent = g.nm;
-  const res = mk("text", { class: "res", x: g.x, y: 68, "text-anchor": "middle" }, G); res.textContent = g.q;
+  mk("line", { class: "post", x1: g.x, y1: TRUNK_Y - 26, x2: g.x, y2: TRUNK_Y + 26 }, G);
+  mk("text", { class: "nm", x: g.x, y: TRUNK_Y - 40, "text-anchor": "middle" }, G).textContent = g.nm;
+  const res = mk("text", { class: "res", x: g.x, y: TRUNK_Y + 46, "text-anchor": "middle" }, G); res.textContent = g.q;
   return { G, res, q: g.q };
 });
 const endG = mk("g", { class: "main-end" }, base);
-mk("circle", { cx: END_X + 16, cy: TRUNK_Y, r: 9, fill: "#86efac" }, endG);
-mk("text", { x: END_X + 16, y: TRUNK_Y + 34, "text-anchor": "middle" }, endG).textContent = "main";
+mk("line", { x1: END_X + 14, y1: TRUNK_Y - 26, x2: END_X + 14, y2: TRUNK_Y + 26, stroke: "#86efac", "stroke-width": 2 }, endG);
+mk("text", { x: END_X + 14, y: TRUNK_Y - 40, "text-anchor": "middle" }, endG).textContent = "main";
 
 const S = { lanes: 0, blocked: 0, merged: 0, read: 0, changed: 0 };
 function paint() {
   $("#sLanes").textContent = S.lanes; $("#sBlocked").textContent = S.blocked; $("#sMerged").textContent = S.merged;
   $("#sRead").textContent = fmt(S.read); $("#sChanged").textContent = fmt(S.changed); pitT.textContent = `Blocked: ${S.blocked}`;
 }
-function log(icon, cls, html) {
-  const d = document.createElement("div"); d.className = "ev";
-  d.innerHTML = `<i class="ph-fill ${icon} ${cls}"></i><span>${html}</span>`;
-  $("#log").insertBefore(d, $("#log h4").nextSibling);
+function log(_icon, cls, html) {
+  const d = document.createElement("div"); d.className = "ev" + (cls === "r" ? " bad" : "");
+  d.innerHTML = html;
+  $("#log").prepend(d);
   const evs = $$("#log .ev"); if (evs.length > 9) evs.at(-1).remove();
 }
 function flash(i, cls, text) {
@@ -598,20 +561,22 @@ function flash(i, cls, text) {
 const bez = (P, u) => { const m = 1 - u; return [0, 1].map((k) => m * m * m * P[0][k] + 3 * m * m * u * P[1][k] + 3 * m * u * u * P[2][k] + u * u * u * P[3][k]); };
 const laneBez = (y) => [[LANE_X0, y], [190, y], [200, TRUNK_Y], [MERGE_X, TRUNK_Y]];
 
-const cars = []; let nextPr = 0, bugN = 0;
+const cars = []; let nextPr = 0, bugN = 0, laneRR = 0;
 function freeLane() { // the lane whose last car is furthest along
   let best = 0, bestU = -1;
-  for (let l = 0; l < 4; l++) {
+  for (let j = 0; j < 4; j++) {
+    const l = (laneRR + j) % 4;
     const inLane = cars.filter((c) => c.phase === "lane" && c.lane === l);
     const u = inLane.length ? Math.min(...inLane.map((c) => c.u)) : 2;
     if (u > bestU) { bestU = u; best = l; }
   }
-  return bestU > 0.25 ? best : -1;
+  if (bestU <= 0.25) return -1;
+  laneRR = best + 1; return best;
 }
 function makeCar(pr) {
   const lane = freeLane(); if (lane < 0) return false;
   const g = mk("g", { class: "car" }, $("#cars"));
-  const body = mk("rect", { x: -24, y: -9, width: 48, height: 18, rx: 6, fill: pr.bug ? "#fda4af" : "#dbe4ff" }, g);
+  const body = mk("rect", { x: -23, y: -8, width: 46, height: 16, rx: 3, fill: pr.bug ? "#fda4af" : "#dbe4ff" }, g);
   mk("text", { x: 0, y: 3.5, "text-anchor": "middle" }, g).textContent = pr.bug ? "bug" : "#" + pr.id;
   const c = { pr, g, body, lane, x: LANE_X0, y: LANES_Y[lane], phase: "lane", u: 0, gate: 0, wait: 0 };
   g.setAttribute("transform", `translate(${c.x} ${c.y})`);
@@ -699,8 +664,8 @@ if (REDUCED) {
 
 /* ---------------------------------------------------------------- how it works: auto-advancing steps */
 const how = $("#how-ui"), stepsEls = $$(".step", how), panels = $$(".pv", how);
-const LABEL = ["Lanes", "Guardrail", "Checkpoint", "EasyReview"], DUR = [7000, 8000, 7000, 8000];
-let cur = 0, timer = null, timers = [];
+const LABEL = ["Lanes", "Guardrail", "Checkpoint", "EasyReview"];
+let cur = 0, timers = [];
 const later = (ms, f) => timers.push(setTimeout(f, REDUCED ? 0 : ms));
 
 function play(i) {
@@ -734,17 +699,12 @@ function play(i) {
 }
 function select(i) {
   cur = i;
-  stepsEls.forEach((s, k) => { s.classList.toggle("on", k === i); s.setAttribute("aria-selected", k === i); s.style.setProperty("--dur", DUR[k] + "ms"); });
+  stepsEls.forEach((s, k) => { s.classList.toggle("on", k === i); s.setAttribute("aria-selected", k === i); });
   panels.forEach((p, k) => p.classList.toggle("on", k === i));
   $("#pvLabel").textContent = LABEL[i];
-  const bar = $(".bar span", stepsEls[i]); bar.style.animation = "none"; void bar.offsetWidth; bar.style.animation = "";
   play(i);
-  clearTimeout(timer);
-  if (!REDUCED && !how.classList.contains("paused")) timer = setTimeout(() => select((cur + 1) % 4), DUR[i]);
 }
 stepsEls.forEach((s, i) => s.addEventListener("click", () => select(i)));
-how.addEventListener("mouseenter", () => { how.classList.add("paused"); clearTimeout(timer); });
-how.addEventListener("mouseleave", () => { how.classList.remove("paused"); clearTimeout(timer); if (!REDUCED) timer = setTimeout(() => select((cur + 1) % 4), 3000); });
 new IntersectionObserver(([e]) => { if (e.isIntersecting && !how.dataset.started) { how.dataset.started = 1; select(0); } }, { threshold: 0.3 }).observe(how);
 
 function resetBreak() {
@@ -755,7 +715,6 @@ function resetBreak() {
   $("#breakIt").onclick = breakIt;
 }
 function breakIt() {
-  how.classList.add("paused"); clearTimeout(timer);
   const v = $("#victim").lastElementChild; v.className = "r"; v.textContent = "FAIL";
   $("#brCount").className = "r"; $("#brCount").textContent = "166 pass";
   $("#verdict").className = "verdict bad";
