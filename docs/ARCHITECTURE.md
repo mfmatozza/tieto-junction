@@ -17,7 +17,10 @@ vouch/
   tests_run.py     run dotnet tests in a git worktree, parse TRX results
   route.py         reading list + route (light / focused / full), fail-closed
   ledger.py        trust levels per code area × agent, sign-off, escapes
-  review.py        orchestrates one review: diff → claims → checks → risk → tests → route → store
+  guard.py         blast radius: touched symbols → callers → existing tests → base vs branch
+  tour.py          evidence pack → ordered tour steps (what to show open, what to collapse)
+  collab.py        reviewer assignment, presence (Valkey), step votes (Kafka + Postgres)
+  review.py        orchestrates one review: diff → guard → claims → checks → risk → tests → route → tour → store
   app.py           FastAPI: JSON API + serves web/
 web/
   index.html       the whole dashboard (vanilla JS, fetch + EventSource)
@@ -121,6 +124,7 @@ for claim in claims:
     if claim not disputed and all its tests Passed:
         reading -= claim.cites
 reading += lines of refused files (R1–R6) + finding lines
+route = blocked if guard found a regression
 route = full   if any refusal, tests unavailable, model failed, or 0 claims
         light  if reading is empty
         focused otherwise
@@ -185,6 +189,45 @@ POST `/api/prs/{id}/signoff` `{owner, decision, residual_risk, ack: [refusal ids
 | Postgres down | app refuses to start | — |
 | no provenance trailers | agent = `unknown` → 🔴 floor | contributors: unknown |
 
-## 15. Measurement (bench/)
+## 15. Guard (guard.py): "nothing that worked before is broken"
+
+1. From the diff, list touched symbols: C# method/type names on changed lines (regex on `class|struct|record|interface X` and `X(` declarations; ponytail: regex, upgrade to Roslyn if it misses too much).
+2. Callers: `git grep -n -w <symbol>` in `src/` and `tests/` at the branch head.
+3. Existing tests = test methods (`[Fact]`/`[Theory]`) in files that reference a touched symbol **and exist on the base commit**.
+4. Run them twice (two worktrees, same filter): base and branch. Cap at ~60 tests / 8 min; over the cap, run the ones in the same test class as the changed code first and say "sampled".
+5. Verdict per test: `kept` (pass→pass) · `regression` (pass→fail) · `already broken` (fail→fail) · `fixed` (fail→pass).
+6. Any `regression` → route = **blocked**, before a human spends a minute. Shown first in the tour.
+7. Plus: `PublicAPI.Shipped.txt` lines removed or changed → `api-break` finding.
+
+Stored in `guard_results` (pr, test, base, branch, verdict). Event `guard.done` on `review.events`.
+
+## 16. Review Tour (tour.py + web)
+
+A tour = ordered steps built from the evidence pack. **No AI call here**: it only reorders and folds what was already checked.
+
+| Step kind | From | Shown |
+|---|---|---|
+| 0 Guard | guard results | blast radius + regressions (if any, the tour stops here) |
+| 1 Story | `summary` | 3 sentences + "read N of M lines, ~X min" (X = lines_to_read / 12 per min) |
+| 2..n Claim | one claim each, in Claude's story order | claim text → code hunk animates in → evidence badges → lines **collapsed** if released, **open** if on the reading list |
+| Refusal | R1–R6 | always open, red frame, needs explicit ✅ |
+| Leftovers | lines no claim cites | open, "nobody explained these" |
+| Sign | — | accepted risk + sign button (enabled when all steps ✅) |
+
+Animation (CSS only, no library): hunk slides in; removed lines fade to 30% and strike; added lines appear with a 20 ms per-line stagger; badge pops with a scale-in. Syntax highlight: Prism (C#) from cdnjs. Keyboard: `→` next step, `a` approve, `q` question, `x` problem.
+
+❓ Ask: POST `/api/steps/{id}/ask {question}` → Claude answers using only that step's hunk + claim + test names, answer marked 🤖 "AI answer, not evidence".
+
+## 17. Collaborative review (collab.py)
+
+- **Assignment**: for each open step, suggest the reviewer with the most commits on those files (`git log --format=%an -- <file>`, mapped to team members; else round-robin). Anyone can take any step.
+- **Presence**: Valkey key `presence:{pr}:{user}` = step id, TTL 15 s, refreshed by the browser every 5 s. `/api/prs/{id}/presence` lists them.
+- **Votes**: POST `/api/steps/{id}/vote {user, vote: ok|question|problem, note}` → row in `step_votes` + event on `review.events` → SSE pushes to every open browser.
+- **Done** = every step has at least one `ok` and no open `problem`. Then the owner signs (§10).
+- Metric on the PR page: total human minutes (sum of time on open steps per reviewer) vs. lines changed.
+
+New tables: `tour_steps (id, pr, ord, kind, claim_id, ranges, collapsed)`, `step_votes (step, user, vote, note, at)`, `guard_results (pr, test, base, branch, verdict)`.
+
+## 18. Measurement (bench/)
 
 `plant.py` copies a ju26 branch and adds one commit with one small bug (off-by-one, flipped condition, removed null check, swapped args) or a harmless change (controls). Key → `~/vouch-key.json`, never in the repo. `score.py` counts: bug **in view** = its line on the reading list or named by a finding; else **escape**. Report reading load + escapes together. Rules fixed before running.

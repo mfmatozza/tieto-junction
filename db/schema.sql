@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS pull_requests (
     branch_name TEXT NOT NULL,
     commit_sha TEXT NOT NULL,
     review_route TEXT NOT NULL DEFAULT 'full_read'
-        CHECK (review_route IN ('light_check', 'focused_read', 'full_read')),
+        CHECK (review_route IN ('light_check', 'focused_read', 'full_read', 'blocked')),
     status TEXT NOT NULL DEFAULT 'pending'
         CHECK (status IN ('pending', 'reviewed', 'signed', 'rejected')),
     changed_lines INTEGER NOT NULL DEFAULT 0 CHECK (changed_lines >= 0),
@@ -123,3 +123,37 @@ CREATE TABLE IF NOT EXISTS review_events (
 CREATE INDEX IF NOT EXISTS review_events_occurred_at_idx
     ON review_events (occurred_at DESC);
 
+
+-- Guard: existing tests run on base and branch.
+CREATE TABLE IF NOT EXISTS guard_results (
+    pull_request_id UUID NOT NULL REFERENCES pull_requests(id) ON DELETE CASCADE,
+    test_name TEXT NOT NULL,
+    base_result TEXT NOT NULL CHECK (base_result IN ('passed', 'failed', 'not_run')),
+    branch_result TEXT NOT NULL CHECK (branch_result IN ('passed', 'failed', 'not_run')),
+    verdict TEXT NOT NULL CHECK (verdict IN ('kept', 'regression', 'already_broken', 'fixed', 'unknown')),
+    PRIMARY KEY (pull_request_id, test_name)
+);
+
+-- Review Tour: ordered steps built from the evidence pack.
+CREATE TABLE IF NOT EXISTS tour_steps (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    pull_request_id UUID NOT NULL REFERENCES pull_requests(id) ON DELETE CASCADE,
+    ord INTEGER NOT NULL,
+    kind TEXT NOT NULL CHECK (kind IN ('guard', 'story', 'claim', 'refusal', 'leftovers', 'sign')),
+    claim_id UUID REFERENCES claims(id) ON DELETE CASCADE,
+    ranges JSONB NOT NULL DEFAULT '[]'::jsonb,  -- [{"path":..., "start":..., "end":..., "open": true}]
+    collapsed BOOLEAN NOT NULL DEFAULT false,
+    suggested_reviewer TEXT,
+    UNIQUE (pull_request_id, ord)
+);
+
+-- Collaborative review: one row per reviewer action on a step.
+CREATE TABLE IF NOT EXISTS step_votes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    step_id UUID NOT NULL REFERENCES tour_steps(id) ON DELETE CASCADE,
+    reviewer TEXT NOT NULL,
+    vote TEXT NOT NULL CHECK (vote IN ('ok', 'question', 'problem')),
+    note TEXT,
+    seconds_on_step INTEGER,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

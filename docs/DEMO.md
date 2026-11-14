@@ -2,20 +2,21 @@
 
 ## Hook (10 s)
 
-"AI agents now write pull requests in seconds. The hard part was never writing the code. It's deciding whether to trust it. Vouch makes the AI earn that."
+"AI agents now write a thousand lines in minutes. Nobody can review a thousand lines. So either we stop using the AI, or we merge things nobody read. Vouch is the third option."
 
 ## Click path
 
-1. **Cluster board**. Type a complaint live → it lands in the "closed generic struct crash" cluster, severity goes up, Kafka feed ticks.
-2. Open the cluster → its requirement (#2283) → the agent-written PR.
-3. **PR 2283**: claims, each tagged 🧪/📏/🤖/⚪. A claim with a fake quote is red. Reading list: the human reads only the lines without proof.
-4. **PR 2129**: AI confidence 95%, greyed out, "not used". New public API → refused → full read.
-5. **Sign 2283** as the named owner, write one residual risk → trust level of `source-generation` moves 🔴 → 🟡.
-6. **Audit**: planted bugs, caught X of Y. One escape → area drops back to 🔴.
-7. Close: "Every line of AI code traces back to a real user and forward to a named human."
+1. **Backlog**: ranked issues from real users. Click #2283 → the agent's PR.
+2. **Guard** (first screen of the tour): "Blast radius: N callers, M existing tests, M/M still pass." Nothing that worked before is broken, proved before anyone reads.
+3. **Review Tour**: "Changed 228 lines · You read N · ~4 min." Press → . Each step animates in: claim, code, evidence. Proven code folds away. Unproven lines stay open.
+4. Hit a **red step**: the AI quoted something that isn't in the issue. Caught by code, not by AI.
+5. **Collaborative**: a second laptop joins. Its avatar appears on step 3, takes the analyzer part, approves. Ask ❓ on one line → AI answers, marked "not evidence".
+6. **PR 2129**: new public API → the step can't fold, red frame, needs an explicit ✅ from a human.
+7. **Sign**: owner writes the accepted risk → trust for this area × agent moves 🔴 → 🟡.
+8. Close: "From backlog to merge, nothing broken, every line either proven or read by a person, in minutes, together."
 
 ## If something breaks
 
-- Aiven down: run on the local fixture, say the same schema runs on Aiven.
-- Model API down: show saved claims; citation and test checks are deterministic.
-- Short on time: show only steps 1, 3, 4, 5.
+- Aiven down: local fixture, same schema.
+- Model API down: saved claims; guard, checks and tour are deterministic.
+- Short on time: steps 2, 3, 5, 7.

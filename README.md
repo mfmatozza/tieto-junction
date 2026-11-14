@@ -1,6 +1,6 @@
 # Vouch
 
-**AI agents write pull requests faster than humans can read them. Vouch makes every agent-written PR earn its trust.**
+**From backlog to merge without breaking anything. Vouch turns a 1,000-line AI diff into a 5-minute guided review a team does together.**
 
 Junction 2026 · Tieto challenge "Earned Trust in AI Code" · Aiven tech challenge.
 
