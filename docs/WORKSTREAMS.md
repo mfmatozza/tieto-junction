@@ -1,4 +1,6 @@
-# Lanes: who builds what, in parallel
+# Workstreams: who builds what, in parallel
+
+Run these workstreams with the Lanes tool so the agents do not collide: see `LANES-INTEGRATION.md`.
 
 4 lanes. Each lane owns its folder and talks to the others **only through the database tables and Kafka topics** (contracts below). Nobody waits for anybody.
 

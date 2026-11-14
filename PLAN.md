@@ -1,7 +1,7 @@
 # PLAN — Vouch (Junction 2026 · Tieto "Earned Trust in AI Code" + Aiven)
 
 > ⏰ Saturday 14 Nov → submission Sunday 15 Nov. **~16 h of building + 4 h sleep.**
-> ✅ done · 🔲 to do. Top to bottom. Parallel split: `docs/LANES.md`.
+> ✅ done · 🔲 to do. Top to bottom. Parallel split: `docs/WORKSTREAMS.md`.
 
 ## 🎯 One sentence
 
@@ -32,6 +32,7 @@
 | 5 | **Anthropic API key** | 🔲 | Claude writes the claims |
 | 6 | **GitHub token** | ✅ (`gh` logged in) | pull issues |
 | 7 | Python 3.12, Node 24, git | ✅ | |
+| 8 | **Lanes** (`~/Desktop/lanes`, build once) + one laptop running `lanes server` | 🔲 | teammates' agents don't collide + per-agent provenance. `docs/LANES-INTEGRATION.md` |
 | — | Embeddings: `fastembed` (local, 384 dims) | — | no extra API key |
 | — | OpenSearch | ❌ skipped | Postgres covers it |
 
@@ -53,7 +54,7 @@ Details: `docs/AIVEN.md`.
 
 ## 🏆 Why we beat the public competitor
 
-`JesseSaarinen/tieto-trust-review` = strong CLI, Markdown output, no UI, no DB, no users. We win on: **real users in the loop · live dashboard · earned-autonomy levels 🔴🟡🟢 · Aiven event stream.** Don't copy his code, text or numbers.
+`JesseSaarinen/tieto-trust-review` = strong CLI, Markdown output, no UI, no DB, no users. We win on: **real users in the loop · live dashboard · earned-autonomy levels 🔴🟡🟢 per area AND per agent (via Lanes) · Aiven event stream.** Don't copy his code, text or numbers.
 
 ## ⏱️ Build order
 
@@ -61,15 +62,17 @@ Details: `docs/AIVEN.md`.
 |---|---|---|---|---|
 | 0 | Paste official briefs into `docs/BRIEF.md`, `docs/AIVEN.md` | 10 min | text is in | 🔲 |
 | 1 | Infra table above: Aiven ×2–3, .NET 8, keys in `.env`; run `db/schema.sql` + `db/seed.sql` | 45 min | `psql` shows 4 PRs | 🔲 |
+| 1b | Lanes level 1: `lanes init` here, server + invites, everyone on Claude Code | 30 min | `lanes app` shows every teammate | 🔲 |
 | 2 | Clone Tieto repo next to this one, run tests on `ju26-issue-2283` | 45 min | tests pass locally | 🔲 |
 | 3 | **Prove** (lane B): claims → checks → tests → route | 4 h | packs for 2283 + 2129 differ | 🔲 |
 | 4 | **Dashboard** (lane C) | 3 h | clickable end to end | 🔲 |
 | 5 | **Listen** (lane A): issues → embed → cluster → severity, live complaint box, Kafka feed | 2.5 h | complaint appears live in a cluster | 🔲 |
+| 5b | Lanes level 2: read `Lanes-Agent`/`Lanes-Task` trailers → contributors per line, trust per area × agent | 1.5 h | PR page shows who wrote what | 🔲 |
 | 6 | **Measure** (lane D): ~10 planted bugs, caught vs escaped | 2 h | one honest number | 🔲 |
 | 7 | Pitch: 2-min video + 3 slides + README + submit | 2 h | submitted | 🔲 |
 | — | Sleep | 4 h | | 🔲 |
 
-**Behind schedule? Cut 6, then shrink 5 to "seeded clusters". Never cut 3, 4, 7.**
+**Behind schedule? Cut 6, then 5b, then shrink 5 to "seeded clusters". Never cut 3, 4, 7.**
 
 ## 🧱 Stack
 
@@ -80,7 +83,8 @@ Python 3.12 · FastAPI · one HTML page (no build step) · `psycopg` · `conflue
 ```
 PLAN.md               ← you are here
 README.md             ← pitch for judges
-docs/LANES.md         ← parallel split: who builds what
+docs/WORKSTREAMS.md   ← parallel split: who builds what
+docs/LANES-INTEGRATION.md ← build with Lanes + Vouch reads Lanes provenance
 docs/AIVEN.md         ← infra + Kafka topics
 docs/BRIEF.md         ← working brief (paste official text)
 docs/INSPIRATION.md   ← Vector → Vouch mapping

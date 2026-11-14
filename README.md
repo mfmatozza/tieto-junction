@@ -12,4 +12,4 @@ Junction 2026 · Tieto challenge "Earned Trust in AI Code" · Aiven tech challen
 
 > The AI's confidence is displayed and ignored. Only verified evidence changes what a human must read.
 
-Status: building. Plan: `PLAN.md`. Parallel split: `docs/LANES.md`.
+Status: building. Plan: `PLAN.md`. Parallel split: `docs/WORKSTREAMS.md`.

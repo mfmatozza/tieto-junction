@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS pull_requests (
     lines_to_read INTEGER NOT NULL DEFAULT 0 CHECK (lines_to_read >= 0),
     review_cost_usd NUMERIC(10, 4),
     review_duration_seconds INTEGER,
+    -- Lanes provenance: [{"agent":"claude-code","human":"ana","task":"fix 2283","lines":[[10,42]]}]
+    contributors JSONB NOT NULL DEFAULT '[]'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE (project_id, branch_name, commit_sha)
 );
@@ -72,13 +74,14 @@ CREATE TABLE IF NOT EXISTS signoffs (
 CREATE TABLE IF NOT EXISTS trust_ledger (
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     code_area TEXT NOT NULL,
+    agent TEXT NOT NULL DEFAULT 'unknown',  -- from the Lanes-Agent trailer; trust is earned per area AND per agent
     level TEXT NOT NULL DEFAULT 'full_read'
         CHECK (level IN ('light_check', 'focused_read', 'full_read')),
     clean_signoffs INTEGER NOT NULL DEFAULT 0 CHECK (clean_signoffs >= 0),
     escaped_bugs INTEGER NOT NULL DEFAULT 0 CHECK (escaped_bugs >= 0),
     false_alarms INTEGER NOT NULL DEFAULT 0 CHECK (false_alarms >= 0),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    PRIMARY KEY (project_id, code_area)
+    PRIMARY KEY (project_id, code_area, agent)
 );
 
 -- Vector part: similar feedback grouped into one cluster with a severity score.

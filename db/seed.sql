@@ -30,4 +30,4 @@ VALUES
     ('00000000-0000-0000-0000-000000000001', 'source-generation'),
     ('00000000-0000-0000-0000-000000000001', 'analyzers'),
     ('00000000-0000-0000-0000-000000000001', 'serialization-contracts')
-ON CONFLICT (project_id, code_area) DO NOTHING;
+ON CONFLICT (project_id, code_area, agent) DO NOTHING;
