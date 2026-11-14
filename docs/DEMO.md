@@ -2,11 +2,11 @@
 
 ## Hook (10 s)
 
-"Vector showed AI can turn user complaints into pull requests. The hard part was never writing the code. It's deciding whether to trust it. Vouch makes the AI earn that."
+"AI agents now write pull requests in seconds. The hard part was never writing the code. It's deciding whether to trust it. Vouch makes the AI earn that."
 
 ## Click path
 
-1. **Cluster board** (Vector moment). Type a complaint live → it lands in the "closed generic struct crash" cluster, severity goes up, Kafka feed ticks.
+1. **Cluster board**. Type a complaint live → it lands in the "closed generic struct crash" cluster, severity goes up, Kafka feed ticks.
 2. Open the cluster → its requirement (#2283) → the agent-written PR.
 3. **PR 2283**: claims, each tagged 🧪/📏/🤖/⚪. A claim with a fake quote is red. Reading list: the human reads only the lines without proof.
 4. **PR 2129**: AI confidence 95%, greyed out, "not used". New public API → refused → full read.

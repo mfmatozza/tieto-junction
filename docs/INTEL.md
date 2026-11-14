@@ -21,9 +21,6 @@ Risk · Hallucination · Transparency · Confidence · Quality · Who owns the d
 - Other active forks (code not inspected): nicholsss, ZeynelAbidin91, oliynykmax, miska-voutilainen.
 - Private repos can't be seen by anyone, so "all possible names" searched: tieto junction, tieto-junction, junction2026, junction-2026, junction26, earned trust, messagepack junction, agent pr review.
 
-## Inspiration
-- Vector (devpost vector-l89mzu, xAI hackathon; reel by @vardy.mov): X complaints → embed + cluster → severity from count/likes/retweets → developer approves → agent clones repo in sandbox → PR with test/build/lint results. Stack: Flask, Next.js, Supabase, Grok.
-
 ## Aiven
 - Tech challenge page (login): https://hackjunction.app/participate/45/tech-challenges/43 — paste into `AIVEN.md`.
 - Free tier: PostgreSQL (pgvector), Kafka, Valkey, MySQL. Idle free services get powered off.

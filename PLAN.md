@@ -5,9 +5,9 @@
 
 ## 🎯 One sentence
 
-**Vector turns user complaints into AI pull requests. Vouch is Vector with a conscience: same pipeline, but no AI change reaches merge without proof, a human signature, and a trust score it has to earn.**
+**Vouch takes what users complain about, lets AI agents fix it, and makes every AI change earn its trust: no merge without proof, a human signature, and a trust score per code area and per agent.**
 
-## 🧩 The pipeline (looks like Vector, judged like Tieto)
+## 🧩 The pipeline
 
 ```
  1 LISTEN            2 CLUSTER + RANK         3 AGENT PR            4 VOUCH                 5 SIGN + EARN
@@ -17,8 +17,8 @@
  ── Kafka ─────────────── Postgres ──────────────────────────────────── Postgres ──────────── Kafka ──
 ```
 
-- **1–3 = Vector** (Devpost vector-l89mzu). Kept almost 1:1. Feedback source = MessagePack GitHub issues + a live "post a complaint" box instead of X posts.
-- **4–5 = Tieto.** This is where the points are. ~60% of the time.
+- **1–3 = Listen.** Feedback = MessagePack GitHub issues + a live "post a complaint" box. Makes the demo feel alive.
+- **4–5 = Prove + Earn.** This is where Tieto's points are. ~60% of the time.
 - Agent in step 3: use Tieto's agent-written branches. Our own agent writing a PR live = stretch (Claude Code headless on one tiny issue).
 
 ## 🛠️ Infra you need (set up first)
@@ -50,7 +50,7 @@ Details: `docs/AIVEN.md`.
 | **Ownership** | Named human signs + writes residual risk. Can't sign without acknowledging refusals |
 | **Scale** | Cost + minutes per review; trust per code area |
 | **Self-distrust** | Planted-bug audit: "caught X of Y". Escape → area drops to 🔴 |
-| **Vector bonus** | Every requirement links back to the real users who asked for it |
+| **Traceability** | Every requirement links back to the real users who asked for it |
 
 ## 🏆 Why we beat the public competitor
 
@@ -84,10 +84,10 @@ Python 3.12 · FastAPI · one HTML page (no build step) · `psycopg` · `conflue
 PLAN.md               ← you are here
 README.md             ← pitch for judges
 docs/WORKSTREAMS.md   ← parallel split: who builds what
-docs/LANES-INTEGRATION.md ← build with Lanes + Vouch reads Lanes provenance
+docs/LANES-INTEGRATION.md ← internal: how the team builds with Lanes
+docs/ARCHITECTURE.md  ← every module, contract and rule
 docs/AIVEN.md         ← infra + Kafka topics
 docs/BRIEF.md         ← working brief (paste official text)
-docs/INSPIRATION.md   ← Vector → Vouch mapping
 docs/DEMO.md          ← 2-min click path
 docs/INTEL.md         ← sources + competitors
 docs/NAMING.md        ← name + backups

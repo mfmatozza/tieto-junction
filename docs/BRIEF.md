@@ -43,5 +43,5 @@ The pitch should show the same tool making different decisions for these four ch
 
 ## Boundary
 
-Vouch is inspired by the public Vector project, but it is not a copy. Vector collects user feedback and drives an AI coding pipeline. Vouch keeps that feedback-to-change spine and adds an evidence ledger, risk routing, human sign-off, and a trust history for AI-generated code.
+Vouch covers the whole path of an AI change: from the users who asked for it, through the evidence that it does what they asked, to the named human who accepts it, and the trust history that decides how much the next change must be read.
 
