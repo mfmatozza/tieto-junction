@@ -18,7 +18,7 @@ SWAPS = [(r">=", ">"), (r"<=", "<"), (r"==", "!="), (r"!=", "=="), (r"(?<![<>=!]
          (r" \+ ", " - "), (r" - ", " + "), (r" \* ", " / "), (r" / ", " * "), (r"\band\b", "or"), (r"\bor\b", "and"),
          (r"\bTrue\b", "False"), (r"\bFalse\b", "True"), (r"&&", "||"), (r"\|\|", "&&")]
 CODE_EXT = (".py", ".js", ".ts", ".jsx", ".tsx", ".mjs", ".cjs", ".go", ".java", ".kt", ".rs", ".cs")
-MAX_MUTANTS = 12
+MAX_MUTANTS = 16
 BUDGET_S = 300
 
 
@@ -32,8 +32,7 @@ def mutants(line: str) -> list[str]:
         m = re.search(pat, code)
         if m:
             out.append(line[:m.start()] + rep + line[m.end():])
-    num = re.search(r"(?<![\w.])(\d+(?:\.\d+)?)(?![\w.])", code)
-    if num:
+    for num in re.finditer(r"(?<![\w.])(\d+(?:\.\d+)?)(?![\w.])", code):  # every constant on its own, like standard mutation tools
         v = num[1]
         bumped = str(int(v) + 1) if "." not in v else f"{float(v) + 1:g}"
         out.append(line[:num.start()] + bumped + line[num.end():])
@@ -42,7 +41,7 @@ def mutants(line: str) -> list[str]:
         if m != line and m not in seen:
             seen.add(m)
             uniq.append(m)
-    return uniq[:3]
+    return uniq[:6]
 
 
 def check(repo: Path, head: str, targets: dict[str, list[int]], head_results: dict[str, str]) -> dict:
@@ -83,6 +82,8 @@ def check(repo: Path, head: str, targets: dict[str, list[int]], head_results: di
 
 if __name__ == "__main__":
     assert mutants("    return 0.0 if amount >= 50 else 4.90")[0] == "    return 0.0 if amount > 50 else 4.90"
+    vip = mutants('    rates = {"WELCOME10": 0.10, "VIP20": 0.02, "VIP30": 0.30}')
+    assert any('"VIP20": 1.02' in m for m in vip) and len(vip) == 3, vip  # each constant mutated separately
     assert "    return round(amount * 0.95, 2) if item_count >= 10 else amount" in mutants("    return round(amount * 0.95, 2) if item_count > 10 else amount")
     assert mutants('    """A docstring line"""') == [] and mutants("# comment") == []
     print("ok:", mutants("    return round(amount * 0.95, 2) if item_count > 10 else amount"))

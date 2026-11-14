@@ -287,7 +287,14 @@ async function showGh(repo, quiet) {
   if (!quiet) $("#view").innerHTML = `<div class="skel" style="height:160px;border-radius:14px"></div>`;
   let d;
   try { d = await api(`/api/gh/${repo}/pulls`); }
-  catch (e) { $("#view").innerHTML = `<div class="err">Could not load pull requests from GitHub. ${esc(e.message)}</div>`; return; }
+  catch (e) {
+    if (quiet) {  // a background refresh failed: keep what is on screen and try again shortly
+      ghTimer = setTimeout(() => { if (location.hash === "#/gh/" + repo) showGh(repo, true); }, 4000);
+      return;
+    }
+    $("#view").innerHTML = `<div class="err">Could not load pull requests from GitHub. ${esc(e.message)} <a href="#/gh/${esc(repo)}" onclick="showGh('${esc(repo)}');return false">Try again</a></div>`;
+    return;
+  }
   const open = d.pulls.filter((p) => p.state === "open"), done = d.pulls.filter((p) => p.state !== "open");
   const row = (p) => {
     const v = p.vouch, rv = p.review || {}, g = v && v.guard;
