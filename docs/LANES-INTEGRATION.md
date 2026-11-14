@@ -1,4 +1,4 @@
-# Lanes × Vouch (internal, not for the pitch)
+# Lanes × Vouch (approved by the Junction organiser: pitch it as the implement step)
 
 **Lanes lets many people's AI agents write one codebase together. Vouch decides how much of what they wrote a human must read.** Lanes is our own tool (`~/Desktop/lanes`, Apache-2.0, private beta). Declare it in the submission as an existing open-source tool we built before the event.
 
@@ -51,7 +51,7 @@ No trailers (like Tieto's `ju26` branches)? Agent = `unknown`, so trust starts a
 4. Vouch shows the claims split by agent, each with its own evidence and its own trust level.
 5. Owner signs → only that agent's trust in that code area goes up.
 
-Pitch: this is just a Vouch feature ("trust per agent"). Vouch reads standard commit trailers; Lanes is how we produce them. Lanes is not part of the pitch.
+Pitch: Lanes optimises the first half (backlog → parallel agent implementation, no collisions); Vouch the second half (review). Organiser approved using it (14 Nov). Declare it as pre-existing.
 
 ## Limits
 

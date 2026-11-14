@@ -51,9 +51,9 @@
 
 | # | What | Status |
 |---|---|---|
-| 1 | Aiven PostgreSQL + pgvector | 🔲 |
-| 2 | Aiven Kafka (`ca.pem`) | 🔲 |
-| 3 | **Aiven Valkey**, now **needed** (live presence for collaborative review) | 🔲 |
+| 1 | Aiven PostgreSQL + pgvector | ✅ review_events |
+| 2 | Aiven Kafka (`ca.pem`) | ✅ `vouch-kafka` free, topic `review.events` |
+| 3 | **Aiven Valkey** (live presence) | ✅ `vouch-valkey` free, keys TTL 15 s |
 | 4 | .NET 8 SDK | ✅ 8.0.428 |
 | 5 | Anthropic API key in `.env` | ✅ tested |
 | 6 | Aiven MCP in Claude Code | ✅ added, restart Claude Code to load |
@@ -79,13 +79,13 @@
 
 | # | Block | Time | Done when… | Status |
 |---|---|---|---|---|
-| 1 | Aiven PG + Kafka + Valkey, `.env`, schema + seed | 45 min | tables exist | 🔲 |
-| 2 | Clone Tieto repo, run 2283 tests on .NET 8 | 30 min | tests pass | 🔲 |
-| 3 | **Prove**: diff → claims → checks → risk → route | 3 h | evidence pack for 2283 + 2129 | 🔲 |
-| 4 | **Guard**: touched symbols → existing tests → base vs branch | 2 h | "37/37 still pass" for 2283 | 🔲 |
-| 5 | **Review Tour** UI with animation | 3.5 h | 2283 tour plays end to end | 🔲 |
-| 6 | **Collaborative**: split list, presence, live ✅/❓ | 2 h | 2 browsers review together | 🔲 |
-| 7 | Backlog board: seeded ranked issues + live "add issue" | 1 h | issue → PR → tour link | 🔲 |
+| 1 | Aiven PG + Kafka + Valkey, `.env`, schema + seed | 45 min | tables exist | ✅ PG + Kafka + Valkey live |
+| 2 | Clone Tieto repo, run 2283 tests on .NET 8 | 30 min | tests pass | ✅ |
+| 3 | **Prove**: diff → claims → checks → risk → route | 3 h | evidence pack for 2283 + 2129 | ✅ packs 2129 2234 2283 2297 |
+| 4 | **Guard**: touched symbols → existing tests → base vs branch | 2 h | "37/37 still pass" for 2283 | ✅ 167/167 kept |
+| 5 | **Review Tour** UI with animation | 3.5 h | 2283 tour plays end to end | ✅ |
+| 6 | **Collaborative**: split list, presence, live ✅/❓ | 2 h | 2 browsers review together | ✅ SSE + presence |
+| 7 | Backlog board: seeded ranked issues + live "add issue" | 1 h | issue → PR → tour link | 🟡 PR list only, no "add issue" |
 | 8 | Measure: planted bugs | 1.5 h | one honest number | 🔲 |
 | 9 | Pitch: video + slides + submit | 2 h | submitted | 🔲 |
 | — | Sleep | 4 h | | 🔲 |
@@ -96,6 +96,6 @@
 
 The public competitor is a CLI that prints Markdown. Ours: **a guarded, guided, shared review that a team finishes in minutes**, with proof nothing broke, on a live Aiven backend.
 
-## ▶️ NEXT ACTION (5 min)
+## ▶️ NEXT ACTION
 
-Create the 3 Aiven services (Postgres, Kafka, Valkey) in the Aiven console and paste their URIs into `.env`.
+Block 8: plant ~10 bugs on copies of ju26 branches, run `vouch.review` on each, count caught vs escaped.

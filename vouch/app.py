@@ -35,6 +35,72 @@ def pg():
     return _pg
 
 
+_kafka = _kv = None
+TOPIC = "review.events"
+
+
+def kafka():
+    """Producer for Aiven Kafka (SASL). False = not configured or unreachable, don't retry on every vote."""
+    global _kafka
+    if _kafka is None:
+        _kafka = False
+        if os.environ.get("AIVEN_KAFKA_PASSWORD"):
+            try:
+                from kafka import KafkaProducer
+                from kafka.admin import KafkaAdminClient, NewTopic
+                conf = dict(bootstrap_servers=os.environ["AIVEN_KAFKA_BOOTSTRAP"], security_protocol="SASL_SSL",
+                            sasl_mechanism="SCRAM-SHA-256", sasl_plain_username=os.environ.get("AIVEN_KAFKA_USER", "avnadmin"),
+                            sasl_plain_password=os.environ["AIVEN_KAFKA_PASSWORD"],
+                            ssl_cafile=str(ROOT / os.environ.get("AIVEN_KAFKA_CA_PEM", "ca.pem")))
+                try:
+                    KafkaAdminClient(**conf).create_topics([NewTopic(TOPIC, 1, 2)])
+                except Exception:
+                    pass  # already exists
+                _kafka = KafkaProducer(**conf, value_serializer=lambda v: json.dumps(v).encode())
+            except Exception as e:
+                print("Kafka off:", e)
+    return _kafka
+
+
+def kv():
+    """Aiven Valkey for live presence. False = use the in-memory dict."""
+    global _kv
+    if _kv is None:
+        _kv = False
+        if os.environ.get("AIVEN_VALKEY_URL"):
+            try:
+                import redis
+                _kv = redis.Redis.from_url(os.environ["AIVEN_VALKEY_URL"], decode_responses=True)
+                _kv.ping()
+            except Exception as e:
+                print("Valkey off:", e)
+                _kv = False
+    return _kv
+
+
+def set_presence(pr: str, user: str, step: str) -> str | None:
+    """Returns the user's previous step. Valkey key expires after 15 s = user left."""
+    if kv():
+        try:
+            return kv().set(f"presence:{pr}:{user}", step, ex=15, get=True)
+        except Exception:
+            pass
+    old = presence.setdefault(pr, {}).get(user)
+    presence[pr][user] = (step, time.time())
+    return old[0] if old else None
+
+
+def get_presence(pr: str) -> dict[str, str]:
+    if kv():
+        try:
+            keys = list(kv().scan_iter(f"presence:{pr}:*"))
+            return {k.split(":", 2)[2]: s for k, s in zip(keys, kv().mget(keys) if keys else []) if s}
+        except Exception:
+            pass
+    now = time.time()
+    return {u: s for u, (s, t) in presence.get(pr, {}).items() if now - t < 15}
+
+
 def load_events() -> list[dict]:
     if not LOG.exists():
         return []
@@ -56,6 +122,12 @@ def record(ev: dict) -> None:
                          (ev["type"], json.dumps(ev)))
     except Exception:
         pass  # the local log is the fallback; a DB hiccup must not lose a reviewer's vote
+    try:
+        if kafka():
+            kafka().send(TOPIC, {"type": ev["type"], "id": ev["pr"],
+                                 "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(ev["at"])), "data": ev})
+    except Exception:
+        pass
     notify(ev["pr"])
 
 
@@ -85,8 +157,7 @@ def state(pr: str, steps: list[dict]) -> dict:
             signoff = ev
         elif ev["type"] == "reset":
             votes, asks, signoff = {}, [], None
-    now = time.time()
-    here = {u: s for u, (s, t) in presence.get(pr, {}).items() if now - t < 15}
+    here = get_presence(pr)
     status = {}
     for s in steps:
         vs = list(votes.get(s["id"], {}).values())
@@ -152,9 +223,7 @@ class Here(BaseModel):
 
 @app.post("/api/prs/{pr}/presence")
 def here(pr: str, h: Here):
-    old = presence.setdefault(pr, {}).get(h.user)
-    presence[pr][h.user] = (h.step, time.time())
-    if not old or old[0] != h.step:
+    if set_presence(pr, h.user, h.step) != h.step:
         notify(pr)
     return {"ok": True}
 
