@@ -71,6 +71,7 @@ h1 { font-size: 30px; letter-spacing: -.025em; font-weight: 600; }
 .chips2 { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .flag:not(.danger):not(.clean):not(.warn) { background: rgba(15,31,77,.05); color: var(--muted); }
 .flag.warn { background: var(--amber-soft); color: var(--amber); }
+.flag.lanes { background: rgba(15,31,77,.07); color: var(--navy); }
 .running { display: inline-flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--muted); }
 .spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line-2); border-top-color: var(--navy); animation: rot .8s linear infinite; }
 @keyframes rot { to { transform: rotate(360deg); } }
@@ -301,7 +302,9 @@ async function showGh(repo, quiet) {
         <a class="btn ${rv.signoff ? "btn-ghost" : "btn-primary"}" href="/review#/pr/${esc(repo.replace("/", "~"))}~${p.number}">${rv.signoff ? "Open" : rv.done ? "Continue review" : "Start EasyReview"}<i class="ph ph-arrow-right"></i></a>`;
       detail = `<div class="chips2">
         <span class="flag ${g && g.regression ? "danger" : g && g.ran ? "clean" : ""}"><i class="ph ${g && g.regression ? "ph-x-circle" : "ph-shield-check"}"></i>${!g || !g.ran ? "Tests did not run: read everything" : g.regression ? `Blocked: ${g.regression} existing test${g.regression > 1 ? "s" : ""} broke` : `${g.kept}/${g.existing} existing tests still pass`}</span>
+        ${v.agent && v.agent !== "unknown" ? `<span class="flag lanes"><i class="ph ph-road-horizon"></i>Written by ${esc(v.agent)} through Lanes</span>` : `<span class="flag">Agent unknown: no Lanes provenance</span>`}
         ${v.stats ? `<span class="flag">${fmtn(v.stats.lines_to_read)} of ${fmtn(v.stats.changed_lines)} lines to read</span>` : ""}
+        ${v.mutation && v.mutation.ran ? `<span class="flag ${v.mutation.survived ? "warn" : "clean"}">Mutation proof: tests caught ${v.mutation.killed} of ${v.mutation.tried} deliberate breaks</span>` : ""}
         ${rv.total ? `<span class="flag">${rv.done}/${rv.total} steps approved</span>` : ""}
         ${p.stale ? `<span class="flag danger">New commits since the check: run again</span>` : ""}
         ${(p.flags || []).filter((f) => !/regression|existing tests now fail/.test(f.text)).map((f) => `<span class="flag ${f.level}">${esc(f.text)}</span>`).join("")}

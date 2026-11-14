@@ -19,7 +19,7 @@ from pathlib import Path
 import httpx
 
 import vouch  # noqa: F401  (loads .env)
-from vouch import runners
+from vouch import mutate, runners
 from vouch.review import analyse, parse_diff
 
 WORK = Path(os.environ.get("VOUCH_WORK", "C:/vw")) / "gh"
@@ -82,9 +82,10 @@ def get(pid: str) -> dict | None:
 
 
 def statuses(repo: str) -> dict[int, dict]:
-    rows = q("SELECT number, status, error, pack->'stats', pack->'guard', pack->>'route', pack->>'head' FROM packs WHERE repo = %s",
-             (repo,), "all")
-    return {r[0]: {"status": r[1], "error": r[2], "stats": r[3], "guard": r[4], "route": r[5], "head": r[6]} for r in rows}
+    rows = q("SELECT number, status, error, pack->'stats', pack->'guard', pack->>'route', pack->>'head', pack->>'agent', pack->'mutation' "
+             "FROM packs WHERE repo = %s", (repo,), "all")
+    return {r[0]: {"status": r[1], "error": r[2], "stats": r[3], "guard": r[4], "route": r[5], "head": r[6], "agent": r[7], "mutation": r[8]}
+            for r in rows}
 
 
 # ---------------------------------------------------------------- the review of one pull request
@@ -92,6 +93,25 @@ def statuses(repo: str) -> dict[int, dict]:
 def git(repo_dir: Path, *args: str) -> str:
     return subprocess.run(["git", "-C", str(repo_dir), "-c", "core.longpaths=true", *args], capture_output=True, text=True,
                           encoding="utf-8", errors="replace", check=True).stdout
+
+
+def lanes_agents(d: Path, head: str) -> str:
+    """Which coding agents wrote this change, from Lanes provenance. A `lanes pr` squash names the checkpoint range
+    on lanes/main; every checkpoint there carries `Lanes-Agent`. No trailer anywhere = unknown, trusted for nothing."""
+    import re
+    direct = git(d, "log", "-1", "--format=%(trailers:key=Lanes-Agent,valueonly)", head).strip()
+    if direct:
+        return direct
+    m = re.search(r"Lanes checkpoint commits on (\S+) \(([0-9a-f]{7,40})\.\.([0-9a-f]{7,40})\)", git(d, "log", "-1", "--format=%B", head))
+    if not m:
+        return ""
+    try:
+        git(d, "fetch", "-q", "origin", m[1])
+        found = git(d, "log", "--format=%(trailers:key=Lanes-Agent,valueonly)", f"{m[2]}^..{m[3]}")
+    except subprocess.CalledProcessError:
+        return ""
+    agents = sorted({re.sub(r"\s*\(session.*", "", a).strip() for a in found.splitlines() if a.strip()})
+    return ", ".join(agents)
 
 
 def review_pr(repo: str, number: int, use_ai: bool = True) -> dict:
@@ -104,7 +124,7 @@ def review_pr(repo: str, number: int, use_ai: bool = True) -> dict:
     git(d, "fetch", "-q", "origin", base, f"pull/{number}/head")  # forks included: GitHub serves every PR head here
     base = git(d, "merge-base", base, head).strip()                 # diff from where the branch started
     files = parse_diff(git(d, "diff", "-U3", base, head))
-    agent = git(d, "log", "-1", "--format=%(trailers:key=Lanes-Agent,valueonly)", head).strip()
+    agent = lanes_agents(d, head)
     req = f"# {pr['title']}\n\n{pr.get('body') or ''}"
 
     v = runners.guard_repo(d, base, head)
@@ -113,7 +133,8 @@ def review_pr(repo: str, number: int, use_ai: bool = True) -> dict:
          if v["ran"] else {"ran": False, "why": v.get("why", "Tests did not run."), "projects": v["languages"]})
 
     p = analyse(pack_id(repo, number), pr["head"]["ref"], base, head, pr["user"]["login"], agent, files, req, pr["title"],
-                f"#{number}", pr["html_url"], g, use_ai=use_ai)
+                f"#{number}", pr["html_url"], g, use_ai=use_ai,
+                mutation=lambda targets: mutate.check(d, head, targets, g.get("head_results") or {}))
     p["github"] = {"repo": repo, "number": number, "url": pr["html_url"], "head_sha": pr["head"]["sha"],
                    "base_ref": pr["base"]["ref"], "head_ref": pr["head"]["ref"]}
     return p

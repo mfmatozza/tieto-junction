@@ -92,12 +92,14 @@ def run_python(repo: Path) -> dict[str, str] | None:
     reqs = [f for f in ("requirements.txt", "requirements-dev.txt", "requirements_dev.txt") if (repo / f).exists()]
     if reqs or (repo / "pyproject.toml").exists():  # fresh clone: its own venv, so a PR's dependencies never touch ours
         venv = repo / ".vouch-venv"
-        if _run([py, "-m", "venv", str(venv)], repo) is None:
-            return None
-        py = str(venv / ("Scripts/python.exe" if os.name == "nt" else "bin/python"))
-        _run([py, "-m", "pip", "install", "-q", "pytest", *sum((["-r", r] for r in reqs), [])], repo)
-        if (repo / "pyproject.toml").exists():
-            _run([py, "-m", "pip", "install", "-q", "-e", "."], repo)  # best effort: not every pyproject is installable
+        vpy = venv / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+        if not vpy.exists():  # first run in this checkout: build it once (mutants reuse it)
+            if _run([py, "-m", "venv", str(venv)], repo) is None:
+                return None
+            _run([str(vpy), "-m", "pip", "install", "-q", "pytest", *sum((["-r", r] for r in reqs), [])], repo)
+            if (repo / "pyproject.toml").exists():
+                _run([str(vpy), "-m", "pip", "install", "-q", "-e", "."], repo)  # best effort: not every pyproject is installable
+        py = str(vpy)
     with tempfile.TemporaryDirectory() as d:
         xml = Path(d) / "r.xml"
         if _run([py, "-m", "pytest", "-q", "-p", "no:cacheprovider", f"--junitxml={xml}"], repo) is None:

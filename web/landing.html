@@ -490,6 +490,14 @@ html { color-scheme: light; }
       <div><b>File leases</b><span>expire on their own, so a crashed agent never blocks the team</span></div>
       <div><b>Any agent</b><span>Claude Code, Codex, Gemini and more, through one hook</span></div>
     </div>
+    <div class="e2e reveal">
+      <h3>Seen live</h3>
+      <p>Two Claude Code agents, two developers, the same file, started at the same second. Lanes made one wait 3.5 s, then both changes landed cleanly on top of each other, each in its own pull request with the agent recorded.</p>
+      <div class="e2e-rows">
+        <a href="https://github.com/mfmatozza/vouch-demo/pull/4" target="_blank" rel="noopener"><span class="tag ok">Lanes</span><b>#4 Add a GIFT25 discount code</b><span>Ana's agent held <code>pricing.py</code> first.</span></a>
+        <a href="https://github.com/mfmatozza/vouch-demo/pull/5" target="_blank" rel="noopener"><span class="tag ok">Lanes</span><b>#5 Free shipping for orders of 5 or more items</b><span>Bea's agent waited, then edited on top: "someone else added a GIFT25 discount code. Both sets of changes are in the files now."</span></a>
+      </div>
+    </div>
     <p class="inhouse reveal"><a href="https://github.com/mfmatozza/lanes" target="_blank" rel="noopener"><i class="ph ph-github-logo"></i>Read the Lanes source and its benchmarks</a><span>Built in house</span></p>
   </div>
 </section>
@@ -643,13 +651,13 @@ html { color-scheme: light; }
     <p class="lead reveal">The AI proposes. Plain code decides. A person signs. These are the exact rules, the same on every run.</p>
     <div class="rules reveal">
       <div><b>Guardrail</b><p>Run the existing tests on the base and on the branch. Passed before and failed after: <em>blocked</em>. Tests could not run: <em>read everything</em>.</p></div>
-      <div><b>Checkpoint</b><p>Each AI claim must pass 4 checks: the cited lines were added by this change, the quote is in the issue word for word, the named test exists, and it passed. All 4: <em>proven</em>. One of the first 3 fails: <em>disputed</em>. Test not passed: <em>unproven</em>.</p></div>
+      <div><b>Checkpoint</b><p>Each AI claim must pass 4 checks: the cited lines were added by this change, the quote is in the issue word for word, the named test exists, and it passed. All 4: <em>proven</em>. One of the first 3 fails: <em>disputed</em>. Test not passed: <em>unproven</em>. The AI's confidence score is never used.</p></div>
       <div><b>Reading list</b><p>Start with every meaningful added line. Remove only lines cited by a proven claim. Put back anything that touches public API, analyzer warnings, unsafe code or dependencies, always.</p></div>
-      <div><b>Confidence</b><p>The AI's confidence score is shown, crossed out, and never used.</p></div>
+      <div><b>Mutation proof</b><p>Vouch breaks every proven line on purpose (<code>&gt;</code> to <code>&gt;=</code>, <code>+</code> to <code>-</code>, a constant changed) and runs the tests again. If no test fails, the tests do not pin that line down: <em>back on the reading list</em>.</p></div>
       <div><b>Sign-off</b><p>Refused by code unless every step is approved by someone, nothing regressed, and the owner wrote the risk they accept. Then the decision goes to GitHub.</p></div>
       <div><b>Fail closed</b><p>If any part does not finish (tests, AI, a check), nothing is folded away. You see more code, never less.</p></div>
     </div>
-    <p class="proof-note reveal">Known limit today: a passing test proves the claim's test ran green, not yet that it executes those exact lines. Coverage proof is next on the roadmap.</p>
+    <p class="proof-note reveal">Known limit: mutation proof shows a test pins a line down, not that it expects the right value. If an agent writes a wrong function and a test that agrees with it, both are consistent. The benchmark below measures exactly this.</p>
   </div>
 </section>
 
@@ -722,6 +730,7 @@ html { color-scheme: light; }
       <div class="cmp-row" role="row"><span role="rowheader">What you get</span><span>Comments on the diff</span><span class="us">A gate: blocked, proven, or open for a person</span></div>
       <div class="cmp-row" role="row"><span role="rowheader">Runs your existing tests before and after</span><span>Not usually</span><span class="us">Every change, base and branch</span></div>
       <div class="cmp-row" role="row"><span role="rowheader">Who decides what is safe</span><span>The model's opinion</span><span class="us">Code: cited lines, quotes and test results</span></div>
+      <div class="cmp-row" role="row"><span role="rowheader">Proves the tests actually check the code</span><span>No</span><span class="us">Breaks the code on purpose; tests must notice</span></div>
       <div class="cmp-row" role="row"><span role="rowheader">What a person reads</span><span>The whole diff, plus comments</span><span class="us">Only what is not proven</span></div>
       <div class="cmp-row" role="row"><span role="rowheader">A made-up finding</span><span>Looks like any other comment</span><span class="us">Turns red and can never fold away</span></div>
       <div class="cmp-row" role="row"><span role="rowheader">Who approves</span><span>Whoever clicks approve</span><span class="us">A named owner who writes the risk they accept</span></div>
@@ -771,8 +780,8 @@ html { color-scheme: light; }
     <h2 class="h2 reveal">Where we are.</h2>
     <p class="lead reveal">An early, working version. Everything under "Working today" runs on this site and in the demo repository. The rest is what we are building next.</p>
     <div class="road-map reveal">
-      <div><h3>Working today</h3><ul><li>Guardrail for .NET, Python, JavaScript and TypeScript</li><li>AI claims checked by code</li><li>EasyReview with live team review</li><li>Lanes agent provenance</li><li>Run Vouch on any pull request from the website</li><li>GitHub commit status, review comment and merge on sign-off</li><li>Aiven Kafka job queue, Postgres records, Valkey presence</li></ul></div>
-      <div><h3>Next</h3><ul><li>Coverage proof: fold only lines the named test actually runs</li><li>One-click install as a GitHub App, so checks start on every new pull request</li><li>Go, Java, Kotlin and Rust runners tested end to end on real repositories</li><li>Slack and Teams alerts from the Kafka stream</li><li>Published planted-bug benchmark</li></ul></div>
+      <div><h3>Working today</h3><ul><li>Guardrail for .NET, Python, JavaScript and TypeScript</li><li>AI claims checked by code</li><li>EasyReview with live team review</li><li>Lanes agent provenance</li><li>Mutation proof: tests must catch deliberate breaks of the code they prove</li><li>Run Vouch on any pull request from the website</li><li>GitHub commit status, review comment and merge on sign-off</li><li>Aiven Kafka job queue, Postgres records, Valkey presence</li></ul></div>
+      <div><h3>Next</h3><ul><li>Mutation proof for .NET (today it runs for Python, JavaScript and TypeScript)</li><li>A second AI that checks each test against the issue, as evidence for the reviewer, never as proof</li><li>One-click install as a GitHub App, so checks start on every new pull request</li><li>Go, Java, Kotlin and Rust runners tested end to end on real repositories</li><li>Slack and Teams alerts from the Kafka stream</li><li>Published planted-bug benchmark</li></ul></div>
       <div><h3>Later</h3><ul><li>Ruby, PHP and Swift</li><li>GitLab CI and Azure DevOps</li><li>Trust that grows per agent and per code area</li><li>Self-hosted install</li></ul></div>
     </div>
   </div>
@@ -783,7 +792,7 @@ html { color-scheme: light; }
     <h2 class="h2 reveal" style="margin:0 auto;text-align:center">Questions reviewers ask</h2>
     <div class="faq">
       <details><summary>Isn't this just AI deciding what humans review?<i class="ph ph-plus"></i></summary><p>No. The AI only proposes a map of the change. Code decides what folds: the cited lines must exist, the named test must have passed on the branch, and no risk rule may apply. The AI's confidence is never used. Next, we will also require coverage proof that the named test actually runs those lines. A named person signs every merge.</p></details>
-      <details><summary>What if the tests are weak?<i class="ph ph-plus"></i></summary><p>Then less folds away. Code that no passing test covers stays open, and risky areas like public API, wire formats and generated files are always shown, even when tests pass.</p></details>
+      <details><summary>What if the tests are weak?<i class="ph ph-plus"></i></summary><p>Then less folds away. Vouch breaks the proven code on purpose and re-runs the tests: if they do not notice, the line stays on your reading list. Risky areas like public API are always shown, even when every test passes.</p></details>
       <details><summary>Who built Lanes?<i class="ph ph-plus"></i></summary><p>We did. Lanes is built in house, like the rest of Vouch. The source is on <a class="g" href="https://github.com/mfmatozza/lanes" target="_blank" rel="noopener">GitHub</a>.</p></details>
       <details><summary>Do I need Lanes to use Vouch?<i class="ph ph-plus"></i></summary><p>No. Without Lanes, every change counts as written by an unknown agent, so nothing is trusted by default. With Lanes, agents work in parallel without collisions and trust is earned per agent and per area of the code.</p></details>
       <details><summary>Why Aiven?<i class="ph ph-plus"></i></summary><p>A review is shared and live. Postgres keeps the record, Kafka lets other tools react to each vote and sign-off, and Valkey holds who is reviewing right now. Aiven runs all three as managed services.</p></details>

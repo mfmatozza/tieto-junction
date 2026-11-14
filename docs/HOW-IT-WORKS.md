@@ -67,8 +67,13 @@ No step uses the AI's confidence. If any part fails to run, Vouch shows **more**
   - checks 1, 2 or 3 fail → **disputed** (red, stays open)
   - all pass, including 4 → **proven**
   - 1 to 3 pass but 4 does not → **unproven** (stays open)
+- **Mutation proof (step 3b):** for every code line a *proven* claim cites, Vouch breaks the line on purpose
+  (`>` → `>=`, `+` → `-`, `and` → `or`, a constant + 1; up to 3 per line, 12 per change) and runs the tests again.
+  - a test now fails → the break was caught, the proof holds
+  - every test still passes → the tests do not pin that line down → claim becomes **unproven**, line goes back on the reading list
+  - skipped for .NET today (one suite run takes minutes); shown as "not run" in the review
 - **The confidence number:** shown, crossed out, never used.
-- **Code:** `check_claim()` and the loop after it in `vouch/review.py`.
+- **Code:** `check_claim()` and the loop after it in `vouch/review.py`; mutation proof in `vouch/mutate.py`.
 
 ## 4. Reading list: what must a person read?
 
@@ -105,7 +110,8 @@ No step uses the AI's confidence. If any part fails to run, Vouch shows **more**
 
 ---
 
-## Known limit, and the next fix
+## Known limit
 
-Today, "proven" means the named test **passed**. It does not yet prove the test **runs those lines**.
-**Next:** run the named test with code coverage, and fold only the lines it actually executes.
+Mutation proof shows a test **pins a line down**. It cannot show the test expects the **right** value:
+if an agent writes a wrong function and a test that agrees with it (VAT added as 22% of the price instead of
+price × 1.22), both are consistent and the change can still fold. The planted-bug benchmark measures exactly this.

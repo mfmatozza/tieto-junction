@@ -319,7 +319,7 @@ def review(pr: str, use_ai: bool = True, use_tests: bool = True) -> dict:
 
 
 def analyse(pr: str, branch: str, base: str, head: str, author: str, agent: str, files: list[dict], req: str, req_title: str,
-            req_key: str, req_url: str, g: dict, use_ai: bool = True, use_tests: bool = True, rerun=None) -> dict:
+            req_key: str, req_url: str, g: dict, use_ai: bool = True, use_tests: bool = True, rerun=None, mutation=None) -> dict:
     """Everything after the diff and the Guardrail run: AI claims, checks by code, risk rules, reading list, route, tour.
     Same for a Tieto branch and for any GitHub pull request."""
     missing = [] if g["ran"] else ["guard"]
@@ -356,6 +356,32 @@ def analyse(pr: str, branch: str, base: str, head: str, author: str, agent: str,
         disputed = any(not k["ok"] for k in c["checks"] if k["id"] in ("cite", "quote", "tests_exist"))
         c["status"] = "disputed" if disputed else "proven" if test_ok else "unproven"
         c["evidence"] = "test" if c["status"] == "proven" else "ai_only"
+
+    # mutation proof: a passing test must also fail when the cited code is broken, or it proves nothing about that code
+    mut = None
+    kinds = {f["path"]: f["kind"] for f in files}
+    targets = {}
+    for c in claims:
+        if c["status"] == "proven":
+            for x in c["cites"]:
+                if kinds.get(x["path"]) == "code":
+                    targets.setdefault(x["path"], set()).update(range(x["start"], x["end"] + 1))
+    if mutation and targets:
+        added_by = {f["path"]: set(added(f)) for f in files}
+        mut = mutation({p: sorted(n & added_by.get(p, set())) for p, n in targets.items()})
+        if mut.get("ran"):
+            bad = {(p, n): m for p, rows in mut["survived"].items() for n, m in rows}
+            for c in claims:
+                if c["status"] != "proven":
+                    continue
+                hit = [(x["path"], n, bad[(x["path"], n)]) for x in c["cites"] for n in range(x["start"], x["end"] + 1) if (x["path"], n) in bad]
+                if hit:
+                    p_, n_, m_ = hit[0]
+                    c["checks"].append({"id": "mutation", "ok": False, "msg": f"Breaking {p_} line {n_} (to `{m_[:70]}`) did not make any test fail. "
+                                        "The tests do not pin this code down."})
+                    c["status"], c["evidence"] = "unproven", "ai_only"
+                elif any(kinds.get(x["path"]) == "code" for x in c["cites"]):
+                    c["checks"].append({"id": "mutation", "ok": True, "msg": "Breaking the cited code made a test fail, every time."})
 
     refs = refusals(files)
     gen = generated_check(files)
@@ -394,6 +420,8 @@ def analyse(pr: str, branch: str, base: str, head: str, author: str, agent: str,
         "stats": {"files": len(files), "changed_lines": changed, "lines_to_read": to_read,
                   "minutes": max(1, round(to_read / READ_SPEED)), "minutes_full": max(1, round(changed / READ_SPEED))},
         "route": route, "missing": missing, "usage": usage, "reviewed_at": time.strftime("%Y-%m-%d %H:%M"),
+        "mutation": ({"ran": mut["ran"], "why": mut.get("why", ""), "tried": mut["tried"], "killed": mut["killed"],
+                      "survived": sum(len(v) for v in mut["survived"].values())} if mut else {"ran": False, "why": "No proven code to check."}),
     }
     pack["steps"] = tour(pack)
     return pack

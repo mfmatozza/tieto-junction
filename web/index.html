@@ -354,6 +354,9 @@ function vStory() {
   const files = P.files.filter((f) => f.kind !== "generated");
   return `<div class="kicker">The change</div><h2>What this change does</h2>
     <p class="lead" style="color:var(--text)">${esc(P.summary || "The AI gave no explanation. Read every line.")}</p>
+    ${P.agent && P.agent !== "unknown" ? `<div class="note info">Written by <b style="color:var(--text)">${esc(P.agent)}</b>, coordinated by Lanes: no other agent edited these files at the same time.</div>` : ""}
+    ${P.mutation && P.mutation.ran ? `<div class="note ${P.mutation.survived ? "warn" : "ok"}">Mutation proof: Vouch broke the proven code ${P.mutation.tried} times on purpose. The tests caught ${P.mutation.killed}.${P.mutation.survived ? ` ${P.mutation.survived} break${P.mutation.survived > 1 ? "s" : ""} went unnoticed, so ${P.mutation.survived > 1 ? "those lines are" : "that line is"} back on your reading list.` : " Every proven line is pinned down by a test."}</div>`
+      : P.mutation && P.mutation.why ? `<div class="note info">Mutation proof not run: ${esc(P.mutation.why)}</div>` : ""}
     <div class="note info">${fmt(st.changed_lines)} lines changed in ${st.files} files. Lines backed by a passing test are folded away. <b style="color:var(--text)">You read ${fmt(st.lines_to_read)}.</b></div>
     ${P.missing.length ? `<div class="note warn">Part of the review is missing: ${P.missing.map(esc).join(", ")}. Nothing was folded away for that part.</div>` : ""}
     <details class="issue"><summary><i class="ph ph-caret-right"></i>Read the original issue</summary><pre class="req">${esc(P.requirement.text)}</pre></details>
