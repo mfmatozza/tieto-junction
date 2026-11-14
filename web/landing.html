@@ -335,6 +335,51 @@ footer .sp { margin-left: auto; }
   .why-grid a + a { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); }
 }
 
+/* Lanes */
+.vs { margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.vs-col { border: 1px solid var(--line); border-radius: 16px; padding: 24px 26px; }
+.vs-col.us { border-color: var(--line-2); background: var(--bg-2); }
+.vs-col h3 { font-size: 16px; font-weight: 600; }
+.vs-col.us h3 { color: var(--green); }
+.vs-col ol { margin: 14px 0 0; padding-left: 20px; display: grid; gap: 8px; color: var(--muted); font-size: 14.5px; }
+.vs-col code, .e2e code, .rules code { font: 12.5px var(--mono); background: rgba(15,31,77,.06); padding: 1px 6px; border-radius: 5px; color: var(--text); }
+.lanes-facts { margin-top: 28px; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.lanes-facts > div { padding: 20px 20px 18px 0; display: flex; flex-direction: column; gap: 6px; }
+.lanes-facts > div + div { padding-left: 20px; border-left: 1px solid var(--line); }
+.lanes-facts b { font: 600 24px/1.1 var(--sans); letter-spacing: -.02em; }
+.lanes-facts span { color: var(--muted); font-size: 13.5px; }
+/* end to end */
+.e2e { margin-top: 40px; }
+.e2e h3 { font-size: 18px; font-weight: 600; }
+.e2e > p { color: var(--muted); font-size: 14.5px; margin-top: 4px; }
+.e2e-rows { margin-top: 16px; border-top: 1px solid var(--line); }
+.e2e-rows a { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 4px 16px; padding: 14px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+.e2e-rows a:hover b { text-decoration: underline; text-underline-offset: 3px; }
+.e2e-rows .tag { grid-row: span 2; align-self: start; justify-self: start; }
+.e2e-rows b { font-weight: 600; font-size: 15px; }
+.e2e-rows span:not(.tag) { color: var(--muted); font-size: 14px; }
+/* rules */
+.rules { margin-top: 32px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 1px solid var(--line); }
+.rules > div { padding: 20px 22px 20px 0; border-bottom: 1px solid var(--line); }
+.rules > div:not(:nth-child(3n+1)) { padding-left: 22px; border-left: 1px solid var(--line); }
+.rules b { font-size: 16px; font-weight: 600; }
+.rules p { color: var(--muted); font-size: 14px; margin-top: 6px; }
+.rules em { font-style: normal; color: var(--text); font-weight: 500; }
+@media (max-width: 980px) {
+  .vs { grid-template-columns: 1fr; }
+  .lanes-facts, .rules { grid-template-columns: 1fr 1fr; }
+  .lanes-facts > div:nth-child(3) { padding-left: 0; border-left: 0; }
+  .rules > div { padding-left: 0 !important; border-left: 0 !important; }
+  .rules > div:nth-child(even) { padding-left: 22px !important; border-left: 1px solid var(--line) !important; }
+}
+@media (max-width: 640px) {
+  .lanes-facts, .rules { grid-template-columns: 1fr; }
+  .lanes-facts > div + div { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); }
+  .rules > div:nth-child(even) { padding-left: 0 !important; border-left: 0 !important; }
+  .e2e-rows a { grid-template-columns: 1fr; }
+  .e2e-rows .tag { grid-row: auto; }
+}
+
 .reveal { opacity: 0; transform: translateY(18px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
 .reveal.in { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
@@ -380,6 +425,7 @@ html { color-scheme: light; }
       Vouch
     </a>
     <div class="links">
+      <a href="#lanes">Lanes</a>
       <a href="#how">How it works</a>
       <a href="#results">Results</a>
       <a href="#compare">Compare</a>
@@ -413,6 +459,40 @@ html { color-scheme: light; }
     </div>
   </div>
 </div>
+
+<section id="lanes" style="padding-top: 88px">
+  <div class="wrap">
+    <h2 class="h2 reveal">Stop conflicts where they start.</h2>
+    <p class="lead reveal">Most broken merges are born while agents write, not at review. When several agents edit the same codebase at once, they overwrite each other or produce conflicting branches that someone has to untangle later. Lanes prevents that at the source.</p>
+    <div class="vs reveal">
+      <div class="vs-col">
+        <h3>Without Lanes</h3>
+        <ol>
+          <li>Agent A and agent B both edit <code>TypeCollector.cs</code>.</li>
+          <li>Both open pull requests against the same lines.</li>
+          <li>The second merge conflicts, or silently undoes the first.</li>
+          <li>A person finds out at review, or in production.</li>
+        </ol>
+      </div>
+      <div class="vs-col us">
+        <h3>With Lanes</h3>
+        <ol>
+          <li>Before every edit, the agent's hook asks the Lanes server for a lease on that file.</li>
+          <li>Agent B's request waits in line, first come first served, while A holds the file.</li>
+          <li>When A is done, B gets the lease and edits on top of A's change.</li>
+          <li>Every commit carries a <code>Lanes-Agent</code> line, so Vouch knows which agent wrote what.</li>
+        </ol>
+      </div>
+    </div>
+    <div class="lanes-facts reveal">
+      <div><b>0</b><span>lost lines and no lost work across Lanes' multi-agent benchmark runs</span></div>
+      <div><b>39 to 79 ms</b><span>added to each edit at p95 (Linux, Windows, macOS)</span></div>
+      <div><b>File leases</b><span>expire on their own, so a crashed agent never blocks the team</span></div>
+      <div><b>Any agent</b><span>Claude Code, Codex, Gemini and more, through one hook</span></div>
+    </div>
+    <p class="inhouse reveal"><a href="https://github.com/mfmatozza/lanes" target="_blank" rel="noopener"><i class="ph ph-github-logo"></i>Read the Lanes source and its benchmarks</a><span>Built in house</span></p>
+  </div>
+</section>
 
 <section id="watch" style="padding-top: 72px">
   <div class="wrap">
@@ -464,6 +544,15 @@ html { color-scheme: light; }
       <div class="res-cell soon"><span class="res-k">Planted bugs caught</span><div class="res-num">Running</div><p>We are planting known bugs in copies of these changes and counting what Guardrail and Checkpoint catch. The number goes here, good or bad.</p></div>
     </div>
     <p class="proof-note reveal">4 changes is a small sample. We will add repositories and publish every run.</p>
+    <div class="e2e reveal">
+      <h3>Seen end to end on GitHub</h3>
+      <p>Three agent pull requests in our public demo repository, run from the website, checked by the worker, decided on GitHub.</p>
+      <div class="e2e-rows">
+        <a href="https://github.com/mfmatozza/vouch-demo/pull/2" target="_blank" rel="noopener"><span class="tag bad">Blocked</span><b>#2 Make shipping free only above 60 EUR</b><span>1 of 4 existing tests broke. GitHub shows <code>vouch/review</code> as failed, so it cannot merge.</span></a>
+        <a href="https://github.com/mfmatozza/vouch-demo/pull/3" target="_blank" rel="noopener"><span class="tag ok">Merged</span><b>#3 Add a 30% VIP discount code</b><span>4/4 existing tests kept, 5 steps approved, signed and squash-merged by a person. The review record is on the pull request.</span></a>
+        <a href="https://github.com/mfmatozza/vouch-demo/pull/1" target="_blank" rel="noopener"><span class="tag wait">Waiting</span><b>#1 Add a 15% student discount code</b><span>4/4 existing tests kept. Waiting for a human sign-off.</span></a>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -551,11 +640,16 @@ html { color-scheme: light; }
 <section id="decides" style="padding-top: 24px">
   <div class="wrap">
     <h2 class="h2 reveal">The AI never decides what you skip.</h2>
-    <div class="decide reveal">
-      <div><b>The AI proposes</b><p>It writes a map of the change: these lines do this, and this test proves it.</p></div>
-      <div><b>Code verifies</b><p>Lines fold only when the cited lines exist, the named test passed on the branch, and no risk rule applies. Its confidence score is never used.</p></div>
-      <div><b>A person signs</b><p>Everything unproven stays open. A named owner approves and writes down the risk they accept.</p></div>
+    <p class="lead reveal">The AI proposes. Plain code decides. A person signs. These are the exact rules, the same on every run.</p>
+    <div class="rules reveal">
+      <div><b>Guardrail</b><p>Run the existing tests on the base and on the branch. Passed before and failed after: <em>blocked</em>. Tests could not run: <em>read everything</em>.</p></div>
+      <div><b>Checkpoint</b><p>Each AI claim must pass 4 checks: the cited lines were added by this change, the quote is in the issue word for word, the named test exists, and it passed. All 4: <em>proven</em>. One of the first 3 fails: <em>disputed</em>. Test not passed: <em>unproven</em>.</p></div>
+      <div><b>Reading list</b><p>Start with every meaningful added line. Remove only lines cited by a proven claim. Put back anything that touches public API, analyzer warnings, unsafe code or dependencies, always.</p></div>
+      <div><b>Confidence</b><p>The AI's confidence score is shown, crossed out, and never used.</p></div>
+      <div><b>Sign-off</b><p>Refused by code unless every step is approved by someone, nothing regressed, and the owner wrote the risk they accept. Then the decision goes to GitHub.</p></div>
+      <div><b>Fail closed</b><p>If any part does not finish (tests, AI, a check), nothing is folded away. You see more code, never less.</p></div>
     </div>
+    <p class="proof-note reveal">Known limit today: a passing test proves the claim's test ran green, not yet that it executes those exact lines. Coverage proof is next on the roadmap.</p>
   </div>
 </section>
 
@@ -674,10 +768,11 @@ html { color-scheme: light; }
 
 <section id="roadmap" style="padding-top: 40px">
   <div class="wrap">
-    <h2 class="h2 reveal">Roadmap.</h2>
+    <h2 class="h2 reveal">Where we are.</h2>
+    <p class="lead reveal">An early, working version. Everything under "Working today" runs on this site and in the demo repository. The rest is what we are building next.</p>
     <div class="road-map reveal">
-      <div><h3>Working today</h3><ul><li>Guardrail for .NET, Python, JavaScript and TypeScript</li><li>AI claims checked by code</li><li>EasyReview with live team review</li><li>Lanes agent provenance</li><li>GitHub sign-in, live presence on Aiven Valkey, events on Aiven Kafka</li></ul></div>
-      <div><h3>Next</h3><ul><li>Coverage proof: fold only lines the named test actually runs</li><li>GitHub Actions check that blocks merge until signed</li><li>Go, Java, Kotlin and Rust runners tested end to end on real repositories</li><li>Slack and Teams alerts from the Kafka stream</li><li>Published planted-bug benchmark</li></ul></div>
+      <div><h3>Working today</h3><ul><li>Guardrail for .NET, Python, JavaScript and TypeScript</li><li>AI claims checked by code</li><li>EasyReview with live team review</li><li>Lanes agent provenance</li><li>Run Vouch on any pull request from the website</li><li>GitHub commit status, review comment and merge on sign-off</li><li>Aiven Kafka job queue, Postgres records, Valkey presence</li></ul></div>
+      <div><h3>Next</h3><ul><li>Coverage proof: fold only lines the named test actually runs</li><li>One-click install as a GitHub App, so checks start on every new pull request</li><li>Go, Java, Kotlin and Rust runners tested end to end on real repositories</li><li>Slack and Teams alerts from the Kafka stream</li><li>Published planted-bug benchmark</li></ul></div>
       <div><h3>Later</h3><ul><li>Ruby, PHP and Swift</li><li>GitLab CI and Azure DevOps</li><li>Trust that grows per agent and per code area</li><li>Self-hosted install</li></ul></div>
     </div>
   </div>
