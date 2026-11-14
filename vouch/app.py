@@ -123,6 +123,8 @@ def list_prs():
 @app.get("/api/prs/{pr}")
 def get_pr(pr: str):
     p = pack(pr)
+    odd = set((p.get("generated") or {}).get("odd", []))
+    p["files"] = [f for f in p["files"] if f["kind"] != "generated" or f["path"] in odd]  # identical generated files: not sent
     return {"pack": p, "state": state(pr, p["steps"])}
 
 

@@ -275,8 +275,7 @@ function vGenerated(s, animate) {
   const g = P.generated;
   return `<h2>${g.files} generated files</h2>
     <div class="box ${g.ok ? "green" : "amber"}">${g.ok ? `<b>${g.same} of ${g.files}</b> files got exactly the same edit. Checked by code. Nothing to read there.` : "These generated files all differ. Read them."}</div>
-    <p>The shared edit:</p><pre class="req">${g.distinct_edits.map(esc).join("
-")}</pre>
+    <p>The shared edit:</p><pre class="req">${g.distinct_edits.map(esc).join("<br>")}</pre>
     ${g.odd.length && g.ok ? `<div class="box amber">${g.odd.length} file${g.odd.length > 1 ? "s differ" : " differs"} from the others. Read ${g.odd.length > 1 ? "them" : "it"}:</div>${legend()}${g.odd.map((p) => fileView(p, [[1, 99999]], false, animate)).join("")}` : ""}`;
 }
 
