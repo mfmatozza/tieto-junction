@@ -51,12 +51,12 @@ nav.top .right { margin-left: auto; }
 
 .hero { position: relative; padding: 80px 0 24px; text-align: center; isolation: isolate; }
 .hero::before { content: ""; position: absolute; inset: -120px 0 auto; height: 640px; z-index: -1; background: radial-gradient(55% 45% at 50% 0%, rgba(56,89,196,.2), transparent 70%); }
-.hero h1 { font-size: clamp(40px, 6vw, 66px); line-height: 1.04; letter-spacing: -.035em; font-weight: 600; max-width: 15ch; margin: 0 auto; }
+.hero h1 { font-size: clamp(38px, 5.6vw, 62px); line-height: 1.05; letter-spacing: -.035em; font-weight: 600; max-width: 17ch; margin: 0 auto; }
 .hero p.sub { max-width: 580px; margin: 20px auto 0; color: var(--muted); font-size: 18px; line-height: 1.55; }
 .hero .ctas { margin-top: 30px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
 /* Simulation: flat, quiet, the moving parts carry it */
-.sim { margin: 56px auto 0; text-align: left; border: 1px solid var(--line); border-radius: 16px; background: var(--bg-2); overflow: hidden; }
+.sim { margin: 40px auto 0; text-align: left; border: 1px solid var(--line); border-radius: 16px; background: var(--bg-2); overflow: hidden; }
 .sim-top { display: flex; align-items: center; gap: 28px; padding: 16px 22px; border-bottom: 1px solid var(--line); flex-wrap: wrap; font-size: 14px; color: var(--muted); }
 .sim-top b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
 .sim-top .acts { margin-left: auto; display: flex; gap: 18px; }
@@ -228,6 +228,107 @@ footer .wrap { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
 footer .brand { color: var(--muted); font-size: 15px; }
 footer .sp { margin-left: auto; }
 
+
+/* Hero metric */
+.metric { margin: 30px auto 0; display: inline-flex; align-items: center; gap: 18px; text-align: left; padding: 14px 22px 14px 18px; border: 1px solid var(--line); border-radius: 16px; }
+.metric b { font: 600 52px/1 var(--sans); letter-spacing: -.04em; color: var(--green); }
+.metric span { color: var(--muted); font-size: 15px; max-width: 30ch; line-height: 1.4; }
+.hero p.sub { color: var(--text); font-size: 20px; font-weight: 500; letter-spacing: -.01em; margin-top: 26px; }
+
+/* Why now */
+.why { padding: 64px 0 0; }
+.why-h { font-size: 15px; color: var(--muted); margin-bottom: 18px; }
+.why-grid { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.why-grid a { padding: 22px 22px 20px 0; display: flex; flex-direction: column; gap: 6px; }
+.why-grid a + a { padding-left: 22px; border-left: 1px solid var(--line); }
+.why-grid b { font: 600 32px/1 var(--sans); letter-spacing: -.03em; }
+.why-grid span { color: var(--muted); font-size: 14px; }
+.why-grid small { color: var(--dim); font-size: 12px; margin-top: auto; padding-top: 6px; text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+.why-grid a:hover small { color: var(--muted); }
+
+/* Results */
+.res { margin-top: 44px; display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+.res > div { background: var(--bg); padding: 24px 26px; }
+.res-main { grid-row: span 2; }
+.res-k { font-size: 13px; color: var(--muted); }
+.res-big { font: 600 44px/1.1 var(--sans); letter-spacing: -.035em; margin-top: 8px; }
+.res-num { font: 600 32px/1.1 var(--sans); letter-spacing: -.03em; margin-top: 8px; }
+.x { color: var(--dim); font-weight: 400; }
+.res-cell p, .res-note { color: var(--muted); font-size: 13.5px; margin-top: 8px; }
+.res-note { color: var(--dim); margin-top: 14px; }
+.bars { margin-top: 22px; display: grid; gap: 12px; }
+.bars div { display: grid; grid-template-columns: 52px 1fr 92px; gap: 12px; align-items: center; font-size: 12.5px; }
+.bars span { color: var(--muted); }
+.bars em { font-style: normal; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.bars i { grid-column: 2; grid-row: 1; height: 8px; width: var(--w); background: rgba(160,178,230,.18); border-radius: 2px; }
+.bars i.read { background: var(--green); min-width: 2px; }
+.res-cell.soon .res-num { color: var(--dim); }
+
+/* Who decides */
+.decide { margin-top: 32px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.decide > div { border-top: 2px solid var(--line); padding-top: 16px; }
+.decide > div:nth-child(2) { border-top-color: var(--green); }
+.decide b { font-size: 17px; font-weight: 600; }
+.decide p { color: var(--muted); font-size: 14.5px; margin-top: 6px; }
+
+/* In house */
+.inhouse { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; font-size: 14px; color: var(--dim); }
+.inhouse a { display: inline-flex; align-items: center; gap: 8px; color: var(--green); font-weight: 500; }
+.inhouse a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.col h3 a { color: var(--green); }
+
+/* Compare */
+.cmp { margin-top: 40px; border-top: 1px solid var(--line); }
+.cmp-row { display: grid; grid-template-columns: 1.1fr 1fr 1.2fr; gap: 24px; padding: 16px 0; border-bottom: 1px solid var(--line); font-size: 15px; color: var(--muted); }
+.cmp-row > span:first-child { color: var(--text); font-weight: 500; }
+.cmp-row .us { color: var(--text); }
+.cmp-h { font-size: 13px; color: var(--dim); padding: 12px 0; }
+.cmp-h .us { color: var(--green); font-weight: 600; }
+
+/* Who + pricing */
+.who { margin-top: 28px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.who p { color: var(--muted); font-size: 15px; }
+.who b { color: var(--text); font-weight: 600; }
+.plans { margin-top: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.plan { border: 1px solid var(--line); border-radius: 16px; padding: 28px; display: flex; flex-direction: column; }
+.plan h3 { font-size: 18px; font-weight: 600; }
+.price { font: 600 36px/1.1 var(--sans); letter-spacing: -.03em; margin-top: 10px; }
+.price span { font-size: 14px; font-weight: 400; color: var(--muted); letter-spacing: 0; }
+.plan ul { list-style: none; padding: 0; margin: 22px 0 26px; display: grid; gap: 10px; }
+.plan li { color: var(--muted); font-size: 14.5px; padding-left: 20px; position: relative; }
+.plan li::before { content: ""; position: absolute; left: 0; top: .62em; width: 8px; height: 2px; background: var(--green); }
+.plan .btn { margin-top: auto; align-self: flex-start; }
+
+/* Roadmap */
+.road-map { margin-top: 40px; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 2px solid var(--line); }
+.road-map > div { padding: 22px 24px 0 0; position: relative; }
+.road-map > div + div { padding-left: 24px; }
+.road-map > div:first-child::before { content: ""; position: absolute; left: 0; top: -2px; width: 100%; height: 2px; background: var(--green); }
+.road-map h3 { font-size: 15px; font-weight: 600; }
+.road-map > div:first-child h3 { color: var(--green); }
+.road-map ul { list-style: none; padding: 0; margin-top: 12px; display: grid; gap: 8px; }
+.road-map li { color: var(--muted); font-size: 14.5px; }
+
+@media (max-width: 980px) {
+  .why-grid { grid-template-columns: 1fr 1fr; }
+  .why-grid a:nth-child(3) { padding-left: 0; border-left: 0; }
+  .why-grid a:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .res { grid-template-columns: 1fr 1fr; }
+  .res-main { grid-column: 1 / -1; grid-row: auto; }
+  .who, .road-map, .decide { grid-template-columns: 1fr; }
+  .road-map > div + div { padding-left: 0; }
+  .plans { grid-template-columns: 1fr; }
+  .cmp-row { grid-template-columns: 1fr 1fr; }
+  .cmp-row > span:first-child { grid-column: 1 / -1; }
+  .cmp-h > span:first-child { display: none; }
+}
+@media (max-width: 640px) {
+  .metric { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .metric b { font-size: 44px; }
+  .why-grid, .res { grid-template-columns: 1fr; }
+  .why-grid a + a { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); }
+}
+
 .reveal { opacity: 0; transform: translateY(18px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
 .reveal.in { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
@@ -270,9 +371,10 @@ footer .sp { margin-left: auto; }
     </a>
     <div class="links">
       <a href="#how">How it works</a>
-      <a href="#stack">Lanes and Aiven</a>
-      <a href="#easyreview">EasyReview</a>
-      <a href="#faq">FAQ</a>
+      <a href="#results">Results</a>
+      <a href="#compare">Compare</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#roadmap">Roadmap</a>
     </div>
     <div class="right"><a class="btn btn-primary" href="/auth/github"><i class="ph ph-github-logo"></i>Connect GitHub</a></div>
   </div>
@@ -280,13 +382,32 @@ footer .sp { margin-left: auto; }
 
 <header class="hero">
   <div class="wrap">
-    <h1>Ship AI code you can <span class="g">actually review</span>.</h1>
-    <p class="sub">Agents build backlog issues in parallel lanes. Vouch blocks anything that breaks and turns the rest into a five-minute team review.</p>
+    <h1>Merge AI code after reading <span class="g">a quarter of it</span>.</h1>
+    <div class="metric"><b>76%</b><span>fewer lines for a person to read, with zero regressions merged, on real AI-written changes</span></div>
+    <p class="sub">Agents write. Vouch proves. Humans sign.</p>
     <div class="ctas">
       <a class="btn btn-primary btn-lg" href="/auth/github"><i class="ph ph-github-logo"></i>Connect GitHub</a>
-      <a class="btn btn-ghost btn-lg" href="#how">See how it works</a>
+      <a class="btn btn-ghost btn-lg" href="#watch">Watch it run</a>
     </div>
+  </div>
+</header>
 
+<div class="why">
+  <div class="wrap">
+    <p class="why-h reveal">Writing code got cheap. Reviewing it did not.</p>
+    <div class="why-grid reveal">
+      <a href="https://devops.com/google-ceo-says-75-of-new-code-is-ai-generated/" target="_blank" rel="noopener"><b>75%</b><span>of new code at Google is generated by AI</span><small>Google, April 2026</small></a>
+      <a href="https://github.blog/news-insights/octoverse/octoverse-a-new-developer-joins-github-every-second-as-ai-leads-typescript-to-1/" target="_blank" rel="noopener"><b>43.2M</b><span>pull requests merged on GitHub every month, up 23% in a year</span><small>GitHub Octoverse 2025</small></a>
+      <a href="https://github.blog/news-insights/octoverse/octoverse-a-new-developer-joins-github-every-second-as-ai-leads-typescript-to-1/" target="_blank" rel="noopener"><b>1M+</b><span>pull requests opened by one coding agent in five months</span><small>GitHub Octoverse 2025</small></a>
+      <a href="https://dora.dev/insights/balancing-ai-tensions/" target="_blank" rel="noopener"><b>30%</b><span>of developers have little or no trust in AI-generated code</span><small>DORA 2025</small></a>
+    </div>
+  </div>
+</div>
+
+<section id="watch" style="padding-top: 72px">
+  <div class="wrap">
+    <h2 class="h2 reveal">Watch the road.</h2>
+    <p class="lead reveal">Four agents, four real pull requests from Tieto's repository, one road to main. Plant a bug and see where it stops.</p>
     <div class="sim" id="sim">
       <div class="sim-top">
         <span><b id="sMerged">0</b> merged</span>
@@ -309,18 +430,32 @@ footer .sp { margin-left: auto; }
       </div>
     </div>
   </div>
-</header>
+</section>
 
-<div class="proof">
+<section id="results" style="padding-top: 40px">
   <div class="wrap">
-    <div class="proof-grid reveal">
-      <div><div class="big">1,383<span class="x">→</span><span class="g">17</span></div><p>Lines changed in issue #2297, and the lines a human actually had to read.</p></div>
-      <div><div class="big">167<span class="x">/</span><span class="g">167</span></div><p>Existing tests that passed before every change and still pass after it.</p></div>
-      <div><div class="big"><span class="g">0</span></div><p>Regressions reached a reviewer. Guardrail blocks them first.</p></div>
+    <h2 class="h2 reveal">Results so far.</h2>
+    <p class="lead reveal">Measured on 4 real AI-written changes in Tieto's MessagePack-CSharp repository. Every number below comes from those runs.</p>
+    <div class="res reveal">
+      <div class="res-main">
+        <span class="res-k">Lines a person had to read</span>
+        <div class="res-big">2,904 <span class="x">→</span> <span class="g">709</span></div>
+        <div class="bars">
+          <div><span>#2297</span><i style="--w:100%"></i><i class="read" style="--w:1.2%"></i><em>1,383 → 17</em></div>
+          <div><span>#2129</span><i style="--w:74.8%"></i><i class="read" style="--w:46.1%"></i><em>1,034 → 638</em></div>
+          <div><span>#2234</span><i style="--w:18.9%"></i><i class="read" style="--w:3.5%"></i><em>262 → 48</em></div>
+          <div><span>#2283</span><i style="--w:16.3%"></i><i class="read" style="--w:0.4%"></i><em>225 → 6</em></div>
+        </div>
+        <p class="res-note">#2129 changes the public API, so most of it stays open on purpose.</p>
+      </div>
+      <div class="res-cell"><span class="res-k">Estimated review time</span><div class="res-num">4 h <span class="x">→</span> <span class="g">1 h</span></div><p>242 minutes to read every changed line, 59 to read only what is not proven, at the same reading pace.</p></div>
+      <div class="res-cell"><span class="res-k">Existing tests kept</span><div class="res-num"><span class="g">167</span>/167</div><p>On every change, run before and after. Regressions merged: 0.</p></div>
+      <div class="res-cell"><span class="res-k">AI claims proven by code</span><div class="res-num"><span class="g">21</span>/33</div><p>The other 12 were not backed by a passing test, so they stayed open for a person.</p></div>
+      <div class="res-cell soon"><span class="res-k">Planted bugs caught</span><div class="res-num">Running</div><p>We are planting known bugs in copies of these changes and counting what Guardrail and Checkpoint catch. The number goes here, good or bad.</p></div>
     </div>
-    <p class="proof-note">Measured on four real AI-written changes in Tieto's MessagePack-CSharp challenge repository.</p>
+    <p class="proof-note reveal">4 changes is a small sample. We will add repositories and publish every run.</p>
   </div>
-</div>
+</section>
 
 <section id="how">
   <div class="wrap">
@@ -403,14 +538,26 @@ footer .sp { margin-left: auto; }
   </div>
 </section>
 
+<section id="decides" style="padding-top: 24px">
+  <div class="wrap">
+    <h2 class="h2 reveal">The AI never decides what you skip.</h2>
+    <div class="decide reveal">
+      <div><b>The AI proposes</b><p>It writes a map of the change: these lines do this, and this test proves it.</p></div>
+      <div><b>Code verifies</b><p>Lines fold only when the cited lines exist, the named test passed on the branch, and no risk rule applies. Its confidence score is never used.</p></div>
+      <div><b>A person signs</b><p>Everything unproven stays open. A named owner approves and writes down the risk they accept.</p></div>
+    </div>
+  </div>
+</section>
+
 <section id="stack" style="padding-top: 40px">
   <div class="wrap">
-    <h2 class="h2 reveal">Lanes, Vouch and Aiven. What runs where.</h2>
-    <p class="lead reveal">Lanes coordinates the agents that write the code. Vouch checks what they wrote. Aiven keeps the permanent record and the live state of every review.</p>
+    <h2 class="h2 reveal">Built in house. What runs where.</h2>
+    <p class="lead reveal">We built both halves ourselves. Lanes coordinates the agents that write the code, and its source is on GitHub. Vouch checks what they wrote. The only outside services are Claude, for explanations, and Aiven, for data.</p>
+    <p class="inhouse reveal"><a href="https://github.com/mfmatozza/lanes-dev" target="_blank" rel="noopener"><i class="ph ph-github-logo"></i>Lanes source on GitHub</a><span>Lanes: built by our team before Junction</span><span>Vouch: built at Junction 2026</span></p>
 
     <div class="arch reveal">
       <div class="col">
-        <h3><b>Lanes</b>code is written</h3>
+        <h3><b>Lanes</b>code is written · <a href="https://github.com/mfmatozza/lanes-dev" target="_blank" rel="noopener">source</a></h3>
         <div class="box"><div class="k"><i class="ph ph-robot"></i>Agents</div><p>Claude Code or Codex, one per backlog issue, each in its own lane.</p></div>
         <div class="box"><div class="k"><i class="ph ph-road-horizon"></i>Lanes server</div><p>Holds file claims so two agents never edit the same file at once. A live board shows who works on what.</p></div>
         <div class="box"><div class="k"><i class="ph ph-git-pull-request"></i>Pull request</div><p>One per task, with a <code>Lanes-Agent</code> line on every commit.</p></div>
@@ -462,12 +609,77 @@ footer .sp { margin-left: auto; }
   </div>
 </section>
 
+<section id="compare" style="padding-top: 40px">
+  <div class="wrap">
+    <h2 class="h2 reveal">AI code reviewers comment. Vouch proves and gates.</h2>
+    <p class="lead reveal">An AI reviewer adds its opinion to a diff you still have to read. Vouch shows, with evidence, what you no longer need to read.</p>
+    <div class="cmp reveal" role="table">
+      <div class="cmp-row cmp-h" role="row"><span role="columnheader"></span><span role="columnheader">Typical AI code reviewer</span><span role="columnheader" class="us">Vouch</span></div>
+      <div class="cmp-row" role="row"><span role="rowheader">What you get</span><span>Comments on the diff</span><span class="us">A gate: blocked, proven, or open for a person</span></div>
+      <div class="cmp-row" role="row"><span role="rowheader">Runs your existing tests before and after</span><span>Not usually</span><span class="us">Every change, base and branch</span></div>
+      <div class="cmp-row" role="row"><span role="rowheader">Who decides what is safe</span><span>The model's opinion</span><span class="us">Code: cited lines, quotes and test results</span></div>
+      <div class="cmp-row" role="row"><span role="rowheader">What a person reads</span><span>The whole diff, plus comments</span><span class="us">Only what is not proven</span></div>
+      <div class="cmp-row" role="row"><span role="rowheader">A made-up finding</span><span>Looks like any other comment</span><span class="us">Turns red and can never fold away</span></div>
+      <div class="cmp-row" role="row"><span role="rowheader">Who approves</span><span>Whoever clicks approve</span><span class="us">A named owner who writes the risk they accept</span></div>
+      <div class="cmp-row" role="row"><span role="rowheader">Many agents in parallel</span><span>One pull request at a time</span><span class="us">Lanes: no collisions, trust per agent</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing" style="padding-top: 40px">
+  <div class="wrap">
+    <h2 class="h2 reveal">For teams that let agents write code.</h2>
+    <div class="who reveal">
+      <p><b>Engineering teams</b> running coding agents on a real codebase every day.</p>
+      <p><b>Tech leads</b> who own the merge button and cannot read everything.</p>
+      <p><b>Regulated teams</b> that must show who accepted which risk, and when.</p>
+    </div>
+    <div class="plans reveal">
+      <div class="plan">
+        <h3>Team</h3>
+        <div class="price">€20 <span>per reviewer per month</span></div>
+        <ul>
+          <li>Guardrail, Checkpoint and EasyReview on every pull request</li>
+          <li>Lanes for parallel agents</li>
+          <li>GitHub sign-in and live team review</li>
+          <li>Hosted for you on Aiven</li>
+        </ul>
+        <a class="btn btn-primary" href="/auth/github"><i class="ph ph-github-logo"></i>Connect GitHub</a>
+      </div>
+      <div class="plan">
+        <h3>Enterprise</h3>
+        <div class="price">Custom</div>
+        <ul>
+          <li>Everything in Team</li>
+          <li>Full audit trail of every vote and sign-off, exportable</li>
+          <li>Review events streamed to your own Kafka, CI and SIEM</li>
+          <li>Runs in your own Aiven project and region</li>
+          <li>SSO and per-agent trust policies</li>
+        </ul>
+        <a class="btn btn-ghost" href="https://github.com/mfmatozza" target="_blank" rel="noopener">Talk to us</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="roadmap" style="padding-top: 40px">
+  <div class="wrap">
+    <h2 class="h2 reveal">Roadmap.</h2>
+    <div class="road-map reveal">
+      <div><h3>Working today</h3><ul><li>.NET test runner for Guardrail</li><li>AI claims checked by code</li><li>EasyReview with live team review</li><li>Lanes agent provenance</li><li>GitHub sign-in, live presence on Aiven Valkey, events on Aiven Kafka</li></ul></div>
+      <div><h3>Next</h3><ul><li>Coverage proof: fold only lines the named test actually runs</li><li>GitHub Actions check that blocks merge until signed</li><li>TypeScript and Python test runners</li><li>Slack and Teams alerts from the Kafka stream</li><li>Published planted-bug benchmark</li></ul></div>
+      <div><h3>Later</h3><ul><li>Java, Kotlin and Go</li><li>GitLab CI and Azure DevOps</li><li>Trust that grows per agent and per code area</li><li>Self-hosted install</li></ul></div>
+    </div>
+  </div>
+</section>
+
 <section id="faq" style="padding-top: 40px">
   <div class="wrap">
     <h2 class="h2 reveal" style="margin:0 auto;text-align:center">Questions reviewers ask</h2>
     <div class="faq">
-      <details><summary>Does the AI decide what is safe to merge?<i class="ph ph-plus"></i></summary><p>No. The AI only explains the change. Code checks each claim against the diff, the issue and the test results. A named person signs every merge and writes down the risk they accept.</p></details>
+      <details><summary>Isn't this just AI deciding what humans review?<i class="ph ph-plus"></i></summary><p>No. The AI only proposes a map of the change. Code decides what folds: the cited lines must exist, the named test must have passed on the branch, and no risk rule may apply. The AI's confidence is never used. Next, we will also require coverage proof that the named test actually runs those lines. A named person signs every merge.</p></details>
       <details><summary>What if the tests are weak?<i class="ph ph-plus"></i></summary><p>Then less folds away. Code that no passing test covers stays open, and risky areas like public API, wire formats and generated files are always shown, even when tests pass.</p></details>
+      <details><summary>Who built Lanes?<i class="ph ph-plus"></i></summary><p>We did. Lanes is our own coordination layer for coding agents, built by our team before Junction. The source is on <a class="g" href="https://github.com/mfmatozza/lanes-dev" target="_blank" rel="noopener">GitHub</a>.</p></details>
       <details><summary>Do I need Lanes to use Vouch?<i class="ph ph-plus"></i></summary><p>No. Without Lanes, every change counts as written by an unknown agent, so nothing is trusted by default. With Lanes, agents work in parallel without collisions and trust is earned per agent and per area of the code.</p></details>
       <details><summary>Why Aiven?<i class="ph ph-plus"></i></summary><p>A review is shared and live. Postgres keeps the record, Kafka lets other tools react to each vote and sign-off, and Valkey holds who is reviewing right now. Aiven runs all three as managed services.</p></details>
       <details><summary>Which stacks does it run on today?<i class="ph ph-plus"></i></summary><p>.NET repositories on GitHub. Guardrail runs your existing test projects on the base and the branch in separate worktrees.</p></details>
@@ -488,9 +700,9 @@ footer .sp { margin-left: auto; }
 <footer>
   <div class="wrap">
     <span class="brand"><svg width="20" height="20" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" fill="#111d42" stroke="rgba(160,178,230,.25)"/><path d="M7 7.5 13 18.5 19 7.5" fill="none" stroke="#86efac" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Vouch</span>
-    <span>Built at Junction 2026 for the Tieto challenge, with Lanes, Claude and Aiven.</span>
+    <span>Built in house at Junction 2026 for the Tieto challenge. Lanes is ours too.</span>
     <span class="sp"></span>
-    <a href="#how">How it works</a><a href="#faq">FAQ</a>
+    <a href="https://github.com/mfmatozza/lanes-dev" target="_blank" rel="noopener">Lanes on GitHub</a><a href="#roadmap">Roadmap</a><a href="#faq">FAQ</a>
   </div>
 </footer>
 
@@ -523,8 +735,8 @@ LANES_Y.forEach((y, i) => {
   mk("path", { class: "lane-mid", d: curve(y) }, base);
   mk("text", { class: "lane-label", x: 0, y: y + 4 }, base).textContent = `Lane ${i + 1}`;
 });
-mk("path", { class: "lane-edge", d: curve(LANES_Y[0], -14) }, base);
-mk("path", { class: "lane-edge", d: curve(LANES_Y[3], 14) }, base);
+mk("path", { class: "lane-edge", d: curve(LANES_Y[0], -16) }, base);
+mk("path", { class: "lane-edge", d: curve(LANES_Y[3], 16) }, base);
 mk("line", { class: "trunk-edge", x1: MERGE_X, y1: TRUNK_Y - 16, x2: END_X, y2: TRUNK_Y - 16 }, base);
 mk("line", { class: "trunk-edge", x1: MERGE_X, y1: TRUNK_Y + 16, x2: END_X, y2: TRUNK_Y + 16 }, base);
 mk("line", { class: "trunk-mid", x1: MERGE_X, y1: TRUNK_Y, x2: END_X, y2: TRUNK_Y }, base);
