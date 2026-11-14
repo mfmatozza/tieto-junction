@@ -158,16 +158,24 @@ def run_job(job: dict) -> None:
 
 
 def worker() -> None:
+    """Consume review jobs forever. Network drops (Wi-Fi, Kafka restarts) reconnect instead of killing the worker."""
     from kafka import KafkaConsumer
     from vouch.app import ca_file, kafka  # same Aiven connection settings as the website
-    kafka()  # creates the review.jobs topic on first run
-    c = KafkaConsumer(TOPIC, group_id="vouch-workers", auto_offset_reset="earliest", enable_auto_commit=True,
-                      bootstrap_servers=os.environ["AIVEN_KAFKA_BOOTSTRAP"], security_protocol="SASL_SSL", sasl_mechanism="SCRAM-SHA-256",
-                      sasl_plain_username=os.environ.get("AIVEN_KAFKA_USER", "avnadmin"), sasl_plain_password=os.environ["AIVEN_KAFKA_PASSWORD"],
-                      ssl_cafile=ca_file(), value_deserializer=lambda b: json.loads(b))
-    print(f"worker listening on {TOPIC}")
-    for msg in c:
-        run_job(msg.value)
+    while True:
+        try:
+            kafka()  # creates the review.jobs topic on first run
+            c = KafkaConsumer(TOPIC, group_id="vouch-workers", auto_offset_reset="earliest", enable_auto_commit=True,
+                              bootstrap_servers=os.environ["AIVEN_KAFKA_BOOTSTRAP"], security_protocol="SASL_SSL", sasl_mechanism="SCRAM-SHA-256",
+                              sasl_plain_username=os.environ.get("AIVEN_KAFKA_USER", "avnadmin"), sasl_plain_password=os.environ["AIVEN_KAFKA_PASSWORD"],
+                              ssl_cafile=ca_file(), value_deserializer=lambda b: json.loads(b))
+            print(f"worker listening on {TOPIC}", flush=True)
+            for msg in c:
+                run_job(msg.value)
+        except KeyboardInterrupt:
+            return
+        except Exception as e:
+            print(f"worker lost the connection ({type(e).__name__}: {e}); reconnecting in 10 s", flush=True)
+            time.sleep(10)
 
 
 if __name__ == "__main__":
