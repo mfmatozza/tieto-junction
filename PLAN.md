@@ -28,7 +28,7 @@
 | 1 | **Aiven PostgreSQL** + pgvector | 🔲 | main DB + clustering |
 | 2 | **Aiven Kafka** (SASL, download `ca.pem`) | 🔲 | live pipeline feed + audit |
 | 3 | **Aiven Valkey** | 🔲 optional | job queue; Postgres can replace it |
-| 4 | **.NET 8 SDK 8.0.4xx** | 🔲 **blocker** | Tieto repo's `global.json` pins 8.0.402. You only have .NET 9 → tests won't run. `winget install Microsoft.DotNet.SDK.8` |
+| 4 | **.NET 8 SDK 8.0.4xx** | ✅ 8.0.428 installed | Tieto repo's `global.json` pins 8.0.402. You only have .NET 9 → tests won't run. `winget install Microsoft.DotNet.SDK.8` |
 | 5 | **Anthropic API key** | 🔲 | Claude writes the claims |
 | 6 | **GitHub token** | ✅ (`gh` logged in) | pull issues |
 | 7 | Python 3.12, Node 24, git | ✅ | |
