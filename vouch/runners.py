@@ -88,23 +88,36 @@ def _junit_files(paths: list[Path]) -> dict[str, str] | None:
 
 
 def run_python(repo: Path) -> dict[str, str] | None:
+    py = os.environ.get("VOUCH_PYTHON", "python")
+    reqs = [f for f in ("requirements.txt", "requirements-dev.txt", "requirements_dev.txt") if (repo / f).exists()]
+    if reqs or (repo / "pyproject.toml").exists():  # fresh clone: its own venv, so a PR's dependencies never touch ours
+        venv = repo / ".vouch-venv"
+        if _run([py, "-m", "venv", str(venv)], repo) is None:
+            return None
+        py = str(venv / ("Scripts/python.exe" if os.name == "nt" else "bin/python"))
+        _run([py, "-m", "pip", "install", "-q", "pytest", *sum((["-r", r] for r in reqs), [])], repo)
+        if (repo / "pyproject.toml").exists():
+            _run([py, "-m", "pip", "install", "-q", "-e", "."], repo)  # best effort: not every pyproject is installable
     with tempfile.TemporaryDirectory() as d:
         xml = Path(d) / "r.xml"
-        if _run([os.environ.get("VOUCH_PYTHON", "python"), "-m", "pytest", "-q", "-p", "no:cacheprovider", f"--junitxml={xml}"], repo) is None:
+        if _run([py, "-m", "pytest", "-q", "-p", "no:cacheprovider", f"--junitxml={xml}"], repo) is None:
             return None
         return _junit_files([xml]) if xml.exists() else None
 
 
 def run_node(repo: Path) -> dict[str, str] | None:
     pkg = json.loads((repo / "package.json").read_text(encoding="utf-8"))
+    if not (repo / "node_modules").exists() and (pkg.get("dependencies") or pkg.get("devDependencies")):
+        npm = "npm.cmd" if os.name == "nt" else "npm"  # --ignore-scripts: install hooks never run
+        _run([npm, "ci" if (repo / "package-lock.json").exists() else "install", "--ignore-scripts", "--no-audit", "--no-fund"], repo)
     deps = {**pkg.get("dependencies", {}), **pkg.get("devDependencies", {})}
     with tempfile.TemporaryDirectory() as d:
         out = Path(d) / "r"
         if "vitest" in deps:
-            r = _run(["npx", "vitest", "run", "--reporter=junit", f"--outputFile={out}.xml"], repo)
+            r = _run(["npx.cmd" if os.name == "nt" else "npx", "vitest", "run", "--reporter=junit", f"--outputFile={out}.xml"], repo)
             return _junit_files([Path(f"{out}.xml")]) if r is not None and Path(f"{out}.xml").exists() else None
         if "jest" in deps:
-            r = _run(["npx", "jest", "--ci", "--json", f"--outputFile={out}.json"], repo)
+            r = _run(["npx.cmd" if os.name == "nt" else "npx", "jest", "--ci", "--json", f"--outputFile={out}.json"], repo)
             return parse_jest_json(Path(f"{out}.json").read_text(encoding="utf-8")) if r is not None and Path(f"{out}.json").exists() else None
         # Node's built-in test runner (node --test), JUnit reporter since Node 20
         r = _run(["node", "--test", "--test-reporter=junit", f"--test-reporter-destination={out}.xml"], repo)
@@ -134,6 +147,22 @@ def run_cargo(repo: Path) -> dict[str, str] | None:
     return (parse_cargo(r.stdout) or None) if r is not None else None
 
 
+def run_dotnet(repo: Path) -> dict[str, str] | None:
+    from vouch.dotnet import DOTNET, parse_trx
+    with tempfile.TemporaryDirectory() as d:
+        if _run([DOTNET, "test", "--logger", "trx", "--results-directory", d], repo,
+                {"DOTNET_CLI_TELEMETRY_OPTOUT": "1", "DOTNET_NOLOGO": "1"}) is None:
+            return None
+        out = {}
+        for f in Path(d).glob("**/*.trx"):
+            out.update(parse_trx(f.read_text(encoding="utf-8", errors="replace")))
+        return out or None
+
+
+def _is_dotnet(repo: Path) -> bool:
+    return any(repo.glob("*.sln")) or any(repo.glob("*.slnx")) or any(repo.glob("*/*.csproj")) or any(repo.glob("*/*/*.csproj"))
+
+
 # marker file(s) -> (language, runner)
 RUNNERS = [
     (("pyproject.toml", "pytest.ini", "setup.cfg", "tox.ini", "conftest.py"), "Python", run_python),
@@ -146,7 +175,8 @@ RUNNERS = [
 
 
 def detect(repo: Path) -> list[tuple[str, callable]]:
-    return [(lang, fn) for markers, lang, fn in RUNNERS if any((repo / m).exists() for m in markers)]
+    found = [(".NET", run_dotnet)] if _is_dotnet(repo) else []
+    return found + [(lang, fn) for markers, lang, fn in RUNNERS if any((repo / m).exists() for m in markers)]
 
 
 def run_all(repo: Path) -> tuple[list[str], dict[str, str] | None]:
@@ -186,8 +216,8 @@ def guard_repo(repo: Path, base: str, head: str) -> dict:
     langs, before = trees[base]
     after = trees[head][1]
     if before is None or after is None:
-        return {"ran": False, "languages": langs}
-    return {"ran": True, "languages": langs, **compare(before, after)}
+        return {"ran": False, "languages": langs, "why": f"The {', '.join(langs) or 'repository'} tests did not run on both commits."}
+    return {"ran": True, "languages": langs, **compare(before, after), "head_results": after}
 
 
 if __name__ == "__main__" and len(__import__("sys").argv) == 4:

@@ -31,17 +31,36 @@ presence: dict[str, dict[str, tuple[str, float]]] = {}  # pr -> user -> (step, s
 _pg = None
 
 
+PG_ON = bool(os.environ.get("AIVEN_PG_URL"))
+
+
 def pg():
+    """Live Postgres connection, reopened when it went stale (serverless instances sleep between requests)."""
     global _pg
-    if _pg is None:
-        _pg = False  # not configured or unreachable: fall back to the local log, don't retry on every request
-        if os.environ.get("AIVEN_PG_URL"):
-            try:
-                import psycopg
-                _pg = psycopg.connect(os.environ["AIVEN_PG_URL"], autocommit=True, connect_timeout=8)
-            except Exception as e:
-                print("Postgres off:", e)
+    if not PG_ON:
+        return None
+    if _pg is None or _pg.closed:
+        import psycopg
+        _pg = psycopg.connect(os.environ["AIVEN_PG_URL"], autocommit=True, connect_timeout=8)
     return _pg
+
+
+def sql(query: str, params: tuple = (), fetch: bool = False):
+    """Run one statement; on a dropped connection reconnect and retry once. Errors are raised, never swallowed:
+    a vote that did not reach Postgres must fail loudly, not vanish."""
+    global _pg
+    for attempt in (1, 2):
+        try:
+            cur = pg().execute(query, params)
+            return cur.fetchall() if fetch else None
+        except Exception:
+            try:
+                _pg and _pg.close()
+            except Exception:
+                pass
+            _pg = None
+            if attempt == 2:
+                raise
 
 
 _kafka = _kv = None
@@ -62,9 +81,14 @@ def kafka():
                             sasl_plain_password=os.environ["AIVEN_KAFKA_PASSWORD"],
                             ssl_cafile=ca_file())
                 try:
-                    KafkaAdminClient(**conf).create_topics([NewTopic(TOPIC, 1, 2)])
+                    admin = KafkaAdminClient(**conf)
+                    for t in (TOPIC, "review.jobs"):
+                        try:
+                            admin.create_topics([NewTopic(t, 1, 2)])
+                        except Exception:
+                            pass  # already exists
                 except Exception:
-                    pass  # already exists
+                    pass
                 _kafka = KafkaProducer(**conf, value_serializer=lambda v: json.dumps(v).encode())
             except Exception as e:
                 print("Kafka off:", e)
@@ -120,14 +144,14 @@ EVENTS = load_events()
 
 
 def current_events() -> list[dict]:
-    """Postgres is the shared log (laptop and Vercel see the same review); the local file is the fallback."""
-    if pg():
-        try:
-            return [r[0] for r in pg().execute(
-                "SELECT payload FROM review_events WHERE aggregate_type = 'pull_request' ORDER BY occurred_at").fetchall()]
-        except Exception:
-            pass
-    return EVENTS
+    """Postgres is the one shared log: every browser, the laptop and every Vercel instance read the same review.
+    The local file is used only when no Postgres is configured at all."""
+    if not PG_ON:
+        return EVENTS
+    try:
+        return [r[0] for r in sql("SELECT payload FROM review_events WHERE aggregate_type = 'pull_request' ORDER BY occurred_at", fetch=True)]
+    except Exception as e:
+        raise HTTPException(503, f"The review store is unreachable, try again in a moment ({type(e).__name__}).")
 
 
 def ca_file() -> str:
@@ -142,23 +166,30 @@ def ca_file() -> str:
 
 def record(ev: dict) -> None:
     ev["at"] = time.time()
-    EVENTS.append(ev)
-    DATA.mkdir(exist_ok=True)
-    with LOG.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(ev) + "\n")
-    try:
-        if pg():
-            pg().execute("INSERT INTO review_events (event_type, aggregate_type, payload) VALUES (%s, 'pull_request', %s)",
-                         (ev["type"], json.dumps(ev)))
-    except Exception:
-        pass  # the local log is the fallback; a DB hiccup must not lose a reviewer's vote
+    if PG_ON:
+        try:
+            sql("INSERT INTO review_events (event_type, aggregate_type, payload) VALUES (%s, 'pull_request', %s)",
+                (ev["type"], json.dumps(ev)))
+        except Exception as e:  # loud, so the reviewer knows to retry: a silently lost vote is the worst outcome
+            raise HTTPException(503, f"Your {ev['type']} was not saved: the review store is unreachable. Try again ({type(e).__name__}).")
+    else:
+        EVENTS.append(ev)
+        DATA.mkdir(exist_ok=True)
+        with LOG.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(ev) + "\n")
+    publish(TOPIC, {"type": ev["type"], "id": ev["pr"], "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(ev["at"])), "data": ev})
+    notify(ev["pr"])
+
+
+def publish(topic: str, msg: dict) -> bool:
+    """Send to Aiven Kafka and wait for the broker (a serverless instance may freeze right after the response)."""
     try:
         if kafka():
-            kafka().send(TOPIC, {"type": ev["type"], "id": ev["pr"],
-                                 "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(ev["at"])), "data": ev})
-    except Exception:
-        pass
-    notify(ev["pr"])
+            kafka().send(topic, msg).get(timeout=8)
+            return True
+    except Exception as e:
+        print("Kafka send failed:", e)
+    return False
 
 
 def notify(pr: str) -> None:
@@ -167,6 +198,14 @@ def notify(pr: str) -> None:
 
 
 def pack(pr: str) -> dict:
+    if "~" in pr:  # a GitHub pull request reviewed by the worker: owner~repo~number, stored in Aiven Postgres
+        from vouch import jobs
+        row = jobs.get(pr)
+        if not row:
+            raise HTTPException(404, "This pull request has not been checked yet. Run Vouch on it first.")
+        if row["status"] != "ready":
+            raise HTTPException(409, f"Vouch is still working on this pull request ({row['status']}). {row['error'] or ''}".strip())
+        return row["pack"]
     f = PACKS / f"{pr}.json"
     if not f.exists():
         raise HTTPException(404, "No review for this PR yet")
@@ -260,7 +299,7 @@ def gh_login(request: Request):
     if not cid:  # no OAuth app configured: demo identity, so the flow still works offline
         return start_session({"login": "demo", "name": "Demo reviewer", "avatar": "", "token": "", "demo": True})
     state = secrets.token_urlsafe(16)
-    q = urllib.parse.urlencode({"client_id": cid, "scope": "read:user", "state": state,
+    q = urllib.parse.urlencode({"client_id": cid, "scope": "read:user public_repo", "state": state,
                                 "redirect_uri": os.environ.get("GITHUB_REDIRECT_URI") or str(request.url_for("gh_callback"))})
     r = RedirectResponse(f"https://github.com/login/oauth/authorize?{q}")
     r.set_cookie("oauth_state", state, max_age=600, httponly=True, samesite="lax")
@@ -430,8 +469,34 @@ class Signoff(BaseModel):
     risk: str
 
 
+def review_record(p: dict, st: dict, s: Signoff, by: str) -> str:
+    """The comment Vouch leaves on the pull request: what was proven, by what, and who accepted which risk."""
+    g = p["guard"]
+    lines = [f"## Vouch review: {'accepted' if s.decision == 'accept' else 'rejected'} by @{by}", ""]
+    lines.append(f"**Guardrail:** {g['kept']}/{g['existing']} existing tests still pass, {g['regression']} regression(s)." if g.get("ran")
+                 else f"**Guardrail:** not run ({g.get('why', '')}). Every line was open for review.")
+    proven = sum(c["status"] == "proven" for c in p["claims"])
+    lines.append(f"**Checkpoint:** {proven}/{len(p['claims'])} AI claims proven by code. AI confidence was not used.")
+    lines.append(f"**Read by people:** {p['stats']['lines_to_read']} of {p['stats']['changed_lines']} changed lines.")
+    lines += ["", "| Step | Reviewed by |", "|---|---|"]
+    for x in p["steps"]:
+        if x["kind"] == "sign":
+            continue
+        v = st["votes"].get(x["id"], {})
+        who = ", ".join(f"{u} ({'ok' if y['vote'] == 'ok' else y['vote']})" for u, y in v.items()) or "nobody"
+        lines.append(f"| {x['title'][:80].replace('|', '/')} | {who} |")
+    lines += ["", f"**{'Risk accepted' if s.decision == 'accept' else 'Reason'}:** {s.risk.strip()}", "",
+              "<sub>Posted by Vouch. Proven means: the cited lines exist, the quote is in the issue, and the named test passed.</sub>"]
+    return "\n".join(lines)
+
+
+def gh_call(method: str, path: str, token: str, body: dict | None = None) -> httpx.Response:
+    return httpx.request(method, f"https://api.github.com{path}", json=body, timeout=20,
+                         headers={"Accept": "application/vnd.github+json", "Authorization": f"Bearer {token}"})
+
+
 @app.post("/api/prs/{pr}/signoff")
-def signoff(pr: str, s: Signoff):
+def signoff(pr: str, s: Signoff, request: Request):
     p = pack(pr)
     st = state(pr, p["steps"])
     if s.decision == "accept" and not st["ready"]:
@@ -440,8 +505,34 @@ def signoff(pr: str, s: Signoff):
         raise HTTPException(400, "A test that passed before now fails. This change cannot be accepted.")
     if not s.risk.strip():
         raise HTTPException(400, "Write the risk you accept, in one sentence")
-    record({"type": "signoff", "pr": pr, **s.model_dump()})
-    return {"ok": True}
+    out = {"ok": True}
+    gh = p.get("github")
+    if gh:  # a real pull request: the decision goes to GitHub, under the signer's own account
+        sess = session_of(request) or {}
+        tok = sess.get("token")
+        if not tok:
+            raise HTTPException(403, "Sign in with GitHub to sign this pull request: Vouch merges it under your own account.")
+        repo, n, sha = gh["repo"], gh["number"], gh["head_sha"]
+        by = sess.get("login", s.user)
+        c = gh_call("POST", f"/repos/{repo}/issues/{n}/comments", tok, {"body": review_record(p, st, s, by)})
+        if c.status_code >= 300:
+            raise HTTPException(c.status_code if c.status_code < 500 else 502, f"GitHub refused the review comment: {c.json().get('message', c.text)[:200]}")
+        target = str(request.base_url).rstrip("/") + f"/review#/pr/{pr}"
+        if s.decision == "accept":
+            gh_call("POST", f"/repos/{repo}/statuses/{sha}", tok, {"state": "success", "context": "vouch/review", "target_url": target,
+                                                                    "description": f"Signed by {by}"[:140]})
+            m = gh_call("PUT", f"/repos/{repo}/pulls/{n}/merge", tok, {"sha": sha, "merge_method": "squash",
+                                                                      "commit_title": f"{p['requirement']['title']} (#{n})"[:250]})
+            if m.status_code >= 300:  # e.g. new commits since the review (sha mismatch), conflicts, no write access
+                raise HTTPException(409, f"Signed, but GitHub did not merge: {m.json().get('message', m.text)[:200]}. "
+                                         "If the branch changed, run Vouch again: the review only covers the commit it checked.")
+            out["merged"] = m.json().get("sha")
+        else:
+            gh_call("POST", f"/repos/{repo}/statuses/{sha}", tok, {"state": "failure", "context": "vouch/review", "target_url": target,
+                                                                    "description": f"Rejected by {by}"[:140]})
+        out["comment"] = c.json().get("html_url")
+    record({"type": "signoff", "pr": pr, **s.model_dump(), **{k: v for k, v in out.items() if k != "ok"}})
+    return out
 
 
 @app.post("/api/prs/{pr}/reset")
@@ -467,3 +558,69 @@ async def stream(pr: str):
             subscribers[pr].discard(q)
 
     return StreamingResponse(gen(), media_type="text/event-stream")
+
+
+# ---------------------------------------------------------------- your own repositories: pull requests, run, status
+
+def _token(request: Request) -> str:
+    s = session_of(request)
+    if not s:
+        raise HTTPException(401, "Not signed in")
+    return s.get("token") or os.environ.get("GITHUB_TOKEN", "")
+
+
+@app.get("/api/gh/{owner}/{name}/pulls")
+def gh_pulls(owner: str, name: str, request: Request):
+    from vouch import jobs
+    repo, tok = f"{owner}/{name}", _token(request)
+    hdr = {"Accept": "application/vnd.github+json", **({"Authorization": f"Bearer {tok}"} if tok else {})}
+    info = httpx.get(f"https://api.github.com/repos/{repo}", headers=hdr, timeout=20)
+    if info.status_code >= 300:
+        raise HTTPException(info.status_code, f"GitHub: {info.json().get('message', info.text)[:200]}")
+    prs = httpx.get(f"https://api.github.com/repos/{repo}/pulls?state=all&per_page=30&sort=updated&direction=desc", headers=hdr, timeout=20).json()
+    try:
+        st = jobs.statuses(repo)
+    except Exception:
+        st = {}
+    out = []
+    for p in prs:
+        v = st.get(p["number"])
+        if p["state"] != "open" and not v:
+            continue  # closed pull requests Vouch never saw are not interesting here
+        row = {"number": p["number"], "title": p["title"], "author": p["user"]["login"], "url": p["html_url"], "state": p["state"],
+               "merged": bool(p.get("merged_at")), "draft": p.get("draft", False), "head_sha": p["head"]["sha"], "vouch": v}
+        if v and v["status"] == "ready":
+            row["stale"] = v.get("head") != p["head"]["sha"]  # new commits since the check: the review no longer covers them
+            try:
+                pk = jobs.get(jobs.pack_id(repo, p["number"]))["pack"]
+                s2 = state(pk["id"], pk["steps"])
+                row["review"] = {"done": s2["done"], "total": s2["total"], "signoff": s2["signoff"], "reviewers": sorted(s2["presence"])}
+                row["flags"] = flags(pk)
+            except Exception:
+                pass
+        out.append(row)
+    perm = (info.json().get("permissions") or {})
+    return {"repo": repo, "language": info.json().get("language"), "can_run": bool(perm.get("push")), "pulls": out}
+
+
+@app.post("/api/gh/{owner}/{name}/pulls/{number}/run")
+def gh_run(owner: str, name: str, number: int, request: Request):
+    from vouch import jobs
+    s = session_of(request) or {}
+    if not s.get("token"):
+        raise HTTPException(403, "Sign in with GitHub to run Vouch on your repositories.")
+    repo = f"{owner}/{name}"
+    info = gh_call("GET", f"/repos/{repo}", s["token"])
+    if not (info.json().get("permissions") or {}).get("push"):  # it runs the pull request's code: only people who can merge may start it
+        raise HTTPException(403, "Only people who can merge into this repository can run Vouch on it.")
+    pid = jobs.pack_id(repo, number)
+    jobs.set_status(pid, repo, number, "queued", by=s["login"])
+    job = {"repo": repo, "number": number, "by": s["login"]}
+    if publish("review.jobs", job):
+        return {"queued": pid, "via": "kafka"}
+    if not SERVERLESS:  # no queue reachable but we are on a machine that can run tests: do it here
+        import threading
+        threading.Thread(target=jobs.run_job, args=(job,), daemon=True).start()
+        return {"queued": pid, "via": "local"}
+    jobs.set_status(pid, repo, number, "failed", error="The job queue is unreachable. Try again.")
+    raise HTTPException(503, "The job queue is unreachable. Try again.")

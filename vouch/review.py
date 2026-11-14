@@ -311,12 +311,18 @@ def review(pr: str, use_ai: bool = True, use_tests: bool = True) -> dict:
     req_path = ROOT / "requirements" / f"REQ-{pr}.md"
     req = req_path.read_text(encoding="utf-8")
     req_title = req.splitlines()[0].lstrip("# ").strip()
-    missing = []
-
     g = guard(base, head, files, use_tests)
-    if not g["ran"]:
-        missing.append("guard")
+    project = TEST_PROJECTS.get("tests/MessagePack.SourceGenerator.Tests")
+    return analyse(pr, branch, base, head, author, trailers, files, req, req_title, f"#{pr}",
+                   f"https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/{pr}", g, use_ai, use_tests,
+                   rerun=lambda names: run_tests(head, project, names))
 
+
+def analyse(pr: str, branch: str, base: str, head: str, author: str, agent: str, files: list[dict], req: str, req_title: str,
+            req_key: str, req_url: str, g: dict, use_ai: bool = True, use_tests: bool = True, rerun=None) -> dict:
+    """Everything after the diff and the Guardrail run: AI claims, checks by code, risk rules, reading list, route, tour.
+    Same for a Tieto branch and for any GitHub pull request."""
+    missing = [] if g["ran"] else ["guard"]
     known_tests = test_methods(files)
     story, usage = None, {}
     if use_ai and os.environ.get("ANTHROPIC_API_KEY"):
@@ -333,9 +339,8 @@ def review(pr: str, use_ai: bool = True, use_tests: bool = True) -> dict:
     # tests the claims name, run on the head commit
     head_results = g.get("head_results") or {}
     named = sorted({t for c in claims for t in c["tests"]})
-    if use_tests and named and any(t not in head_results for t in named):
-        project = TEST_PROJECTS.get("tests/MessagePack.SourceGenerator.Tests")
-        head_results = {**head_results, **(run_tests(head, project, [t.split(".")[-1] for t in named]) or {})}
+    if use_tests and named and rerun and any(t not in head_results for t in named):
+        head_results = {**head_results, **(rerun([t.split(".")[-1] for t in named]) or {})}
     if use_tests and named and not head_results:
         missing.append("tests")
 
@@ -381,8 +386,8 @@ def review(pr: str, use_ai: bool = True, use_tests: bool = True) -> dict:
         route = "focused"
 
     pack = {
-        "id": pr, "branch": branch, "base": base, "head": head, "author": author, "agent": trailers or "unknown",
-        "requirement": {"key": f"#{pr}", "title": req_title, "url": f"https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/{pr}", "text": req},
+        "id": pr, "branch": branch, "base": base, "head": head, "author": author, "agent": agent or "unknown",
+        "requirement": {"key": req_key, "title": req_title, "url": req_url, "text": req},
         "summary": (story or {}).get("summary", ""),
         "files": files, "claims": claims, "refusals": refs, "generated": gen, "guard": {k: v for k, v in g.items() if k != "head_results"},
         "reading": {p: ranges(sorted(v)) for p, v in reading.items() if v},

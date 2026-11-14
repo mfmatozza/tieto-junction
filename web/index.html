@@ -26,6 +26,7 @@
 body { background: var(--bg); color: var(--text); font: 15px/1.55 var(--sans); -webkit-font-smoothing: antialiased; min-height: 100dvh; }
 a { color: inherit; text-decoration: none; }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+.ghlink { color: var(--dim); font-size: 20px; vertical-align: -2px; margin-left: 6px; } .ghlink:hover { color: var(--text); }
 code { font: 12.5px var(--mono); background: rgba(15,31,77,0.044); padding: 1px 6px; border-radius: 5px; }
 .g { color: var(--green); } .r { color: var(--red); } .a { color: var(--amber); } .m { color: var(--muted); } .d { color: var(--dim); }
 
@@ -286,7 +287,8 @@ function go(i) {
 function render(animate) {
   const st = P.stats, g = P.guard, step = P.steps[cur];
   const draft = $("#draft")?.value, risk = $("#risk")?.value;   // keep what the user is typing across live refreshes
-  $("#crumb").innerHTML = `<span>/</span><a class="repo" href="/app#/repo">${esc(REPO)}</a><span>/</span><span class="cur">#${esc(P.id)}</span>`;
+  const gh = P.github, repoName = gh ? gh.repo : REPO, num = gh ? gh.number : P.id;
+  $("#crumb").innerHTML = `<span>/</span><a class="repo" href="${gh ? `/app#/gh/${esc(gh.repo)}` : "/app#/repo"}">${esc(repoName)}</a><span>/</span><span class="cur">#${esc(num)}</span>`;
   renderRight();
   const here = (sid) => Object.entries(S.presence).filter(([u, s]) => s === sid && u !== me).map(([u]) => avatar(u, u + " is here")).join("");
   const icon = (s, i) => {
@@ -299,7 +301,7 @@ function render(animate) {
   const route = ROUTE[P.route] || ["Review", "dim"];
   $("#app").innerHTML = `<div class="page">
     <div class="top">
-      <h1><span class="id">#${esc(P.id)}</span>${esc(P.requirement.title.replace(/^#?\d+\s*/, ""))}</h1>
+      <h1><span class="id">#${esc(num)}</span>${esc(P.requirement.title.replace(/^#?\d+\s*/, ""))}${gh ? ` <a class="ghlink" href="${esc(gh.url)}" target="_blank" rel="noopener" title="Open on GitHub"><i class="ph ph-github-logo"></i></a>` : ""}</h1>
       <div class="meta">
         <span><b>${fmt(st.changed_lines)}</b> lines changed</span>
         <span>you read <b class="g">${fmt(st.lines_to_read)}</b>, about ${st.minutes} min</span>
@@ -405,19 +407,23 @@ function vSign() {
     const v = Object.values(S.votes[x.id] || {});
     return `<div><span>${esc(x.title)}</span><span>${v.length ? v.map((y) => `${esc(y.user)} <span class="${y.vote === "ok" ? "g" : y.vote === "problem" ? "r" : "a"}">${VOTE_WORD[y.vote]}</span>`).join(", ") : '<span class="d">nobody yet</span>'}</span></div>`;
   }).join("");
-  if (S.signoff) return `<div class="kicker">Sign-off</div><h2>${S.signoff.decision === "accept" ? "Accepted" : "Rejected"} by ${esc(S.signoff.user)}</h2>
-    <div class="note ${S.signoff.decision === "accept" ? "ok" : "bad"}"><b>Risk accepted:</b> ${esc(S.signoff.risk)}</div>
+  if (S.signoff) { const so = S.signoff; return `<div class="kicker">Sign-off</div><h2>${so.decision === "accept" ? (so.merged ? "Merged on GitHub" : "Accepted") : "Rejected"} by ${esc(so.user)}</h2>
+    <div class="note ${so.decision === "accept" ? "ok" : "bad"}"><b>${so.decision === "accept" ? "Risk accepted" : "Reason"}:</b> ${esc(so.risk)}</div>
+    ${so.merged ? `<div class="note info">Squash-merged into <b>${esc(P.github.base_ref)}</b> as commit <code>${esc(so.merged.slice(0, 7))}</code>. The commit status <code>vouch/review</code> is green.</div>` : ""}
+    ${so.comment ? `<p class="conf"><a class="g" href="${esc(so.comment)}" target="_blank" rel="noopener">Read the review record on the pull request</a></p>` : ""}
+    ${!P.github ? `<p class="conf">This is a demo pull request in Tieto's repository, which we cannot write to. On your own repositories, signing posts this record on the pull request and merges it.</p>` : ""}
     <div class="sec"><div class="sec-h">Who reviewed what</div><div class="rows">${who}</div></div>
-    <div class="actbar"><button class="btn btn-ghost" onclick="resetReview()"><i class="ph ph-arrow-counter-clockwise"></i>Start the review again</button></div>`;
+    ${so.merged ? "" : `<div class="actbar"><button class="btn btn-ghost" onclick="resetReview()"><i class="ph ph-arrow-counter-clockwise"></i>Start the review again</button></div>`}`; }
   return `<div class="kicker">Sign-off</div><h2>Sign this change</h2>
     ${P.route === "blocked" ? `<div class="note bad">An existing test broke. This change cannot be accepted.</div>` : ""}
     ${left ? `<div class="note warn">${left} step${left > 1 ? "s" : ""} still need${left > 1 ? "" : "s"} an approval from someone on the team.</div>` : `<div class="note ok">Every step has been approved by the team.</div>`}
     <div class="sec"><div class="sec-h">Who reviewed what</div><div class="rows">${who}</div></div>
+    <div class="note info">${P.github ? `Accepting posts the review record on <a class="g" href="${esc(P.github.url)}" target="_blank" rel="noopener">the pull request</a>, sets <code>vouch/review</code> to green and <b>squash-merges it on GitHub as you</b>. Rejecting posts your reason and sets it to red.` : "Demo pull request: the sign-off is recorded in Vouch. On your own repositories it also merges on GitHub."}</div>
     <div class="sec"><label class="sec-h" for="risk" style="display:block">The risk you accept, in one sentence</label>
       <textarea id="risk" rows="2" placeholder="For example: only tested on .NET 8, and the third crash site in the issue is unchanged."></textarea></div>
     <div id="signErr"></div>
     <div class="actbar">
-      <button class="btn btn-primary" ${left || P.route === "blocked" ? "disabled" : ""} onclick="sign('accept')"><i class="ph ph-signature"></i>Accept and sign as ${esc(me)}</button>
+      <button class="btn btn-primary" ${left || P.route === "blocked" ? "disabled" : ""} onclick="sign('accept')"><i class="ph ph-signature"></i>${P.github ? "Approve and merge" : "Accept and sign"} as ${esc(me)}</button>
       <button class="btn btn-ghost" onclick="sign('reject')">Reject</button>
       <span class="sp"></span>
       <button class="btn btn-ghost icon-btn" onclick="go(cur-1)" aria-label="Previous step"><i class="ph ph-arrow-left"></i></button>
@@ -491,7 +497,8 @@ function closeCompose() { compose = null; render(false); }
 async function vote(v, note = "") {
   try {
     await api(`/api/prs/${prId}/vote`, { user: me, step: P.steps[cur].id, vote: v, note });
-    if (v === "ok") { S.status[P.steps[cur].id] = "ok"; go(cur + 1); } else refresh();
+    S = (await api(`/api/prs/${prId}`)).state;   // the saved state, not a guess: what everyone else now sees too
+    if (v === "ok") { lastStep = null; go(cur + 1 < P.steps.length ? cur + 1 : cur); render(false); } else render(false);
   } catch (e) { showErr("#actErr", e); }
 }
 async function sendProblem() {
@@ -507,8 +514,10 @@ async function sendAsk() {
   catch (e) { b.disabled = false; b.textContent = "Ask"; showErr("#actErr", e); }
 }
 async function sign(decision) {
-  try { await api(`/api/prs/${prId}/signoff`, { user: me, decision, risk: $("#risk").value }); await refresh(); }
-  catch (e) { showErr("#signErr", e); }
+  const btns = document.querySelectorAll(".actbar .btn"); btns.forEach((b) => (b.disabled = true));
+  $("#signErr").innerHTML = `<div class="note info">${P.github ? (decision === "accept" ? "Posting the review on GitHub and merging…" : "Posting the rejection on GitHub…") : "Saving…"}</div>`;
+  try { await api(`/api/prs/${prId}/signoff`, { user: me, decision, risk: $("#risk").value }); S = (await api(`/api/prs/${prId}`)).state; render(false); }
+  catch (e) { btns.forEach((b) => (b.disabled = false)); showErr("#signErr", e); }
 }
 async function resetReview() {
   if (!confirm("Clear every vote and the sign-off for this change?")) return;
@@ -523,7 +532,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 function route() {
-  const m = location.hash.match(/^#\/pr\/(\w+)(?:\/(\d+))?/);
+  const m = location.hash.match(/^#\/pr\/([^/]+)(?:\/(\d+))?/);
   if (!m) { location.href = "/app#/repo"; return; }
   const step = m[2] ? +m[2] - 1 : 0;
   if (m[1] !== prId) { cur = step; showPR(m[1]); }

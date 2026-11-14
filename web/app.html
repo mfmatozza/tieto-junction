@@ -66,6 +66,17 @@ h1 { font-size: 30px; letter-spacing: -.025em; font-weight: 600; }
 .connect .d { color: var(--dim); font-size: 13px; }
 .link { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
 .list-h + .repos { margin-top: 14px; }
+.pr.gh { grid-template-columns: minmax(0,1fr) auto; }
+.pr .ext { color: var(--dim); font-size: 15px; vertical-align: -1px; }
+.chips2 { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.flag:not(.danger):not(.clean):not(.warn) { background: rgba(15,31,77,.05); color: var(--muted); }
+.flag.warn { background: var(--amber-soft); color: var(--amber); }
+.running { display: inline-flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--muted); }
+.spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line-2); border-top-color: var(--navy); animation: rot .8s linear infinite; }
+@keyframes rot { to { transform: rotate(360deg); } }
+.note2 { margin-top: 18px; padding: 12px 16px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+.note2 b { color: var(--text); } .note2 a { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+.note2 code { font: 12.5px var(--mono); background: rgba(15,31,77,.06); padding: 1px 6px; border-radius: 5px; color: var(--text); }
 .state { font: 12px var(--mono); color: var(--dim); }
 .skel { height: 64px; background: linear-gradient(90deg, var(--surface) 0%, var(--surface-2) 50%, var(--surface) 100%); background-size: 200% 100%; animation: sh 1.4s infinite; }
 .skel + .skel { border-top: 1px solid var(--line); }
@@ -193,7 +204,7 @@ async function showRepos() {
         <div class="repo">
           <i class="ph ph-git-branch ic"></i>
           <div><div class="name">${esc(r.full_name)}</div><div class="meta">${esc(r.language || "No language detected")}${r.private ? " · private" : ""} · ${lang ? `<span class="ok-t">${esc(lang)} is supported</span>` : "not supported yet"}</div></div>
-          <button class="btn btn-ghost" onclick="toggleConnect(${i})">Connect</button>
+          ${lang ? `<a class="btn btn-primary" href="#/gh/${esc(r.full_name)}">Open<i class="ph ph-arrow-right"></i></a>` : `<button class="btn btn-ghost" onclick="toggleConnect(${i})">Why not?</button>`}
         </div>
         <div class="connect" id="c${i}" hidden>
           <p>Connecting means Vouch checks every AI pull request in this repository: Guardrail runs your existing tests before and after, Checkpoint verifies the AI's claims, and your team reviews the rest here.</p>
@@ -268,8 +279,59 @@ async function showRepo() {
     ${done.length ? `<div class="list-h"><h2>Signed</h2><span>${done.length}</span></div>${done.map(card).join("")}` : ""}`;
 }
 
+let ghTimer = null;
+async function showGh(repo, quiet) {
+  clearTimeout(ghTimer);
+  $("#crumb").innerHTML = `<span>/</span><a href="#/gh/${esc(repo)}">${esc(repo)}</a>`;
+  if (!quiet) $("#view").innerHTML = `<div class="skel" style="height:160px;border-radius:14px"></div>`;
+  let d;
+  try { d = await api(`/api/gh/${repo}/pulls`); }
+  catch (e) { $("#view").innerHTML = `<div class="err">Could not load pull requests from GitHub. ${esc(e.message)}</div>`; return; }
+  const open = d.pulls.filter((p) => p.state === "open"), done = d.pulls.filter((p) => p.state !== "open");
+  const row = (p) => {
+    const v = p.vouch, rv = p.review || {}, g = v && v.guard;
+    let right = "", detail = "";
+    if (p.merged) right = `<span class="flag clean"><i class="ph ph-git-merge"></i>Merged${rv.signoff ? ` · signed by ${esc(rv.signoff.user)}` : ""}</span>`;
+    else if (p.state !== "open") right = `<span class="flag">Closed</span>`;
+    else if (!v) right = d.can_run ? `<button class="btn btn-primary" onclick="runVouch('${esc(repo)}', ${p.number}, this)"><i class="ph ph-play"></i>Run Vouch</button>` : `<span class="state">Not checked</span>`;
+    else if (v.status === "queued" || v.status === "running") right = `<span class="running"><span class="spin"></span>${v.status === "queued" ? "Queued for a worker" : "Running the tests and checking claims"}</span>`;
+    else if (v.status === "failed") right = `<span class="flag danger"><i class="ph ph-warning-octagon"></i>Could not finish</span>${d.can_run ? `<button class="btn btn-ghost" onclick="runVouch('${esc(repo)}', ${p.number}, this)">Run again</button>` : ""}`;
+    else {
+      right = `${p.stale && d.can_run ? `<button class="btn btn-ghost" onclick="runVouch('${esc(repo)}', ${p.number}, this)">Run again</button>` : ""}
+        <a class="btn ${rv.signoff ? "btn-ghost" : "btn-primary"}" href="/review#/pr/${esc(repo.replace("/", "~"))}~${p.number}">${rv.signoff ? "Open" : rv.done ? "Continue review" : "Start EasyReview"}<i class="ph ph-arrow-right"></i></a>`;
+      detail = `<div class="chips2">
+        <span class="flag ${g && g.regression ? "danger" : g && g.ran ? "clean" : ""}"><i class="ph ${g && g.regression ? "ph-x-circle" : "ph-shield-check"}"></i>${!g || !g.ran ? "Tests did not run: read everything" : g.regression ? `Blocked: ${g.regression} existing test${g.regression > 1 ? "s" : ""} broke` : `${g.kept}/${g.existing} existing tests still pass`}</span>
+        ${v.stats ? `<span class="flag">${fmtn(v.stats.lines_to_read)} of ${fmtn(v.stats.changed_lines)} lines to read</span>` : ""}
+        ${rv.total ? `<span class="flag">${rv.done}/${rv.total} steps approved</span>` : ""}
+        ${p.stale ? `<span class="flag danger">New commits since the check: run again</span>` : ""}
+        ${(p.flags || []).filter((f) => !/regression|existing tests now fail/.test(f.text)).map((f) => `<span class="flag ${f.level}">${esc(f.text)}</span>`).join("")}
+      </div>`;
+    }
+    if (v && v.status === "failed") detail = `<div class="chips2"><span class="flag danger">${esc((v.error || "").slice(0, 160))}</span></div>`;
+    return `<div class="pr gh"><div><div class="t"><span class="id">#${p.number}</span>${esc(p.title)} <a class="ext" href="${esc(p.url)}" target="_blank" rel="noopener" title="Open on GitHub"><i class="ph ph-arrow-square-out"></i></a></div>
+      <div class="m">by ${esc(p.author)}${p.draft ? " · draft" : ""}</div>${detail}</div><div class="act">${right}</div></div>`;
+  };
+  $("#view").innerHTML = `
+    <div class="head"><div><h1>${esc(repo)}</h1><p class="sub">${esc(d.language || "")} · Vouch checks each pull request on a worker, your team reviews it here, and signing merges it on GitHub.</p></div></div>
+    ${d.can_run ? "" : `<div class="note2">You can see this repository, but only people who can merge into it can run Vouch: it runs the pull request's code.</div>`}
+    <div class="note2"><b>Make it a real gate:</b> in GitHub, add <code>vouch/review</code> as a required status check in <a href="https://github.com/${esc(repo)}/settings/branches" target="_blank" rel="noopener">branch protection</a>. Then nothing merges without a passing Guardrail and a human sign-off.</div>
+    <div class="list-h"><h2>Open pull requests</h2><span>${open.length}</span></div>
+    ${open.length ? open.map(row).join("") : `<div class="empty"><i class="ph ph-git-pull-request"></i>No open pull requests.</div>`}
+    ${done.length ? `<div class="list-h"><h2>Checked by Vouch, closed</h2><span>${done.length}</span></div>${done.map(row).join("")}` : ""}`;
+  if (d.pulls.some((p) => p.vouch && (p.vouch.status === "queued" || p.vouch.status === "running")))
+    ghTimer = setTimeout(() => { if (location.hash === "#/gh/" + repo) showGh(repo, true); }, 4000);
+}
+const fmtn = (x) => Number(x).toLocaleString("en-US");
+async function runVouch(repo, n, btn) {
+  btn.disabled = true; btn.textContent = "Queuing…";
+  try { await fetch(`/api/gh/${repo}/pulls/${n}/run`, { method: "POST", credentials: "same-origin" }).then(async (r) => { if (!r.ok) throw new Error((await r.json()).detail || r.status); }); showGh(repo, true); }
+  catch (e) { btn.disabled = false; btn.textContent = "Run Vouch"; alert(e.message); }
+}
+
 function route() {
-  if (location.hash.startsWith("#/repo")) showRepo(); else showRepos();
+  clearTimeout(ghTimer);
+  const gh = location.hash.match(/^#\/gh\/([^/]+\/[^/]+)/);
+  if (gh) showGh(gh[1]); else if (location.hash.startsWith("#/repo")) showRepo(); else showRepos();
 }
 
 (async () => {
