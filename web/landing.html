@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vouch · Review AI code in minutes</title>
-<meta name="description" content="AI agents build backlog issues in parallel lanes. Vouch proves nothing broke and turns the diff into a five-minute team review.">
+<meta name="description" content="AI agents build backlog issues in parallel lanes. Vouch blocks anything that breaks and turns the rest into a five-minute team review.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 26 26%27%3E%3Crect width=%2726%27 height=%2726%27 rx=%277%27 fill=%27%23111d42%27/%3E%3Cpath d=%27M7 7.5 13 18.5 19 7.5%27 fill=%27none%27 stroke=%27%2386efac%27 stroke-width=%272.4%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,265 +13,272 @@
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
 <style>
 :root {
-  --bg: #060b1c;
-  --bg-2: #0a1230;
-  --surface: #0d1736;
-  --surface-2: #111d42;
-  --line: rgba(160, 178, 230, .12);
-  --line-2: rgba(160, 178, 230, .2);
-  --text: #eef2fb;
-  --muted: #94a0c2;
-  --dim: #66719a;
-  --green: #86efac;
-  --green-ink: #052e16;
-  --green-soft: rgba(134, 239, 172, .12);
-  --red: #fda4af;
-  --amber: #fcd34d;
+  --bg: #060b1c; --bg-2: #0a1230; --surface: #0d1736; --surface-2: #111d42;
+  --line: rgba(160,178,230,.12); --line-2: rgba(160,178,230,.2);
+  --text: #eef2fb; --muted: #94a0c2; --dim: #66719a;
+  --green: #86efac; --green-ink: #052e16; --green-soft: rgba(134,239,172,.12);
+  --red: #fda4af; --red-soft: rgba(253,164,175,.12); --amber: #fcd34d; --amber-soft: rgba(252,211,77,.12);
+  --blue: #93c5fd;
   --r: 14px;
-  --sans: "Geist", ui-sans-serif, system-ui, sans-serif;
-  --mono: "Geist Mono", ui-monospace, monospace;
+  --sans: "Geist", ui-sans-serif, system-ui, sans-serif; --mono: "Geist Mono", ui-monospace, monospace;
+  --ease: cubic-bezier(.16,1,.3,1);
 }
 * { box-sizing: border-box; margin: 0; }
 html { scroll-behavior: smooth; }
-body {
-  background: var(--bg);
-  color: var(--text);
-  font: 16px/1.6 var(--sans);
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
+body { background: var(--bg); color: var(--text); font: 16px/1.6 var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 a { color: inherit; text-decoration: none; }
-.wrap { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
-.mono { font-family: var(--mono); }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+.g { color: var(--green); } .r { color: var(--red); } .a { color: var(--amber); }
 
-/* Nav */
-nav.top {
-  position: sticky; top: 0; z-index: 20;
-  background: rgba(6, 11, 28, .72);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  border-bottom: 1px solid transparent;
-  transition: border-color .3s;
-}
+nav.top { position: sticky; top: 0; z-index: 20; background: rgba(6,11,28,.72); backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%); border-bottom: 1px solid transparent; transition: border-color .3s; }
 nav.top.scrolled { border-bottom-color: var(--line); }
 nav.top .wrap { height: 64px; display: flex; align-items: center; gap: 32px; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 17px; letter-spacing: -.01em; }
-.brand svg { display: block; }
 nav.top .links { display: flex; gap: 28px; font-size: 14px; color: var(--muted); }
 nav.top .links a:hover { color: var(--text); }
-nav.top .right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+nav.top .right { margin-left: auto; }
 
-/* Buttons */
-.btn {
-  display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
-  height: 40px; padding: 0 18px; border-radius: 999px;
-  font: 500 14px/1 var(--sans); cursor: pointer; border: 1px solid transparent;
-  transition: transform .15s cubic-bezier(.16,1,.3,1), background .2s, border-color .2s;
-}
-.btn:active { transform: scale(.98); }
+.btn { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; height: 40px; padding: 0 18px; border-radius: 999px; font: 500 14px/1 var(--sans); cursor: pointer; border: 1px solid transparent; transition: transform .15s var(--ease), background .2s, border-color .2s; }
+.btn:active { transform: scale(.97); }
 .btn-primary { background: var(--green); color: var(--green-ink); }
 .btn-primary:hover { background: #a7f3c0; }
 .btn-ghost { color: var(--text); border-color: var(--line-2); }
 .btn-ghost:hover { border-color: rgba(160,178,230,.4); background: rgba(160,178,230,.06); }
 .btn-lg { height: 48px; padding: 0 24px; font-size: 15px; }
-.btn i { font-size: 18px; }
+.btn-sm { height: 32px; padding: 0 12px; font-size: 13px; }
+.btn i { font-size: 17px; }
 
-/* Hero */
-.hero { position: relative; padding: 88px 0 40px; text-align: center; isolation: isolate; }
-.hero::before {
-  content: ""; position: absolute; inset: -120px 0 auto; height: 720px; z-index: -1;
-  background:
-    radial-gradient(60% 50% at 50% 0%, rgba(56, 89, 196, .34), transparent 70%),
-    radial-gradient(30% 30% at 50% 30%, rgba(134, 239, 172, .07), transparent 70%);
-}
-.hero h1 {
-  font-size: clamp(40px, 6vw, 68px); line-height: 1.04; letter-spacing: -.035em; font-weight: 600;
-  max-width: 14ch; margin: 0 auto;
-}
-.hero h1 span { color: var(--green); }
-.hero p.sub { max-width: 560px; margin: 22px auto 0; color: var(--muted); font-size: 18px; line-height: 1.55; }
-.hero .ctas { margin-top: 34px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.hero { position: relative; padding: 80px 0 24px; text-align: center; isolation: isolate; }
+.hero::before { content: ""; position: absolute; inset: -120px 0 auto; height: 760px; z-index: -1; background: radial-gradient(60% 50% at 50% 0%, rgba(56,89,196,.34), transparent 70%), radial-gradient(30% 30% at 50% 30%, rgba(134,239,172,.07), transparent 70%); }
+.hero h1 { font-size: clamp(40px, 6vw, 66px); line-height: 1.04; letter-spacing: -.035em; font-weight: 600; max-width: 15ch; margin: 0 auto; }
+.hero p.sub { max-width: 580px; margin: 20px auto 0; color: var(--muted); font-size: 18px; line-height: 1.55; }
+.hero .ctas { margin-top: 30px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
-/* Road visual */
-.road-card {
-  margin: 64px auto 0; max-width: 1100px; border: 1px solid var(--line); border-radius: 20px;
-  background: linear-gradient(180deg, rgba(17, 29, 66, .7), rgba(10, 18, 48, .5));
-  box-shadow: 0 40px 120px -40px rgba(20, 40, 120, .6), inset 0 1px 0 rgba(255,255,255,.04);
-  padding: 8px; overflow: hidden;
-}
-.road-card svg { display: block; width: 100%; height: auto; }
-.road-legend { display: flex; justify-content: space-between; padding: 6px 16px 10px; font: 12px var(--mono); color: var(--dim); }
+/* Simulation */
+.sim { margin: 56px auto 0; text-align: left; border: 1px solid var(--line-2); border-radius: 20px; background: linear-gradient(180deg, rgba(17,29,66,.75), rgba(10,18,48,.6)); box-shadow: 0 40px 120px -40px rgba(20,40,120,.65), inset 0 1px 0 rgba(255,255,255,.04); overflow: hidden; }
+.sim-top { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.live { display: inline-flex; align-items: center; gap: 8px; font: 500 12.5px var(--mono); color: var(--green); }
+.live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 1.8s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(134,239,172,.6); } 70%, 100% { box-shadow: 0 0 0 7px rgba(134,239,172,0); } }
+.sim-top .repo { font: 12.5px var(--mono); color: var(--muted); }
+.sim-top .acts { margin-left: auto; display: flex; gap: 8px; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--line); }
+.stats div { padding: 14px 18px; }
+.stats div + div { border-left: 1px solid var(--line); }
+.stats b { display: block; font: 500 24px/1.15 var(--mono); letter-spacing: -.02em; }
+.stats span { font-size: 12.5px; color: var(--muted); }
+.sim-body { display: grid; grid-template-columns: minmax(0,1fr) 310px; }
+.sim-road { padding: 8px 8px 4px 14px; }
+.sim-road svg { display: block; width: 100%; height: auto; }
+.log { border-left: 1px solid var(--line); padding: 14px 14px 10px; display: flex; flex-direction: column; gap: 9px; height: 372px; overflow: hidden; }
+.log h4 { font: 500 12px var(--mono); color: var(--dim); }
+.ev { display: grid; grid-template-columns: 18px 1fr; gap: 8px; font-size: 12.5px; line-height: 1.4; color: var(--muted); animation: evin .45s var(--ease) both; }
+.ev i { font-size: 15px; margin-top: 1px; }
+.ev b { color: var(--text); font-weight: 500; }
+@keyframes evin { from { opacity: 0; transform: translateY(-6px); } }
+
 .lane-edge { stroke: rgba(160,178,230,.16); stroke-width: 1.2; fill: none; }
-.lane-mid { stroke: rgba(160,178,230,.22); stroke-width: 1.2; stroke-dasharray: 6 10; fill: none; animation: dash 1.4s linear infinite; }
-.trunk-edge { stroke: rgba(160,178,230,.28); stroke-width: 1.4; fill: none; }
-.trunk-mid { stroke: rgba(134,239,172,.45); stroke-width: 1.4; stroke-dasharray: 10 12; fill: none; animation: dash 1s linear infinite; }
+.lane-mid { stroke: rgba(160,178,230,.24); stroke-width: 1.2; stroke-dasharray: 6 10; fill: none; animation: dash 1.4s linear infinite; }
+.trunk-edge { stroke: rgba(160,178,230,.3); stroke-width: 1.4; fill: none; }
+.trunk-mid { stroke: rgba(134,239,172,.4); stroke-width: 1.4; stroke-dasharray: 10 12; fill: none; animation: dash 1s linear infinite; }
+.ramp { stroke: rgba(253,164,175,.35); stroke-width: 1.4; stroke-dasharray: 5 7; fill: none; }
 @keyframes dash { to { stroke-dashoffset: -32; } }
-.gate rect { fill: var(--surface-2); stroke: var(--line-2); }
-.gate text { font: 500 12px var(--sans); fill: var(--text); }
-.gate .sub { font: 11px var(--mono); fill: var(--dim); }
-.gate .post { stroke: rgba(134,239,172,.6); stroke-width: 2; }
-.lane-label { font: 12px var(--mono); fill: var(--muted); }
-.car { fill: #dbe4ff; }
-.car.ok { fill: var(--green); }
-.end text { font: 600 13px var(--sans); fill: var(--green); }
+.lane-label { font: 11px var(--mono); fill: var(--dim); }
+.gate .post { stroke: rgba(160,178,230,.45); stroke-width: 3; stroke-linecap: round; transition: stroke .25s; }
+.gate.pass .post { stroke: var(--green); }
+.gate.fail .post { stroke: var(--red); }
+.gate.warn .post { stroke: var(--amber); }
+.gate rect { fill: var(--surface-2); stroke: var(--line-2); transition: stroke .25s, fill .25s; }
+.gate.pass rect { stroke: rgba(134,239,172,.6); }
+.gate.warn rect { stroke: rgba(252,211,77,.6); }
+.gate.fail rect { stroke: rgba(253,164,175,.7); fill: #2a1430; }
+.gate .nm { font: 600 12.5px var(--sans); fill: var(--text); }
+.gate .res { font: 11px var(--mono); fill: var(--muted); }
+.gate.pass .res { fill: var(--green); } .gate.fail .res { fill: var(--red); } .gate.warn .res { fill: var(--amber); }
+.pit rect { fill: rgba(253,164,175,.06); stroke: rgba(253,164,175,.35); stroke-dasharray: 4 4; }
+.pit text { font: 11.5px var(--mono); fill: var(--red); }
+.main-end text { font: 600 13px var(--sans); fill: var(--green); }
+.car text { font: 600 9.5px var(--mono); fill: #0a1230; }
+.car { transition: opacity .4s; }
 
-/* Sections */
-section { padding: 120px 0; }
+section { padding: 112px 0; }
 .h2 { font-size: clamp(30px, 4vw, 44px); line-height: 1.1; letter-spacing: -.03em; font-weight: 600; max-width: 22ch; }
-.lead { color: var(--muted); font-size: 17px; max-width: 58ch; margin-top: 16px; }
-.center { text-align: center; }
-.center .h2, .center .lead { margin-left: auto; margin-right: auto; }
+.lead { color: var(--muted); font-size: 17px; max-width: 60ch; margin-top: 14px; }
 
-/* Proof numbers */
-.proof { padding: 72px 0 40px; }
-.proof-grid {
-  display: grid; grid-template-columns: 1.3fr 1fr 1fr; border: 1px solid var(--line); border-radius: var(--r);
-  background: rgba(13, 23, 54, .5);
-}
-.proof-grid > div { padding: 28px 28px 26px; }
+.proof { padding: 56px 0 24px; }
+.proof-grid { display: grid; grid-template-columns: 1.3fr 1fr 1fr; border: 1px solid var(--line); border-radius: var(--r); background: rgba(13,23,54,.5); }
+.proof-grid > div { padding: 26px 28px 24px; }
 .proof-grid > div + div { border-left: 1px solid var(--line); }
-.big { font: 500 40px/1 var(--mono); letter-spacing: -.03em; }
-.big .arrow { color: var(--dim); font-size: 28px; margin: 0 6px; }
-.big .to { color: var(--green); }
+.big { font: 500 38px/1 var(--mono); letter-spacing: -.03em; }
+.big .x { color: var(--dim); font-size: 26px; margin: 0 6px; }
 .proof-grid p { color: var(--muted); font-size: 14px; margin-top: 12px; max-width: 34ch; }
-.proof-note { color: var(--dim); font-size: 13px; margin-top: 16px; }
+.proof-note { color: var(--dim); font-size: 13px; margin-top: 14px; }
 
-/* Route: 4 processes */
-.route { margin-top: 64px; position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-.route::before {
-  content: ""; position: absolute; left: 28px; right: 28px; top: 27px; height: 2px;
-  background: repeating-linear-gradient(90deg, rgba(160,178,230,.28) 0 10px, transparent 10px 20px);
-}
-.stop { position: relative; }
-.stop .badge {
-  width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
-  background: var(--surface-2); border: 1px solid var(--line-2); font-size: 26px; color: var(--green);
-  position: relative; z-index: 1;
-}
-.stop:last-child .badge { background: var(--green); color: var(--green-ink); border-color: var(--green); }
-.stop h3 { margin-top: 22px; font-size: 20px; letter-spacing: -.02em; font-weight: 600; }
-.stop .what { color: var(--text); font-size: 15px; margin-top: 4px; font-weight: 500; }
-.stop p { color: var(--muted); font-size: 14.5px; margin-top: 10px; }
-.chip {
-  display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; padding: 6px 10px; border-radius: 8px;
-  background: var(--surface); border: 1px solid var(--line); font: 12px var(--mono); color: var(--muted);
-}
-.chip i { color: var(--green); font-size: 14px; }
+/* How it works */
+.how { margin-top: 56px; display: grid; grid-template-columns: 380px minmax(0,1fr); gap: 32px; align-items: start; }
+.steps { display: grid; gap: 8px; }
+.step { text-align: left; width: 100%; border: 1px solid transparent; border-radius: 14px; padding: 16px 18px; display: grid; grid-template-columns: 40px 1fr; gap: 14px; transition: background .3s, border-color .3s; position: relative; overflow: hidden; }
+.step:hover { background: rgba(17,29,66,.5); }
+.step.on { background: var(--surface); border-color: var(--line-2); }
+.step .ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 20px; background: var(--surface-2); border: 1px solid var(--line-2); color: var(--dim); transition: all .3s; }
+.step.on .ic { color: var(--green-ink); background: var(--green); border-color: var(--green); }
+.step .nm { font-weight: 600; font-size: 17px; letter-spacing: -.01em; display: flex; align-items: baseline; gap: 10px; }
+.step .nm small { font: 400 12px var(--mono); color: var(--dim); }
+.step .q { display: block; color: var(--muted); font-size: 14px; margin-top: 2px; }
+.step .more { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .45s var(--ease); }
+.step.on .more { grid-template-rows: 1fr; }
+.step .more > span { overflow: hidden; }
+.step .more p { color: var(--muted); font-size: 14px; padding-top: 8px; }
+.step .bar { position: absolute; left: 18px; right: 18px; bottom: 0; height: 2px; opacity: 0; }
+.step.on .bar { opacity: 1; }
+.step .bar span { display: block; height: 100%; width: 0; background: var(--green); }
+.step.on .bar span { animation: fillbar var(--dur, 7s) linear forwards; }
+.paused .step.on .bar span { animation-play-state: paused; }
+@keyframes fillbar { to { width: 100%; } }
 
-/* EasyReview showcase */
-.show { display: grid; grid-template-columns: 1fr 1.25fr; gap: 64px; align-items: center; }
-.points { margin-top: 32px; display: grid; gap: 22px; }
-.points div { display: grid; grid-template-columns: 36px 1fr; gap: 14px; }
+.panel { position: sticky; top: 88px; border: 1px solid var(--line-2); border-radius: 18px; background: var(--bg-2); min-height: 480px; overflow: hidden; box-shadow: 0 50px 120px -50px rgba(30,60,160,.7); }
+.panel-top { display: flex; align-items: center; gap: 10px; padding: 13px 18px; border-bottom: 1px solid var(--line); font: 12.5px var(--mono); color: var(--muted); }
+.panel-top b { color: var(--text); font-weight: 500; font-family: var(--sans); font-size: 13.5px; }
+.panel-top .right { margin-left: auto; }
+.pv { display: none; padding: 22px; }
+.pv.on { display: block; animation: pvin .5s var(--ease); }
+@keyframes pvin { from { opacity: 0; transform: translateY(8px); } }
+.pv-cap { color: var(--muted); font-size: 13.5px; margin-bottom: 16px; }
+
+.agents { display: grid; gap: 10px; }
+.agent { display: grid; grid-template-columns: 34px minmax(0,1fr) auto; gap: 12px; align-items: center; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(13,23,54,.6); }
+.agent .av { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: 18px; background: var(--surface-2); color: var(--blue); }
+.agent .who { font-size: 14px; font-weight: 500; }
+.agent .file { font: 12px var(--mono); color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tag { display: inline-flex; align-items: center; gap: 5px; font: 500 11.5px var(--mono); padding: 4px 9px; border-radius: 999px; white-space: nowrap; transition: all .3s; }
+.tag.ok { background: var(--green-soft); color: var(--green); }
+.tag.wait { background: var(--amber-soft); color: var(--amber); }
+.tag.bad { background: var(--red-soft); color: var(--red); }
+.tag.dim { background: rgba(160,178,230,.08); color: var(--dim); }
+.trailer { margin-top: 16px; padding: 12px 14px; border-radius: 12px; border: 1px dashed var(--line-2); font: 12px/1.8 var(--mono); color: var(--muted); }
+.trailer b { color: var(--green); font-weight: 500; }
+
+.gr-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.gr-col { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: rgba(13,23,54,.6); }
+.gr-col > span { font-size: 12.5px; color: var(--muted); }
+.gr-col b { display: block; font: 500 30px/1.2 var(--mono); margin-top: 4px; transition: color .3s; }
+.tests { margin-top: 12px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.trow { display: grid; grid-template-columns: minmax(0,1fr) 64px 64px; gap: 10px; padding: 9px 14px; font: 12px var(--mono); color: var(--muted); align-items: center; }
+.trow + .trow { border-top: 1px solid var(--line); }
+.trow.h { color: var(--dim); font-size: 11px; background: rgba(13,23,54,.6); }
+.trow .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.verdict { margin-top: 14px; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; font-size: 14px; background: var(--green-soft); color: var(--green); }
+.verdict.bad { background: var(--red-soft); color: var(--red); }
+.verdict i { font-size: 20px; }
+.verdict button { margin-left: auto; }
+
+.claims { display: grid; gap: 10px; }
+.claim { padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(13,23,54,.6); }
+.claim .t { font-size: 14px; font-weight: 500; display: flex; gap: 10px; align-items: center; }
+.claim .t .tag { margin-left: auto; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip { font: 11.5px var(--mono); padding: 3px 8px; border-radius: 6px; background: rgba(160,178,230,.08); color: var(--dim); transition: all .3s; }
+.chip.ok { background: var(--green-soft); color: var(--green); }
+.chip.wait { background: var(--amber-soft); color: var(--amber); }
+.chip.bad { background: var(--red-soft); color: var(--red); }
+.claim.example { border-style: dashed; }
+.claim .ex { font: 11px var(--mono); color: var(--dim); margin-top: 6px; }
+
+.er-head { display: flex; align-items: flex-end; gap: 18px; flex-wrap: wrap; }
+.er-num { font: 500 46px/1 var(--mono); letter-spacing: -.03em; }
+.er-num .x { color: var(--dim); font-size: 30px; margin: 0 8px; }
+.er-head p { color: var(--muted); font-size: 13.5px; max-width: 30ch; }
+.diff { margin-top: 16px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font: 12px/1.75 var(--mono); }
+.blk { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .6s var(--ease), opacity .4s; }
+.blk > div { overflow: hidden; }
+.blk.fold { grid-template-rows: 0fr; opacity: 0; }
+.ln { display: grid; grid-template-columns: 44px minmax(0,1fr); padding: 0 12px; color: #c8d2f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ln em { font-style: normal; color: var(--dim); }
+.ln.add { background: rgba(134,239,172,.06); }
+.ln.read { background: rgba(252,211,77,.08); }
+.foldrow { display: none; gap: 8px; align-items: center; padding: 7px 12px; color: var(--green); background: rgba(134,239,172,.05); border-bottom: 1px solid var(--line); }
+.foldrow.show { display: flex; animation: pvin .4s var(--ease); }
+.er-foot { margin-top: 14px; display: flex; align-items: center; gap: 10px; }
+.avs { display: flex; }
+.avs b { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font: 600 11px var(--sans); color: #0a1230; border: 2px solid var(--bg-2); margin-left: -6px; }
+.er-foot .tag { margin-left: auto; }
+
+/* Stack */
+.arch { margin-top: 56px; display: grid; grid-template-columns: 1fr 48px 1fr 48px 1fr; }
+.col { display: flex; flex-direction: column; gap: 12px; }
+.col h3 { font: 400 12.5px var(--mono); color: var(--dim); display: flex; align-items: baseline; gap: 10px; }
+.col h3 b { color: var(--text); font-family: var(--sans); font-size: 17px; font-weight: 600; letter-spacing: -.01em; }
+.box { border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; background: rgba(13,23,54,.6); flex: 1; }
+.box .k { display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 15px; }
+.box .k i { font-size: 19px; color: var(--green); }
+.box p { color: var(--muted); font-size: 13.5px; margin-top: 6px; }
+.box code { font: 12px var(--mono); color: var(--text); background: rgba(160,178,230,.08); padding: 1px 6px; border-radius: 5px; }
+.box.aiven { background: linear-gradient(135deg, rgba(56,89,196,.24), rgba(13,23,54,.6) 60%); border-color: var(--line-2); }
+.box .k .tag { margin-left: auto; }
+.wire { position: relative; display: flex; align-items: center; justify-content: center; }
+.wire::before { content: ""; position: absolute; left: 4px; right: 4px; top: 50%; height: 2px; background: repeating-linear-gradient(90deg, rgba(134,239,172,.6) 0 8px, transparent 8px 16px); animation: wire 1s linear infinite; }
+.wire i { position: relative; color: var(--green); background: var(--bg); font-size: 16px; padding: 3px; }
+@keyframes wire { from { background-position: 0 0; } to { background-position: 16px 0; } }
+.arch-foot { margin-top: 28px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; padding-top: 28px; border-top: 1px solid var(--line); }
+.arch-foot > div { display: grid; grid-template-columns: 28px 1fr; gap: 10px; color: var(--muted); font-size: 14px; }
+.arch-foot i { font-size: 20px; color: var(--green); margin-top: 2px; }
+.arch-foot b { color: var(--text); font-weight: 500; }
+
+.show { display: grid; grid-template-columns: 1fr 1.2fr; gap: 64px; align-items: center; }
+.points { margin-top: 30px; display: grid; gap: 22px; }
+.points > div { display: grid; grid-template-columns: 36px 1fr; gap: 14px; }
 .points i { font-size: 22px; color: var(--green); margin-top: 2px; }
 .points b { font-weight: 500; display: block; }
 .points span { color: var(--muted); font-size: 14.5px; }
 
-.ui {
-  border: 1px solid var(--line-2); border-radius: 18px; overflow: hidden;
-  background: var(--bg-2); box-shadow: 0 50px 120px -50px rgba(30, 60, 160, .7);
-}
-.ui-bar { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--line); font-size: 13px; }
-.ui-bar .title { font-weight: 500; }
-.ui-bar .meta { margin-left: auto; font: 12px var(--mono); color: var(--muted); }
-.ui-bar .meta b { color: var(--green); font-weight: 500; }
-.ui-body { display: grid; grid-template-columns: 200px minmax(0, 1fr); min-height: 340px; }
-.ui-steps { border-right: 1px solid var(--line); padding: 10px; display: grid; gap: 2px; align-content: start; }
-.ui-steps div { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; font-size: 12.5px; color: var(--muted); }
-.ui-steps div.on { background: var(--surface-2); color: var(--text); }
-.ui-steps i { font-size: 15px; }
-.i-ok { color: var(--green); }
-.i-warn { color: var(--amber); }
-.ui-main { padding: 20px 22px; }
-.ui-main h4 { font-size: 16px; font-weight: 600; letter-spacing: -.01em; }
-.ui-main .claim { color: var(--muted); font-size: 13.5px; margin-top: 6px; }
-.evid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
-.evid span { font: 11.5px var(--mono); padding: 4px 8px; border-radius: 6px; background: var(--green-soft); color: var(--green); }
-.evid span.ai { background: rgba(160,178,230,.08); color: var(--dim); }
-.code { margin-top: 16px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; font: 12px/1.75 var(--mono); }
-.code .fold { padding: 8px 12px; color: var(--muted); background: rgba(134,239,172,.05); display: flex; gap: 8px; align-items: center; }
-.code .fold i { color: var(--green); }
-.code .ln { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 12px; display: grid; grid-template-columns: 38px 1fr; color: #c8d2f0; }
-.code .ln em { font-style: normal; color: var(--dim); }
-.code .add { background: rgba(134,239,172,.07); }
-.code .add::before { content: none; }
-.votes { display: flex; gap: 8px; margin-top: 16px; }
-.votes span { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--muted); }
-.votes span.yes { background: var(--green); color: var(--green-ink); border-color: var(--green); }
-.who { display: flex; align-items: center; margin-left: auto; }
-.who b {
-  width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font: 600 11px var(--sans);
-  border: 2px solid var(--bg-2); margin-left: -6px; color: #0a1230;
-}
-
-/* Infra bento */
-.bento { margin-top: 56px; display: grid; grid-template-columns: 1.15fr 1fr; grid-template-rows: repeat(3, auto); gap: 16px; }
-.cell { border: 1px solid var(--line); border-radius: var(--r); padding: 26px; background: rgba(13, 23, 54, .55); }
-.cell.tall { grid-row: span 3; display: flex; flex-direction: column; background:
-  radial-gradient(120% 80% at 0% 0%, rgba(56, 89, 196, .28), transparent 60%), var(--surface); }
-.cell .k { display: flex; align-items: center; gap: 10px; font-weight: 500; }
-.cell .k i { font-size: 20px; color: var(--green); }
-.cell p { color: var(--muted); font-size: 14.5px; margin-top: 8px; }
-.cell .tag { margin-left: auto; font: 11.5px var(--mono); color: var(--dim); }
-.flow { margin-top: auto; padding-top: 28px; display: grid; gap: 10px; font: 12.5px var(--mono); }
-.flow div { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(6, 11, 28, .5); border: 1px solid var(--line); color: var(--muted); }
-.flow div b { color: var(--text); font-weight: 500; }
-.flow .ok { margin-left: auto; color: var(--green); }
-.flow .no { margin-left: auto; color: var(--red); }
-
-/* FAQ */
-.faq { max-width: 760px; margin: 48px auto 0; }
+.faq { max-width: 760px; margin: 44px auto 0; }
 .faq details { border-bottom: 1px solid var(--line); }
 .faq summary { list-style: none; cursor: pointer; padding: 22px 0; font-size: 17px; font-weight: 500; display: flex; justify-content: space-between; gap: 24px; }
 .faq summary::-webkit-details-marker { display: none; }
-.faq summary i { color: var(--muted); transition: transform .25s cubic-bezier(.16,1,.3,1); }
+.faq summary i { color: var(--muted); transition: transform .25s var(--ease); }
 .faq details[open] summary i { transform: rotate(45deg); }
 .faq details p { color: var(--muted); padding: 0 0 22px; max-width: 62ch; }
 
-/* Final CTA */
-.final {
-  margin: 0 auto; text-align: center; border: 1px solid var(--line); border-radius: 24px; padding: 80px 24px;
-  background: radial-gradient(70% 90% at 50% 100%, rgba(56, 89, 196, .35), transparent 70%), var(--bg-2);
-}
-.final .h2 { margin: 0 auto; }
-.final .lead { margin: 16px auto 0; }
-.final .btn { margin-top: 32px; }
-
+.final { text-align: center; border: 1px solid var(--line); border-radius: 24px; padding: 80px 24px; background: radial-gradient(70% 90% at 50% 100%, rgba(56,89,196,.35), transparent 70%), var(--bg-2); }
+.final .h2, .final .lead { margin-left: auto; margin-right: auto; }
+.final .btn { margin-top: 30px; }
 footer { padding: 48px 0 56px; color: var(--dim); font-size: 13.5px; }
 footer .wrap { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
 footer .brand { color: var(--muted); font-size: 15px; }
 footer .sp { margin-left: auto; }
 
-/* Reveal */
-.reveal { opacity: 0; transform: translateY(18px); transition: opacity .8s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1); }
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
 .reveal.in { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
   .reveal { opacity: 1; transform: none; transition: none; }
-  .lane-mid, .trunk-mid { animation: none; }
+  .lane-mid, .trunk-mid, .wire::before, .live::before { animation: none; }
   html { scroll-behavior: auto; }
 }
-
-/* Mobile */
-@media (max-width: 900px) {
+@media (max-width: 980px) {
   nav.top .links { display: none; }
-  .hero { padding-top: 56px; }
+  .sim-body { grid-template-columns: 1fr; }
+  .log { border-left: 0; border-top: 1px solid var(--line); height: 230px; }
+  .how { grid-template-columns: 1fr; }
+  .panel { position: relative; top: 0; }
+  .arch { grid-template-columns: 1fr; }
+  .wire { height: 40px; }
+  .wire::before { left: 50%; right: auto; top: 4px; bottom: 4px; width: 2px; height: auto; background: repeating-linear-gradient(180deg, rgba(134,239,172,.6) 0 8px, transparent 8px 16px); animation: none; }
+  .wire i { transform: rotate(90deg); }
+  .arch-foot { grid-template-columns: 1fr; }
+  .show { grid-template-columns: 1fr; gap: 40px; }
   .proof-grid { grid-template-columns: 1fr; }
   .proof-grid > div + div { border-left: 0; border-top: 1px solid var(--line); }
-  .route { grid-template-columns: 1fr 1fr; gap: 40px 20px; }
-  .route::before { display: none; }
-  .show { grid-template-columns: 1fr; gap: 40px; }
-  .bento { grid-template-columns: 1fr; }
-  .cell.tall { grid-row: auto; }
   section { padding: 88px 0; }
 }
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .wrap { padding: 0 16px; }
-  .route { grid-template-columns: 1fr; }
-  .ui-body { grid-template-columns: 1fr; }
-  .ui-steps { display: none; }
-  .ui-bar .meta { display: none; }
-  .road-legend { display: none; }
-  .big { font-size: 34px; }
-  nav.top .right .btn-ghost { display: none; }
+  .stats { grid-template-columns: 1fr 1fr; }
+  .stats div:nth-child(3) { border-left: 0; }
+  .stats div:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .sim-top .repo { display: none; }
+  .trow { grid-template-columns: minmax(0,1fr) 48px 48px; }
+  .er-num { font-size: 36px; }
 }
 </style>
 </head>
@@ -285,77 +292,47 @@ footer .sp { margin-left: auto; }
     </a>
     <div class="links">
       <a href="#how">How it works</a>
+      <a href="#stack">Lanes and Aiven</a>
       <a href="#easyreview">EasyReview</a>
-      <a href="#infra">Infrastructure</a>
       <a href="#faq">FAQ</a>
     </div>
-    <div class="right">
-      <a class="btn btn-primary" href="/auth/github"><i class="ph ph-github-logo"></i>Connect GitHub</a>
-    </div>
+    <div class="right"><a class="btn btn-primary" href="/auth/github"><i class="ph ph-github-logo"></i>Connect GitHub</a></div>
   </div>
 </nav>
 
 <header class="hero">
   <div class="wrap">
-    <h1>Ship AI code you can <span>actually review</span>.</h1>
-    <p class="sub">Agents build backlog issues in parallel lanes. Vouch proves nothing broke and turns the diff into a five-minute team review.</p>
+    <h1>Ship AI code you can <span class="g">actually review</span>.</h1>
+    <p class="sub">Agents build backlog issues in parallel lanes. Vouch blocks anything that breaks and turns the rest into a five-minute team review.</p>
     <div class="ctas">
       <a class="btn btn-primary btn-lg" href="/auth/github"><i class="ph ph-github-logo"></i>Connect GitHub</a>
       <a class="btn btn-ghost btn-lg" href="#how">See how it works</a>
     </div>
 
-    <div class="road-card" role="img" aria-label="Four agent lanes merge into one road that passes Guardrail, Checkpoint and EasyReview before reaching main.">
-      <svg viewBox="0 0 1100 300" id="road">
-        <defs>
-          <path id="p0" d="M10 40 C 220 40, 250 150, 420 150 L 1040 150"/>
-          <path id="p1" d="M10 110 C 220 110, 260 150, 420 150 L 1040 150"/>
-          <path id="p2" d="M10 190 C 220 190, 260 150, 420 150 L 1040 150"/>
-          <path id="p3" d="M10 260 C 220 260, 250 150, 420 150 L 1040 150"/>
-        </defs>
-        <g>
-          <path class="lane-edge" d="M10 28 C 220 28, 250 138, 420 138"/>
-          <path class="lane-edge" d="M10 272 C 220 272, 250 162, 420 162"/>
-          <path class="lane-mid" d="M10 40 C 220 40, 250 150, 420 150"/>
-          <path class="lane-mid" d="M10 110 C 220 110, 260 150, 420 150"/>
-          <path class="lane-mid" d="M10 190 C 220 190, 260 150, 420 150"/>
-          <path class="lane-mid" d="M10 260 C 220 260, 250 150, 420 150"/>
-          <line class="trunk-edge" x1="420" y1="132" x2="1040" y2="132"/>
-          <line class="trunk-edge" x1="420" y1="168" x2="1040" y2="168"/>
-          <line class="trunk-mid" x1="420" y1="150" x2="1040" y2="150"/>
-        </g>
-        <text class="lane-label" x="16" y="30">#2283</text>
-        <text class="lane-label" x="16" y="100">#2297</text>
-        <text class="lane-label" x="16" y="180">#2234</text>
-        <text class="lane-label" x="16" y="250">#2129</text>
-
-        <g class="gate" transform="translate(540 0)">
-          <line class="post" x1="0" y1="122" x2="0" y2="178"/>
-          <rect x="-62" y="196" width="124" height="46" rx="10"/>
-          <text x="0" y="215" text-anchor="middle">Guardrail</text>
-          <text class="sub" x="0" y="232" text-anchor="middle">167/167 pass</text>
-        </g>
-        <g class="gate" transform="translate(720 0)">
-          <line class="post" x1="0" y1="122" x2="0" y2="178"/>
-          <rect x="-62" y="196" width="124" height="46" rx="10"/>
-          <text x="0" y="215" text-anchor="middle">Checkpoint</text>
-          <text class="sub" x="0" y="232" text-anchor="middle">claims checked</text>
-        </g>
-        <g class="gate" transform="translate(900 0)">
-          <line class="post" x1="0" y1="122" x2="0" y2="178"/>
-          <rect x="-62" y="196" width="124" height="46" rx="10"/>
-          <text x="0" y="215" text-anchor="middle">EasyReview</text>
-          <text class="sub" x="0" y="232" text-anchor="middle">read 6 of 225</text>
-        </g>
-        <g class="end"><circle cx="1052" cy="150" r="7" fill="#86efac"/><text x="1052" y="122" text-anchor="middle">main</text></g>
-
-        <g id="cars">
-          <circle class="car" r="5"><animateMotion dur="8s" repeatCount="indefinite" begin="0s"><mpath href="#p0"/></animateMotion><animate attributeName="fill" values="#dbe4ff;#dbe4ff;#86efac" keyTimes="0;.86;1" dur="8s" repeatCount="indefinite" begin="0s"/></circle>
-          <circle class="car" r="5"><animateMotion dur="8s" repeatCount="indefinite" begin="-6s"><mpath href="#p1"/></animateMotion><animate attributeName="fill" values="#dbe4ff;#dbe4ff;#86efac" keyTimes="0;.86;1" dur="8s" repeatCount="indefinite" begin="-6s"/></circle>
-          <circle class="car" r="5"><animateMotion dur="8s" repeatCount="indefinite" begin="-4s"><mpath href="#p2"/></animateMotion><animate attributeName="fill" values="#dbe4ff;#dbe4ff;#86efac" keyTimes="0;.86;1" dur="8s" repeatCount="indefinite" begin="-4s"/></circle>
-          <circle class="car" r="5"><animateMotion dur="8s" repeatCount="indefinite" begin="-2s"><mpath href="#p3"/></animateMotion><animate attributeName="fill" values="#dbe4ff;#dbe4ff;#86efac" keyTimes="0;.86;1" dur="8s" repeatCount="indefinite" begin="-2s"/></circle>
-        </g>
-      </svg>
-      <div class="road-legend"><span>Lanes: agents work in parallel</span><span>One road to main, three checks on the way</span></div>
+    <div class="sim" id="sim">
+      <div class="sim-top">
+        <span class="live">Live simulation</span>
+        <span class="repo">real numbers from 4 AI pull requests in Tieto's MessagePack-CSharp</span>
+        <div class="acts">
+          <button class="btn btn-ghost btn-sm" id="addIssue"><i class="ph ph-plus"></i>Add an issue</button>
+          <button class="btn btn-ghost btn-sm" id="plantBug" style="color:var(--red);border-color:rgba(253,164,175,.35)"><i class="ph ph-bug"></i>Plant a bug</button>
+        </div>
+      </div>
+      <div class="stats">
+        <div><b id="sLanes">0</b><span>Agents in lanes</span></div>
+        <div><b class="r" id="sBlocked">0</b><span>Blocked by Guardrail</span></div>
+        <div><b class="g" id="sMerged">0</b><span>Merged to main</span></div>
+        <div><b><span class="g" id="sRead">0</span><span style="color:var(--dim);font-size:15px"> of </span><span id="sChanged" style="color:var(--dim)">0</span></b><span>Lines a human had to read</span></div>
+      </div>
+      <div class="sim-body">
+        <div class="sim-road">
+          <svg viewBox="0 0 860 360" id="road" role="img" aria-label="Agent pull requests travel from four lanes through Guardrail, Checkpoint and EasyReview to main. Broken ones are sent to Blocked.">
+            <g id="roadBase"></g>
+            <g id="cars"></g>
+          </svg>
+        </div>
+        <div class="log" id="log" aria-live="polite"><h4>What is happening</h4></div>
+      </div>
     </div>
   </div>
 </header>
@@ -363,18 +340,9 @@ footer .sp { margin-left: auto; }
 <div class="proof">
   <div class="wrap">
     <div class="proof-grid reveal">
-      <div>
-        <div class="big">1,383<span class="arrow">→</span><span class="to">17</span></div>
-        <p>Lines changed in issue #2297, and the lines a human actually had to read.</p>
-      </div>
-      <div>
-        <div class="big">167<span class="arrow">/</span><span class="to">167</span></div>
-        <p>Existing tests that passed before every change and still pass after it.</p>
-      </div>
-      <div>
-        <div class="big"><span class="to">0</span></div>
-        <p>Regressions reached a reviewer. Vouch blocks them first.</p>
-      </div>
+      <div><div class="big">1,383<span class="x">→</span><span class="g">17</span></div><p>Lines changed in issue #2297, and the lines a human actually had to read.</p></div>
+      <div><div class="big">167<span class="x">/</span><span class="g">167</span></div><p>Existing tests that passed before every change and still pass after it.</p></div>
+      <div><div class="big"><span class="g">0</span></div><p>Regressions reached a reviewer. Guardrail blocks them first.</p></div>
     </div>
     <p class="proof-note">Measured on four real AI-written changes in Tieto's MessagePack-CSharp challenge repository.</p>
   </div>
@@ -382,38 +350,125 @@ footer .sp { margin-left: auto; }
 
 <section id="how">
   <div class="wrap">
-    <h2 class="h2 reveal">From backlog to main in four stops.</h2>
-    <p class="lead reveal">Each stop answers one question a reviewer would otherwise answer by reading everything.</p>
+    <h2 class="h2 reveal">Four stops between a backlog issue and main.</h2>
+    <p class="lead reveal">Each stop answers one question a reviewer used to answer by reading every line. Click a stop, or let it play.</p>
 
-    <div class="route">
-      <div class="stop reveal">
-        <div class="badge"><i class="ph ph-road-horizon"></i></div>
-        <h3>Lanes</h3>
-        <div class="what">Every agent gets its own lane.</div>
-        <p>Agents claim files before they edit, so parallel work never collides. Each commit records which agent and which issue wrote it.</p>
-        <span class="chip"><i class="ph ph-git-commit"></i>Lanes-Agent: claude-code</span>
+    <div class="how reveal" id="how-ui">
+      <div class="steps" role="tablist">
+        <button class="step on" role="tab" data-i="0">
+          <span class="ic"><i class="ph ph-road-horizon"></i></span>
+          <span><span class="nm">Lanes <small>implement</small></span><span class="q">Can agents work in parallel safely?</span>
+            <span class="more"><span><p>Each agent claims the files it will edit. A second agent that wants the same file waits its turn, so nothing gets overwritten. Every commit records which agent and which issue wrote it.</p></span></span></span>
+          <span class="bar"><span></span></span>
+        </button>
+        <button class="step" role="tab" data-i="1">
+          <span class="ic"><i class="ph ph-shield-check"></i></span>
+          <span><span class="nm">Guardrail <small>protect</small></span><span class="q">Did anything that worked break?</span>
+            <span class="more"><span><p>Vouch runs the existing tests on the base and on the branch. A test that passed before and fails after blocks the change before a human sees it.</p></span></span></span>
+          <span class="bar"><span></span></span>
+        </button>
+        <button class="step" role="tab" data-i="2">
+          <span class="ic"><i class="ph ph-seal-check"></i></span>
+          <span><span class="nm">Checkpoint <small>prove</small></span><span class="q">Is the AI telling the truth?</span>
+            <span class="more"><span><p>Claude explains the change as claims. Code checks each one: the cited lines exist, the quote is really in the issue, and the named test passed. Anything unproven stays open.</p></span></span></span>
+          <span class="bar"><span></span></span>
+        </button>
+        <button class="step" role="tab" data-i="3">
+          <span class="ic"><i class="ph-fill ph-flag-checkered"></i></span>
+          <span><span class="nm">EasyReview <small>approve</small></span><span class="q">What does a human still need to read?</span>
+            <span class="more"><span><p>Proven code folds away. The team reads what is left together, live, and a named owner signs and writes down the risk they accept.</p></span></span></span>
+          <span class="bar"><span></span></span>
+        </button>
       </div>
-      <div class="stop reveal">
-        <div class="badge"><i class="ph ph-shield-check"></i></div>
-        <h3>Guardrail</h3>
-        <div class="what">Nothing that worked can break.</div>
-        <p>Existing tests run on the base and on the branch. Passed before and failed after means blocked, before anyone reads a line.</p>
-        <span class="chip"><i class="ph ph-check"></i>167/167 still pass</span>
+
+      <div class="panel">
+        <div class="panel-top"><i class="ph ph-git-pull-request g"></i><b>#2283 Crash on generic struct from another assembly</b><span class="right" id="pvLabel">Lanes</span></div>
+
+        <div class="pv on" data-i="0">
+          <p class="pv-cap">Three agents, three backlog issues, one codebase.</p>
+          <div class="agents">
+            <div class="agent"><span class="av"><i class="ph ph-robot"></i></span><div><div class="who">claude-code · #2283</div><div class="file">src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs</div></div><span class="tag ok" id="laneA">editing</span></div>
+            <div class="agent"><span class="av"><i class="ph ph-robot"></i></span><div><div class="who">codex · #2297</div><div class="file">src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs</div></div><span class="tag wait" id="laneB">waiting for #2283</span></div>
+            <div class="agent"><span class="av"><i class="ph ph-robot"></i></span><div><div class="who">claude-code · #2234</div><div class="file">src/MessagePack.SourceGenerator/MsgPack00xMessagePackAnalyzer.cs</div></div><span class="tag ok">editing</span></div>
+          </div>
+          <div class="trailer">commit 9df83c3 &nbsp;fix closed generic struct crash<br><b>Lanes-Agent:</b> claude-code (session 3f9a12bc)<br><b>Lanes-Task:</b> #2283</div>
+        </div>
+
+        <div class="pv" data-i="1">
+          <p class="pv-cap">The same 167 existing tests, run on the base commit and on the agent's branch.</p>
+          <div class="gr-cols">
+            <div class="gr-col"><span>Before (base 32258fd)</span><b class="g"><span class="count" data-to="167">0</span> pass</b></div>
+            <div class="gr-col"><span>After (branch 9df83c3)</span><b class="g" id="brCount"><span class="count" data-to="167">0</span> pass</b></div>
+          </div>
+          <div class="tests">
+            <div class="trow h"><span>Existing test</span><span>Before</span><span>After</span></div>
+            <div class="trow"><span class="n">GenericsFormatterTests.GenericClass</span><span class="g">pass</span><span class="g">pass</span></div>
+            <div class="trow"><span class="n">MessagePackAnalyzerTests.NoMessagePackObject</span><span class="g">pass</span><span class="g">pass</span></div>
+            <div class="trow" id="victim"><span class="n">StringKeyedFormatterTests.PropertiesGetterSetter</span><span class="g">pass</span><span class="g">pass</span></div>
+            <div class="trow"><span class="n">and 164 more</span><span class="g">pass</span><span class="g">pass</span></div>
+          </div>
+          <div class="verdict" id="verdict"></div>
+        </div>
+
+        <div class="pv" data-i="2">
+          <p class="pv-cap">Claude wrote eight claims about this change. Code checked every one.</p>
+          <div class="claims">
+            <div class="claim"><div class="t">Diagnostics from other assemblies are dropped<span class="tag ok">proven</span></div><div class="chips"><span class="chip" data-s="ok">cite TypeCollector.cs:239</span><span class="chip" data-s="ok">quote found in issue</span><span class="chip" data-s="ok">test passed</span></div></div>
+            <div class="claim"><div class="t">Member-needs-key diagnostic uses FirstOrDefault<span class="tag ok">proven</span></div><div class="chips"><span class="chip" data-s="ok">cite TypeCollector.cs:1077</span><span class="chip" data-s="ok">quote found in issue</span><span class="chip" data-s="ok">test passed</span></div></div>
+            <div class="claim"><div class="t">Docs: diagnostics belong to the defining assembly<span class="tag wait">read it</span></div><div class="chips"><span class="chip" data-s="ok">cite README.md:1639</span><span class="chip" data-s="ok">quote found in issue</span><span class="chip" data-s="wait">no test named</span></div></div>
+            <div class="claim example"><div class="t">The fix also covers the third crash site<span class="tag bad">rejected</span></div><div class="chips"><span class="chip" data-s="bad">line 735 is not in the diff</span><span class="chip" data-s="bad">quote not in the issue</span></div><div class="ex">Example: this is what a made-up claim looks like</div></div>
+          </div>
+        </div>
+
+        <div class="pv" data-i="3">
+          <div class="er-head"><div class="er-num"><span>225</span><span class="x">→</span><span class="g" id="erRead">225</span></div><p>Lines changed, and lines still open after proven code folds away.</p></div>
+          <div class="diff">
+            <div class="blk" data-fold><div><div class="ln add"><em>239</em>this.reportDiagnostic = ... ReportIfLocatedInCompilation(...)</div><div class="ln add"><em>985</em>this.reportDiagnostic?.Invoke(Diagnostic.Create(...))</div><div class="ln add"><em>1077</em>: Diagnostic.Create(MsgPack00xMessagePackAnalyzer.MemberNeedsKey, ...)</div><div class="ln add"><em>1444</em>private void ReportIfLocatedInCompilation(...)</div></div></div>
+            <div class="foldrow" id="fold1"><i class="ph ph-caret-right"></i>TypeCollector.cs folded: proven by passing tests</div>
+            <div class="blk" data-fold><div><div class="ln add"><em>499</em>public void ClosedGenericStruct_FromMetadataReference()</div><div class="ln add"><em>543</em>public void ClosedGenericRecordStruct_FromMetadataReference()</div><div class="ln add"><em>582</em>public void ClosedGenericStruct_FromMetadataReference_UnkeyedMember()</div></div></div>
+            <div class="foldrow" id="fold2"><i class="ph ph-caret-right"></i>GenericsFormatterTests.cs folded: the new tests passed</div>
+            <div class="ln read"><em>1639</em>Generic types from referenced assemblies are supported.</div>
+            <div class="ln read"><em>49</em>Problems with such types are reported by the defining assembly.</div>
+          </div>
+          <div class="er-foot"><div class="avs"><b style="background:#86efac">MV</b><b style="background:#93c5fd">LK</b></div><span style="color:var(--muted);font-size:13px">2 reviewers, live</span><span class="tag ok" id="erTag">reading 6 lines</span></div>
+        </div>
       </div>
-      <div class="stop reveal">
-        <div class="badge"><i class="ph ph-seal-check"></i></div>
-        <h3>Checkpoint</h3>
-        <div class="what">The AI's story is checked by code.</div>
-        <p>Every claim must cite real lines, quote the real issue and name a test that passed. A made-up claim turns red.</p>
-        <span class="chip"><i class="ph ph-quotes"></i>7 of 8 claims proven</span>
+    </div>
+  </div>
+</section>
+
+<section id="stack" style="padding-top: 40px">
+  <div class="wrap">
+    <h2 class="h2 reveal">Lanes, Vouch and Aiven. What runs where.</h2>
+    <p class="lead reveal">Lanes coordinates the agents that write the code. Vouch checks what they wrote. Aiven keeps the permanent record and the live state of every review.</p>
+
+    <div class="arch reveal">
+      <div class="col">
+        <h3><b>Lanes</b>code is written</h3>
+        <div class="box"><div class="k"><i class="ph ph-robot"></i>Agents</div><p>Claude Code or Codex, one per backlog issue, each in its own lane.</p></div>
+        <div class="box"><div class="k"><i class="ph ph-road-horizon"></i>Lanes server</div><p>Holds file claims so two agents never edit the same file at once. A live board shows who works on what.</p></div>
+        <div class="box"><div class="k"><i class="ph ph-git-pull-request"></i>Pull request</div><p>One per task, with a <code>Lanes-Agent</code> line on every commit.</p></div>
       </div>
-      <div class="stop reveal">
-        <div class="badge"><i class="ph-fill ph-flag-checkered"></i></div>
-        <h3>EasyReview</h3>
-        <div class="what">Read only what isn't proven.</div>
-        <p>Proven code folds away. The team splits what's left, reviews it live together, and a named owner signs.</p>
-        <span class="chip"><i class="ph ph-eye"></i>225 lines, you read 6</span>
+      <div class="wire"><i class="ph ph-arrow-right"></i></div>
+      <div class="col">
+        <h3><b>Vouch</b>code is checked</h3>
+        <div class="box"><div class="k"><i class="ph ph-shield-check"></i>Guardrail</div><p>Runs your existing .NET tests on the base and on the branch, in separate git worktrees.</p></div>
+        <div class="box"><div class="k"><i class="ph ph-seal-check"></i>Checkpoint</div><p>Claude writes the claims. Plain code verifies cited lines, quotes and test results.</p></div>
+        <div class="box"><div class="k"><i class="ph ph-eye"></i>EasyReview</div><p>The web app your team reviews in, with GitHub sign-in.</p></div>
       </div>
+      <div class="wire"><i class="ph ph-arrow-right"></i></div>
+      <div class="col">
+        <h3><b>Aiven</b>everything is kept</h3>
+        <div class="box aiven"><div class="k"><i class="ph ph-database"></i>PostgreSQL<span class="tag dim">Aiven</span></div><p>Every vote, question and sign-off in <code>review_events</code>: the audit trail of who accepted which risk.</p></div>
+        <div class="box aiven"><div class="k"><i class="ph ph-flow-arrow"></i>Apache Kafka<span class="tag dim">Aiven</span></div><p>Each review event is published to <code>review.events</code>, so CI, chat and dashboards can react to it.</p></div>
+        <div class="box aiven"><div class="k"><i class="ph ph-lightning"></i>Valkey<span class="tag dim">Aiven</span></div><p>Live presence (who is on which step, gone after 15 s) and GitHub login sessions.</p></div>
+      </div>
+    </div>
+
+    <div class="arch-foot reveal">
+      <div><i class="ph ph-arrows-split"></i><p><b>Lanes is the first half.</b> One backlog becomes many parallel changes, without collisions.</p></div>
+      <div><i class="ph ph-check-square-offset"></i><p><b>Vouch is the second half.</b> Each change becomes a short review a person can finish.</p></div>
+      <div><i class="ph ph-cloud-check"></i><p><b>Aiven runs the state.</b> Managed Postgres, Kafka and Valkey, so there is nothing to operate.</p></div>
     </div>
   </div>
 </section>
@@ -421,81 +476,21 @@ footer .sp { margin-left: auto; }
 <section id="easyreview" style="padding-top: 40px">
   <div class="wrap show">
     <div class="reveal">
-      <h2 class="h2">A review your team can finish before lunch.</h2>
-      <p class="lead">No file-by-file diff. The change plays as a short story, one claim per step, with the evidence next to the code.</p>
+      <h2 class="h2">Risky code never hides.</h2>
+      <p class="lead">Even when every test passes, some changes need a person. Vouch keeps them open and asks for an explicit yes.</p>
       <div class="points">
-        <div><i class="ph ph-arrows-in-line-vertical"></i><p><b>Proven code collapses</b><span>Lines backed by a passing test fold to one row. Risky lines, like public API, never fold.</span></p></div>
-        <div><i class="ph ph-users-three"></i><p><b>Reviewed together, live</b><span>Steps are split by who knows the code. Everyone sees who is where, and every vote, as it happens.</span></p></div>
+        <div><i class="ph ph-lock-key-open"></i><p><b>Public API never folds</b><span>A change every user depends on always needs a human decision.</span></p></div>
+        <div><i class="ph ph-users-three"></i><p><b>Reviewed together, live</b><span>Steps are split between reviewers. Everyone sees who is where, and every vote, as it happens.</span></p></div>
         <div><i class="ph ph-signature"></i><p><b>A person signs, not a model</b><span>The owner writes the risk they accept. The AI's own confidence is shown, never used.</span></p></div>
       </div>
     </div>
-
-    <div class="ui reveal" aria-label="Preview of an EasyReview step for issue 2283">
-      <div class="ui-bar">
-        <i class="ph ph-git-pull-request" style="color:var(--green)"></i>
-        <span class="title">#2283 Crash on generic struct from another assembly</span>
-        <span class="meta">225 lines · you read <b>6</b></span>
-      </div>
-      <div class="ui-body">
-        <div class="ui-steps">
-          <div><i class="ph-fill ph-check-circle i-ok"></i>Guardrail</div>
-          <div><i class="ph-fill ph-check-circle i-ok"></i>What this changes</div>
-          <div class="on"><i class="ph-fill ph-check-circle i-ok"></i>Foreign diagnostics dropped</div>
-          <div><i class="ph-fill ph-check-circle i-ok"></i>FirstOrDefault fix</div>
-          <div><i class="ph-fill ph-check-circle i-ok"></i>Repro test</div>
-          <div><i class="ph-fill ph-warning-circle i-warn"></i>Docs: AI only</div>
-          <div><i class="ph ph-signature"></i>Sign off</div>
-        </div>
-        <div class="ui-main">
-          <h4>Diagnostics from other assemblies are dropped</h4>
-          <p class="claim">Every diagnostic the type collector reports now goes through a filter that only passes locations in the project being compiled.</p>
-          <div class="evid">
-            <span>cited lines exist</span><span>quote is in the issue</span><span>test passed</span><span class="ai">AI confidence 0.85 · not used</span>
-          </div>
-          <div class="code">
-            <div class="fold"><i class="ph ph-caret-right"></i>TypeCollector.cs folded, backed by a passing test</div>
-            <div class="ln add"><em>1446</em>if (diagnostic.Location.IsInSource &amp;&amp;</div>
-            <div class="ln add"><em></em>    compilation.ContainsSyntaxTree(...))</div>
-            <div class="ln add"><em>1448</em>    report(diagnostic);</div>
-          </div>
-          <div class="votes">
-            <span class="yes"><i class="ph ph-check"></i>Looks right</span>
-            <span><i class="ph ph-question"></i>Ask</span>
-            <span><i class="ph ph-x"></i>Problem</span>
-            <span class="who"><b style="background:#86efac">MV</b><b style="background:#93c5fd">LK</b></span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="infra" style="padding-top: 40px">
-  <div class="wrap">
-    <h2 class="h2 reveal">Plain code decides. AI only explains.</h2>
-    <p class="lead reveal">Claude writes the story. Every claim it makes is checked by deterministic code, and the review runs on Aiven.</p>
-    <div class="bento">
-      <div class="cell tall reveal">
-        <div class="k"><i class="ph ph-brain"></i>Claude writes, code verifies</div>
-        <p>The model turns the diff into claims. Vouch accepts a claim only when every check passes. Anything it cannot prove stays open for a human.</p>
-        <div class="flow">
-          <div><b>cite</b> TypeCollector.cs:239 exists<span class="ok">pass</span></div>
-          <div><b>quote</b> found in issue #2283<span class="ok">pass</span></div>
-          <div><b>test</b> ClosedGenericStruct_FromMetadataReference<span class="ok">pass</span></div>
-          <div><b>test</b> none named for the docs change<span class="no">read it</span></div>
-        </div>
-      </div>
-      <div class="cell reveal">
-        <div class="k"><i class="ph ph-database"></i>PostgreSQL<span class="tag">Aiven</span></div>
-        <p>Every vote, question and sign-off, kept as an audit trail of who accepted which risk.</p>
-      </div>
-      <div class="cell reveal">
-        <div class="k"><i class="ph ph-flow-arrow"></i>Kafka<span class="tag">Aiven</span></div>
-        <p>Each review event streams to review.events, so CI, chat and dashboards can follow along.</p>
-      </div>
-      <div class="cell reveal">
-        <div class="k"><i class="ph ph-lightning"></i>Valkey<span class="tag">Aiven</span></div>
-        <p>Live presence: who is on which step right now, gone 15 seconds after they leave.</p>
+    <div class="box reveal" style="padding:0;overflow:hidden;border-color:var(--line-2)">
+      <div class="panel-top"><i class="ph ph-git-pull-request g"></i><b>#2129 Formatter for a type in a referenced assembly</b><span class="right">1,034 lines</span></div>
+      <div style="padding:20px 22px;display:grid;gap:12px">
+        <div class="claim" style="border-color:rgba(253,164,175,.4)"><div class="t">Changes the public API that every user depends on<span class="tag bad">never folds</span></div><div class="chips"><span class="chip bad">PublicAPI.Unshipped.txt</span><span class="chip">needs an explicit yes from a person</span></div></div>
+        <div class="claim"><div class="t">Adds or changes analyzer warnings users will see<span class="tag wait">6 files open</span></div><div class="chips"><span class="chip wait">doc/analyzers/MsgPack019.md</span><span class="chip">and 5 more</span></div></div>
+        <div class="claim"><div class="t">8 of 10 claims not proven by a test<span class="tag wait">read</span></div><div class="chips"><span class="chip">named tests did not run</span></div></div>
+        <div style="display:flex;gap:8px;margin-top:4px"><span class="tag ok"><i class="ph ph-check"></i>Looks right</span><span class="tag dim">Ask</span><span class="tag dim">Problem</span></div>
       </div>
     </div>
   </div>
@@ -503,12 +498,13 @@ footer .sp { margin-left: auto; }
 
 <section id="faq" style="padding-top: 40px">
   <div class="wrap">
-    <h2 class="h2 center reveal" style="margin:0 auto;text-align:center">Questions reviewers ask</h2>
+    <h2 class="h2 reveal" style="margin:0 auto;text-align:center">Questions reviewers ask</h2>
     <div class="faq">
       <details><summary>Does the AI decide what is safe to merge?<i class="ph ph-plus"></i></summary><p>No. The AI only explains the change. Code checks each claim against the diff, the issue and the test results. A named person signs every merge and writes down the risk they accept.</p></details>
       <details><summary>What if the tests are weak?<i class="ph ph-plus"></i></summary><p>Then less folds away. Code that no passing test covers stays open, and risky areas like public API, wire formats and generated files are always shown, even when tests pass.</p></details>
-      <details><summary>Do I need Lanes to use Vouch?<i class="ph ph-plus"></i></summary><p>No. Without Lanes, every change is reviewed as written by an unknown agent, so nothing is trusted by default. With Lanes, trust is earned per agent and per area of the code.</p></details>
-      <details><summary>Which stacks does it run on today?<i class="ph ph-plus"></i></summary><p>.NET repositories on GitHub. The Guardrail runs your existing test projects on the base and the branch in separate worktrees.</p></details>
+      <details><summary>Do I need Lanes to use Vouch?<i class="ph ph-plus"></i></summary><p>No. Without Lanes, every change counts as written by an unknown agent, so nothing is trusted by default. With Lanes, agents work in parallel without collisions and trust is earned per agent and per area of the code.</p></details>
+      <details><summary>Why Aiven?<i class="ph ph-plus"></i></summary><p>A review is shared and live. Postgres keeps the record, Kafka lets other tools react to each vote and sign-off, and Valkey holds who is reviewing right now. Aiven runs all three as managed services.</p></details>
+      <details><summary>Which stacks does it run on today?<i class="ph ph-plus"></i></summary><p>.NET repositories on GitHub. Guardrail runs your existing test projects on the base and the branch in separate worktrees.</p></details>
     </div>
   </div>
 </section>
@@ -525,27 +521,248 @@ footer .sp { margin-left: auto; }
 
 <footer>
   <div class="wrap">
-    <span class="brand">
-      <svg width="20" height="20" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" fill="#111d42" stroke="rgba(160,178,230,.25)"/><path d="M7 7.5 13 18.5 19 7.5" fill="none" stroke="#86efac" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Vouch
-    </span>
-    <span>Built at Junction 2026 for the Tieto challenge.</span>
+    <span class="brand"><svg width="20" height="20" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" fill="#111d42" stroke="rgba(160,178,230,.25)"/><path d="M7 7.5 13 18.5 19 7.5" fill="none" stroke="#86efac" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Vouch</span>
+    <span>Built at Junction 2026 for the Tieto challenge, with Lanes, Claude and Aiven.</span>
     <span class="sp"></span>
-    <a href="#how">How it works</a>
-    <a href="#faq">FAQ</a>
+    <a href="#how">How it works</a><a href="#faq">FAQ</a>
   </div>
 </footer>
 
 <script>
-const nav = document.getElementById("nav");
-new IntersectionObserver(([e]) => nav.classList.toggle("scrolled", !e.isIntersecting)).observe(document.querySelector(".hero h1"));
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const NS = "http://www.w3.org/2000/svg";
+const fmt = (n) => n.toLocaleString("en-US");
 
-const io = new IntersectionObserver((es) => es.forEach((e) => {
-  if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
-}), { threshold: 0.15 });
-document.querySelectorAll(".reveal").forEach((el, i) => { el.style.transitionDelay = (i % 4) * 70 + "ms"; io.observe(el); });
+new IntersectionObserver(([e]) => $("#nav").classList.toggle("scrolled", !e.isIntersecting)).observe($(".hero h1"));
+const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: 0.12 });
+$$(".reveal").forEach((el, i) => { el.style.transitionDelay = (i % 3) * 70 + "ms"; io.observe(el); });
 
-if (matchMedia("(prefers-reduced-motion: reduce)").matches) document.getElementById("road").pauseAnimations();
+/* ---------------------------------------------------------------- hero simulation */
+const PRS = [ // real numbers from the four review packs
+  { id: "2283", changed: 225, read: 6, claims: "7/8", agent: "claude-code" },
+  { id: "2297", changed: 1383, read: 17, claims: "6/7", agent: "codex" },
+  { id: "2234", changed: 262, read: 48, claims: "6/8", agent: "claude-code" },
+  { id: "2129", changed: 1034, read: 638, claims: "2/10", agent: "codex", risky: true },
+];
+const LANES_Y = [126, 186, 246, 306], LANE_X0 = 64, MERGE_X = 300, TRUNK_Y = 216, END_X = 812;
+const GATES = [{ x: 420, nm: "Guardrail", q: "anything broken?" }, { x: 560, nm: "Checkpoint", q: "claims true?" }, { x: 700, nm: "EasyReview", q: "what to read?" }];
+const PIT = { x: 520, y: 330 };
+const base = $("#roadBase");
+const mk = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const curve = (y, dy = 0) => `M ${LANE_X0} ${y + dy} C 190 ${y + dy}, 200 ${TRUNK_Y + dy}, ${MERGE_X} ${TRUNK_Y + dy}`;
+
+LANES_Y.forEach((y, i) => {
+  mk("path", { class: "lane-mid", d: curve(y) }, base);
+  mk("text", { class: "lane-label", x: 0, y: y + 4 }, base).textContent = `lane ${i + 1}`;
+});
+mk("path", { class: "lane-edge", d: curve(LANES_Y[0], -14) }, base);
+mk("path", { class: "lane-edge", d: curve(LANES_Y[3], 14) }, base);
+mk("line", { class: "trunk-edge", x1: MERGE_X, y1: TRUNK_Y - 16, x2: END_X, y2: TRUNK_Y - 16 }, base);
+mk("line", { class: "trunk-edge", x1: MERGE_X, y1: TRUNK_Y + 16, x2: END_X, y2: TRUNK_Y + 16 }, base);
+mk("line", { class: "trunk-mid", x1: MERGE_X, y1: TRUNK_Y, x2: END_X, y2: TRUNK_Y }, base);
+const RAMP = [[GATES[0].x, TRUNK_Y], [GATES[0].x + 10, TRUNK_Y + 80], [PIT.x - 70, PIT.y], [PIT.x - 30, PIT.y]];
+mk("path", { class: "ramp", d: `M ${RAMP[0]} C ${RAMP[1]}, ${RAMP[2]}, ${RAMP[3]}` }, base);
+const pit = mk("g", { class: "pit" }, base);
+mk("rect", { x: PIT.x - 30, y: PIT.y - 15, width: 130, height: 30, rx: 8 }, pit);
+const pitT = mk("text", { x: PIT.x + 35, y: PIT.y + 4, "text-anchor": "middle" }, pit); pitT.textContent = "Blocked: 0";
+const gateEls = GATES.map((g) => {
+  const G = mk("g", { class: "gate" }, base);
+  mk("line", { x1: g.x, y1: 82, x2: g.x, y2: TRUNK_Y - 22, stroke: "rgba(160,178,230,.18)", "stroke-dasharray": "2 4" }, G);
+  mk("line", { class: "post", x1: g.x, y1: TRUNK_Y - 24, x2: g.x, y2: TRUNK_Y + 24 }, G);
+  mk("rect", { x: g.x - 62, y: 26, width: 124, height: 56, rx: 10 }, G);
+  mk("text", { class: "nm", x: g.x, y: 49, "text-anchor": "middle" }, G).textContent = g.nm;
+  const res = mk("text", { class: "res", x: g.x, y: 68, "text-anchor": "middle" }, G); res.textContent = g.q;
+  return { G, res, q: g.q };
+});
+const endG = mk("g", { class: "main-end" }, base);
+mk("circle", { cx: END_X + 16, cy: TRUNK_Y, r: 9, fill: "#86efac" }, endG);
+mk("text", { x: END_X + 16, y: TRUNK_Y + 34, "text-anchor": "middle" }, endG).textContent = "main";
+
+const S = { lanes: 0, blocked: 0, merged: 0, read: 0, changed: 0 };
+function paint() {
+  $("#sLanes").textContent = S.lanes; $("#sBlocked").textContent = S.blocked; $("#sMerged").textContent = S.merged;
+  $("#sRead").textContent = fmt(S.read); $("#sChanged").textContent = fmt(S.changed); pitT.textContent = `Blocked: ${S.blocked}`;
+}
+function log(icon, cls, html) {
+  const d = document.createElement("div"); d.className = "ev";
+  d.innerHTML = `<i class="ph-fill ${icon} ${cls}"></i><span>${html}</span>`;
+  $("#log").insertBefore(d, $("#log h4").nextSibling);
+  const evs = $$("#log .ev"); if (evs.length > 9) evs.at(-1).remove();
+}
+function flash(i, cls, text) {
+  const g = gateEls[i]; g.G.classList.remove("pass", "fail", "warn"); g.G.classList.add(cls); g.res.textContent = text;
+  clearTimeout(g.t); g.t = setTimeout(() => { g.G.classList.remove("pass", "fail", "warn"); g.res.textContent = g.q; }, 1400);
+}
+const bez = (P, u) => { const m = 1 - u; return [0, 1].map((k) => m * m * m * P[0][k] + 3 * m * m * u * P[1][k] + 3 * m * u * u * P[2][k] + u * u * u * P[3][k]); };
+const laneBez = (y) => [[LANE_X0, y], [190, y], [200, TRUNK_Y], [MERGE_X, TRUNK_Y]];
+
+const cars = []; let nextPr = 0, bugN = 0;
+function freeLane() { // the lane whose last car is furthest along
+  let best = 0, bestU = -1;
+  for (let l = 0; l < 4; l++) {
+    const inLane = cars.filter((c) => c.phase === "lane" && c.lane === l);
+    const u = inLane.length ? Math.min(...inLane.map((c) => c.u)) : 2;
+    if (u > bestU) { bestU = u; best = l; }
+  }
+  return bestU > 0.25 ? best : -1;
+}
+function makeCar(pr) {
+  const lane = freeLane(); if (lane < 0) return false;
+  const g = mk("g", { class: "car" }, $("#cars"));
+  const body = mk("rect", { x: -24, y: -9, width: 48, height: 18, rx: 6, fill: pr.bug ? "#fda4af" : "#dbe4ff" }, g);
+  mk("text", { x: 0, y: 3.5, "text-anchor": "middle" }, g).textContent = pr.bug ? "bug" : "#" + pr.id;
+  const c = { pr, g, body, lane, x: LANE_X0, y: LANES_Y[lane], phase: "lane", u: 0, gate: 0, wait: 0 };
+  g.setAttribute("transform", `translate(${c.x} ${c.y})`);
+  cars.push(c); S.lanes++; paint();
+  log(pr.bug ? "ph-bug" : "ph-robot", pr.bug ? "r" : "a", pr.bug
+    ? `<b>Planted bug</b> in lane ${lane + 1}: this change breaks an existing test`
+    : `<b>${pr.agent}</b> starts <b>#${pr.id}</b> in lane ${lane + 1}`);
+  return true;
+}
+const SPEED = 105;
+const blockedAhead = (c) => cars.some((o) => o !== c && o.phase === "trunk" && o.x > c.x && o.x - c.x < 56);
+function step(dt) {
+  for (const c of [...cars]) {
+    if (c.wait > 0) { c.wait -= dt; continue; }
+    if (c.phase === "lane") {
+      const ahead = cars.some((o) => o !== c && o.phase === "lane" && o.lane === c.lane && o.u > c.u && o.u - c.u < 0.2);
+      if (!ahead) c.u = Math.min(1, c.u + (SPEED * dt) / 250);
+      [c.x, c.y] = bez(laneBez(LANES_Y[c.lane]), c.u);
+      if (c.u >= 1) {
+        if (cars.some((o) => o.phase === "trunk" && o.x < MERGE_X + 58)) continue; // yield at the merge
+        c.phase = "trunk"; S.lanes--; paint();
+      }
+    } else if (c.phase === "trunk") {
+      if (blockedAhead(c)) continue;
+      const g = GATES[c.gate], nx = c.x + SPEED * dt;
+      if (g && c.x < g.x && nx >= g.x) { c.x = g.x; arrive(c); }
+      else c.x = nx;
+      c.y = TRUNK_Y;
+      if (c.x >= END_X + 16) { finish(c); continue; }
+    } else if (c.phase === "ramp") {
+      c.u = Math.min(1, c.u + dt / 1.2);
+      [c.x, c.y] = bez(RAMP, c.u);
+      if (c.u >= 1) { c.phase = "gone"; c.g.style.opacity = 0; setTimeout(() => c.g.remove(), 450); cars.splice(cars.indexOf(c), 1); continue; }
+    }
+    c.g.setAttribute("transform", `translate(${c.x.toFixed(1)} ${c.y.toFixed(1)})`);
+  }
+}
+function arrive(c) {
+  const p = c.pr, i = c.gate++;
+  c.wait = 0.8;
+  if (i === 0 && p.bug) {
+    flash(0, "fail", "166/167, blocked");
+    log("ph-x-circle", "r", `<b>Guardrail</b> blocks the planted bug: 1 existing test now fails. No human time spent.`);
+    c.phase = "ramp"; c.u = 0; S.blocked++; paint(); return;
+  }
+  if (i === 0) { flash(0, "pass", "167/167 pass"); log("ph-shield-check", "g", `<b>#${p.id}</b> Guardrail: all 167 existing tests still pass`); }
+  if (i === 1) { flash(1, p.risky ? "warn" : "pass", `${p.claims} proven`); log("ph-seal-check", p.risky ? "a" : "g", `<b>#${p.id}</b> Checkpoint: ${p.claims} AI claims proven by code`); }
+  if (i === 2) {
+    flash(2, p.risky ? "warn" : "pass", `read ${fmt(p.read)} of ${fmt(p.changed)}`);
+    log("ph-eye", p.risky ? "a" : "g", p.risky
+      ? `<b>#${p.id}</b> EasyReview: public API change stays open, team reads ${fmt(p.read)} of ${fmt(p.changed)} lines`
+      : `<b>#${p.id}</b> EasyReview: team reads ${fmt(p.read)} of ${fmt(p.changed)} lines`);
+    c.body.setAttribute("fill", "#86efac");
+  }
+}
+function finish(c) {
+  S.merged++; S.read += c.pr.read; S.changed += c.pr.changed; paint();
+  log("ph-flag-checkered", "g", `<b>#${c.pr.id}</b> signed by its owner and merged to main`);
+  c.phase = "gone"; c.g.style.opacity = 0; setTimeout(() => c.g.remove(), 450); cars.splice(cars.indexOf(c), 1);
+}
+
+let last = 0, spawnT = 0.2, running = false, spawned = 0;
+function loop(t) {
+  const dt = Math.min(0.05, (t - last) / 1000 || 0); last = t;
+  if ((spawnT -= dt) <= 0) {
+    const bug = (spawned + 1) % 5 === 0;
+    if (makeCar(bug ? { bug: true } : PRS[nextPr % PRS.length])) { spawned++; if (!bug) nextPr++; }
+    spawnT = 2.4;
+  }
+  step(dt);
+  if (running) requestAnimationFrame(loop);
+}
+$("#addIssue").onclick = () => { if (makeCar(PRS[nextPr % PRS.length])) nextPr++; };
+$("#plantBug").onclick = () => makeCar({ bug: true });
+
+if (REDUCED) {
+  S.merged = 4; S.blocked = 1; S.read = 709; S.changed = 2904; paint();
+  log("ph-flag-checkered", "g", "<b>4</b> pull requests merged and <b>1</b> planted bug blocked");
+} else {
+  new IntersectionObserver(([e]) => {
+    if (e.isIntersecting && !running) { running = true; last = performance.now(); requestAnimationFrame(loop); }
+    else if (!e.isIntersecting) running = false;
+  }).observe($("#sim"));
+}
+
+/* ---------------------------------------------------------------- how it works: auto-advancing steps */
+const how = $("#how-ui"), stepsEls = $$(".step", how), panels = $$(".pv", how);
+const LABEL = ["Lanes", "Guardrail", "Checkpoint", "EasyReview"], DUR = [7000, 8000, 7000, 8000];
+let cur = 0, timer = null, timers = [];
+const later = (ms, f) => timers.push(setTimeout(f, REDUCED ? 0 : ms));
+
+function play(i) {
+  timers.forEach(clearTimeout); timers = [];
+  const p = panels[i];
+  if (i === 0) {
+    const a = $("#laneA"), b = $("#laneB");
+    a.className = "tag ok"; a.textContent = "editing"; b.className = "tag wait"; b.textContent = "waiting for #2283";
+    later(2800, () => { a.className = "tag dim"; a.textContent = "done, file released"; b.className = "tag ok"; b.textContent = "editing"; });
+  }
+  if (i === 1) {
+    resetBreak();
+    $$(".count", p).forEach((c) => {
+      const to = +c.dataset.to, t0 = performance.now();
+      if (REDUCED) { c.textContent = to; return; }
+      const tick = (t) => { const k = Math.min(1, (t - t0) / 1400); c.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(tick); };
+      requestAnimationFrame(tick);
+    });
+  }
+  if (i === 2) {
+    const chips = $$(".chip", p); chips.forEach((c) => (c.className = "chip"));
+    chips.forEach((c, k) => later(350 + k * 260, () => (c.className = "chip " + c.dataset.s)));
+  }
+  if (i === 3) {
+    const blks = $$("[data-fold]", p);
+    blks.forEach((b) => b.classList.remove("fold")); $$(".foldrow", p).forEach((f) => f.classList.remove("show"));
+    $("#erRead").textContent = "225"; $("#erTag").textContent = "folding proven code";
+    later(1300, () => { blks[0].classList.add("fold"); $("#fold1").classList.add("show"); $("#erRead").textContent = "199"; });
+    later(2600, () => { blks[1].classList.add("fold"); $("#fold2").classList.add("show"); $("#erRead").textContent = "6"; $("#erTag").textContent = "reading 6 lines"; });
+  }
+}
+function select(i) {
+  cur = i;
+  stepsEls.forEach((s, k) => { s.classList.toggle("on", k === i); s.setAttribute("aria-selected", k === i); s.style.setProperty("--dur", DUR[k] + "ms"); });
+  panels.forEach((p, k) => p.classList.toggle("on", k === i));
+  $("#pvLabel").textContent = LABEL[i];
+  const bar = $(".bar span", stepsEls[i]); bar.style.animation = "none"; void bar.offsetWidth; bar.style.animation = "";
+  play(i);
+  clearTimeout(timer);
+  if (!REDUCED && !how.classList.contains("paused")) timer = setTimeout(() => select((cur + 1) % 4), DUR[i]);
+}
+stepsEls.forEach((s, i) => s.addEventListener("click", () => select(i)));
+how.addEventListener("mouseenter", () => { how.classList.add("paused"); clearTimeout(timer); });
+how.addEventListener("mouseleave", () => { how.classList.remove("paused"); clearTimeout(timer); if (!REDUCED) timer = setTimeout(() => select((cur + 1) % 4), 3000); });
+new IntersectionObserver(([e]) => { if (e.isIntersecting && !how.dataset.started) { how.dataset.started = 1; select(0); } }, { threshold: 0.3 }).observe(how);
+
+function resetBreak() {
+  const v = $("#victim").lastElementChild; v.className = "g"; v.textContent = "pass";
+  $("#brCount").className = "g"; $("#brCount").innerHTML = `<span class="count" data-to="167">167</span> pass`;
+  $("#verdict").className = "verdict";
+  $("#verdict").innerHTML = `<i class="ph-fill ph-shield-check"></i><span>0 regressions: 167 kept, 3 new tests. Sent on.</span><button class="btn btn-ghost btn-sm" id="breakIt">Simulate a regression</button>`;
+  $("#breakIt").onclick = breakIt;
+}
+function breakIt() {
+  how.classList.add("paused"); clearTimeout(timer);
+  const v = $("#victim").lastElementChild; v.className = "r"; v.textContent = "FAIL";
+  $("#brCount").className = "r"; $("#brCount").textContent = "166 pass";
+  $("#verdict").className = "verdict bad";
+  $("#verdict").innerHTML = `<i class="ph-fill ph-x-circle"></i><span>1 regression. Blocked before any human reads it.</span><button class="btn btn-ghost btn-sm" id="undoIt">Undo</button>`;
+  $("#undoIt").onclick = resetBreak;
+}
+resetBreak();
 </script>
 </body>
 </html>

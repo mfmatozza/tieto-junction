@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+ca.pem
+.cache
+.work
+data
+target-repo
+docs
+db
+__pycache__
+*.pyc

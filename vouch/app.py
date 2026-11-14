@@ -19,7 +19,8 @@ from pydantic import BaseModel
 import vouch  # noqa: F401  (loads .env)
 
 ROOT = Path(__file__).resolve().parents[1]
-PACKS, DATA = ROOT / "packs", ROOT / "data"
+SERVERLESS = bool(os.environ.get("VERCEL"))  # read-only disk, many instances: Postgres is the source of truth
+PACKS, DATA = ROOT / "packs", (Path("/tmp/vouch") if SERVERLESS else ROOT / "data")
 LOG = DATA / "events.jsonl"
 app = FastAPI()
 subscribers: dict[str, set[asyncio.Queue]] = {}
@@ -32,9 +33,14 @@ _pg = None
 
 def pg():
     global _pg
-    if _pg is None and os.environ.get("AIVEN_PG_URL"):
-        import psycopg
-        _pg = psycopg.connect(os.environ["AIVEN_PG_URL"], autocommit=True)
+    if _pg is None:
+        _pg = False  # not configured or unreachable: fall back to the local log, don't retry on every request
+        if os.environ.get("AIVEN_PG_URL"):
+            try:
+                import psycopg
+                _pg = psycopg.connect(os.environ["AIVEN_PG_URL"], autocommit=True, connect_timeout=8)
+            except Exception as e:
+                print("Postgres off:", e)
     return _pg
 
 
@@ -54,7 +60,7 @@ def kafka():
                 conf = dict(bootstrap_servers=os.environ["AIVEN_KAFKA_BOOTSTRAP"], security_protocol="SASL_SSL",
                             sasl_mechanism="SCRAM-SHA-256", sasl_plain_username=os.environ.get("AIVEN_KAFKA_USER", "avnadmin"),
                             sasl_plain_password=os.environ["AIVEN_KAFKA_PASSWORD"],
-                            ssl_cafile=str(ROOT / os.environ.get("AIVEN_KAFKA_CA_PEM", "ca.pem")))
+                            ssl_cafile=ca_file())
                 try:
                     KafkaAdminClient(**conf).create_topics([NewTopic(TOPIC, 1, 2)])
                 except Exception:
@@ -113,6 +119,27 @@ def load_events() -> list[dict]:
 EVENTS = load_events()
 
 
+def current_events() -> list[dict]:
+    """Serverless: each instance has its own memory, so read the shared log from Postgres."""
+    if SERVERLESS and pg():
+        try:
+            return [r[0] for r in pg().execute(
+                "SELECT payload FROM review_events WHERE aggregate_type = 'pull_request' ORDER BY occurred_at").fetchall()]
+        except Exception:
+            pass
+    return EVENTS
+
+
+def ca_file() -> str:
+    """AIVEN_KAFKA_CA_PEM is a path, or (on Vercel) the certificate itself."""
+    v = os.environ.get("AIVEN_KAFKA_CA_PEM", "ca.pem")
+    if v.lstrip().startswith("-----BEGIN"):
+        f = Path("/tmp/aiven-ca.pem")
+        f.write_text(v.replace("\\n", "\n"))  # env vars may carry the PEM with literal \n
+        return str(f)
+    return str(ROOT / v)
+
+
 def record(ev: dict) -> None:
     ev["at"] = time.time()
     EVENTS.append(ev)
@@ -149,7 +176,7 @@ def pack(pr: str) -> dict:
 def state(pr: str, steps: list[dict]) -> dict:
     votes: dict[str, dict[str, dict]] = {}  # step -> user -> latest vote
     asks, signoff = [], None
-    for ev in EVENTS:
+    for ev in current_events():
         if ev["pr"] != pr:
             continue
         if ev["type"] == "vote":
