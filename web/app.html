@@ -58,6 +58,14 @@ h1 { font-size: 30px; letter-spacing: -.025em; font-weight: 600; }
 .repo.on i.ic { color: var(--green); }
 .repo .name { font-weight: 500; }
 .repo .meta { color: var(--dim); font-size: 13px; margin-top: 2px; }
+.repo-wrap + .repo-wrap { border-top: 1px solid var(--line); }
+.repo .ok-t { color: var(--green); }
+.connect { padding: 4px 20px 20px 70px; color: var(--muted); font-size: 14px; display: grid; gap: 10px; max-width: 900px; }
+.connect[hidden] { display: none; }
+.connect pre { font: 12.5px/1.7 var(--mono); color: var(--text); background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; overflow-x: auto; }
+.connect .d { color: var(--dim); font-size: 13px; }
+.link { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+.list-h + .repos { margin-top: 14px; }
 .state { font: 12px var(--mono); color: var(--dim); }
 .skel { height: 64px; background: linear-gradient(90deg, var(--surface) 0%, var(--surface-2) 50%, var(--surface) 100%); background-size: 200% 100%; animation: sh 1.4s infinite; }
 .skel + .skel { border-top: 1px solid var(--line); }
@@ -160,24 +168,44 @@ function renderMe() {
     <span class="name">${esc(ME.name)}</span><a href="/auth/logout">Sign out</a>`;
 }
 
+const SUPPORTED = { "C#": ".NET", "F#": ".NET", "Python": "Python", "JavaScript": "JavaScript", "TypeScript": "TypeScript",
+  "Go": "Go", "Java": "Java", "Kotlin": "Kotlin", "Rust": "Rust" };
+
 async function showRepos() {
   $("#crumb").innerHTML = "";
-  $("#view").innerHTML = `<h1>Choose a repository</h1><p class="sub">Vouch reviews pull requests written by AI agents in connected repositories.</p>
-    <div class="repos" id="repos"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>`;
+  $("#view").innerHTML = `<h1>Repositories</h1><p class="sub">Vouch reviews pull requests written by AI agents.</p>
+    <div id="repos"><div class="repos"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div></div>`;
   try { REPOS = REPOS || await api("/api/repos"); }
-  catch (e) { $("#repos").outerHTML = `<div class="err">Could not load repositories. ${esc(e.message)}</div>`; return; }
-  $("#repos").innerHTML = REPOS.map((r) => r.connected ? `
-    <a class="repo on" href="#/repo">
-      <i class="ph ph-git-branch ic"></i>
-      <div><div class="name">${esc(r.full_name)}</div><div class="meta">${esc(r.language || "")} · ${r.prs} pull requests waiting for review</div></div>
-      <span class="btn btn-primary">Open<i class="ph ph-arrow-right"></i></span>
-    </a>` : `
-    <div class="repo">
-      <i class="ph ph-git-branch ic"></i>
-      <div><div class="name">${esc(r.full_name)}</div><div class="meta">${esc(r.language || "No language")}${r.private ? " · private" : ""}</div></div>
-      <span class="state">Not connected</span>
-    </div>`).join("");
+  catch (e) { $("#repos").innerHTML = `<div class="err">Could not load repositories. ${esc(e.message)}</div>`; return; }
+  const demo = REPOS.filter((r) => r.connected), mine = REPOS.filter((r) => !r.connected);
+  $("#repos").innerHTML = `
+    <div class="list-h"><h2>Demo repository</h2><span>Tieto's Junction challenge</span></div>
+    <div class="repos">${demo.map((r) => `
+      <a class="repo on" href="#/repo">
+        <i class="ph ph-git-branch ic"></i>
+        <div><div class="name">${esc(r.full_name)}</div><div class="meta">Public challenge repository from Tieto. ${r.prs} AI-written pull requests, already checked by Vouch.</div></div>
+        <span class="btn btn-primary">Open<i class="ph ph-arrow-right"></i></span>
+      </a>`).join("")}</div>
+    <div class="list-h"><h2>Your repositories</h2><span>${ME.demo ? "Sign in with GitHub to see yours" : "Public repositories on your GitHub account"}</span></div>
+    ${mine.length ? `<div class="repos">${mine.map((r, i) => {
+      const lang = SUPPORTED[r.language];
+      return `<div class="repo-wrap">
+        <div class="repo">
+          <i class="ph ph-git-branch ic"></i>
+          <div><div class="name">${esc(r.full_name)}</div><div class="meta">${esc(r.language || "No language detected")}${r.private ? " · private" : ""} · ${lang ? `<span class="ok-t">${esc(lang)} is supported</span>` : "not supported yet"}</div></div>
+          <button class="btn btn-ghost" onclick="toggleConnect(${i})">Connect</button>
+        </div>
+        <div class="connect" id="c${i}" hidden>
+          <p>Connecting means Vouch checks every AI pull request in this repository: Guardrail runs your existing tests before and after, Checkpoint verifies the AI's claims, and your team reviews the rest here.</p>
+          ${lang ? `<p>The one-click GitHub connection is next on our roadmap. Today, run Guardrail on any pull request branch yourself:</p>
+          <pre>git clone https://github.com/${esc(r.full_name)}.git
+python -m vouch.runners ${esc(r.full_name.split("/")[1])} main &lt;agent-branch&gt;</pre>
+          <p class="d">Exit code 1 means an existing test broke: block the merge.</p>` : `<p>${esc(r.language || "This language")} is not supported yet. Supported today: .NET, Python, JavaScript, TypeScript, Go, Java, Kotlin and Rust.</p>`}
+        </div>
+      </div>`; }).join("")}</div>`
+    : `<div class="empty"><i class="ph ph-github-logo"></i>${ME.demo ? `You are using the demo login. <a class="link" href="/auth/logout">Sign out</a> and connect GitHub to see your repositories.` : "No public repositories found on your account."}</div>`}`;
 }
+function toggleConnect(i) { const el = $("#c" + i); el.hidden = !el.hidden; }
 
 function road(p) {
   const g = p.guard, blocked = g.regression > 0;
