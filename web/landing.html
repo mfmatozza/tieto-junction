@@ -553,7 +553,7 @@ footer .sp { margin-left: auto; }
   <div class="wrap">
     <h2 class="h2 reveal">Built in house. What runs where.</h2>
     <p class="lead reveal">We built both halves ourselves. Lanes coordinates the agents that write the code, and its source is on GitHub. Vouch checks what they wrote. The only outside services are Claude, for explanations, and Aiven, for data.</p>
-    <p class="inhouse reveal"><a href="https://github.com/mfmatozza/lanes" target="_blank" rel="noopener"><i class="ph ph-github-logo"></i>Lanes source on GitHub</a><span>Lanes: built by our team before Junction</span><span>Vouch: built at Junction 2026</span></p>
+    <p class="inhouse reveal"><a href="https://github.com/mfmatozza/lanes" target="_blank" rel="noopener"><i class="ph ph-github-logo"></i>Lanes source on GitHub</a><span>Lanes and Vouch: built in house</span></p>
 
     <div class="arch reveal">
       <div class="col">
@@ -679,7 +679,7 @@ footer .sp { margin-left: auto; }
     <div class="faq">
       <details><summary>Isn't this just AI deciding what humans review?<i class="ph ph-plus"></i></summary><p>No. The AI only proposes a map of the change. Code decides what folds: the cited lines must exist, the named test must have passed on the branch, and no risk rule may apply. The AI's confidence is never used. Next, we will also require coverage proof that the named test actually runs those lines. A named person signs every merge.</p></details>
       <details><summary>What if the tests are weak?<i class="ph ph-plus"></i></summary><p>Then less folds away. Code that no passing test covers stays open, and risky areas like public API, wire formats and generated files are always shown, even when tests pass.</p></details>
-      <details><summary>Who built Lanes?<i class="ph ph-plus"></i></summary><p>We did. Lanes is our own coordination layer for coding agents, built by our team before Junction. The source is on <a class="g" href="https://github.com/mfmatozza/lanes" target="_blank" rel="noopener">GitHub</a>.</p></details>
+      <details><summary>Who built Lanes?<i class="ph ph-plus"></i></summary><p>We did. Lanes is built in house, like the rest of Vouch. The source is on <a class="g" href="https://github.com/mfmatozza/lanes" target="_blank" rel="noopener">GitHub</a>.</p></details>
       <details><summary>Do I need Lanes to use Vouch?<i class="ph ph-plus"></i></summary><p>No. Without Lanes, every change counts as written by an unknown agent, so nothing is trusted by default. With Lanes, agents work in parallel without collisions and trust is earned per agent and per area of the code.</p></details>
       <details><summary>Why Aiven?<i class="ph ph-plus"></i></summary><p>A review is shared and live. Postgres keeps the record, Kafka lets other tools react to each vote and sign-off, and Valkey holds who is reviewing right now. Aiven runs all three as managed services.</p></details>
       <details><summary>Which stacks does it run on today?<i class="ph ph-plus"></i></summary><p>.NET repositories on GitHub. Guardrail runs your existing test projects on the base and the branch in separate worktrees.</p></details>
@@ -700,7 +700,7 @@ footer .sp { margin-left: auto; }
 <footer>
   <div class="wrap">
     <span class="brand"><svg width="20" height="20" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" fill="#111d42" stroke="rgba(160,178,230,.25)"/><path d="M7 7.5 13 18.5 19 7.5" fill="none" stroke="#86efac" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Vouch</span>
-    <span>Built in house at Junction 2026 for the Tieto challenge. Lanes is ours too.</span>
+    <span>Lanes and Vouch, built in house.</span>
     <span class="sp"></span>
     <a href="https://github.com/mfmatozza/lanes" target="_blank" rel="noopener">Lanes on GitHub</a><a href="#roadmap">Roadmap</a><a href="#faq">FAQ</a>
   </div>
