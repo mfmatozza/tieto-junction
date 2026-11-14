@@ -120,8 +120,8 @@ EVENTS = load_events()
 
 
 def current_events() -> list[dict]:
-    """Serverless: each instance has its own memory, so read the shared log from Postgres."""
-    if SERVERLESS and pg():
+    """Postgres is the shared log (laptop and Vercel see the same review); the local file is the fallback."""
+    if pg():
         try:
             return [r[0] for r in pg().execute(
                 "SELECT payload FROM review_events WHERE aggregate_type = 'pull_request' ORDER BY occurred_at").fetchall()]
