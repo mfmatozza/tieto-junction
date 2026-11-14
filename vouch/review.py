@@ -11,7 +11,8 @@ import sys
 import time
 from pathlib import Path
 
-from vouch.dotnet import TEST_PROJECTS, git, run_tests
+from vouch import runners
+from vouch.dotnet import TEST_PROJECTS, git, run_tests, worktree
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKS = ROOT / "packs"
@@ -21,12 +22,17 @@ READ_SPEED = 12  # lines a reviewer reads per minute, for the time estimate
 # ---------------------------------------------------------------- diff
 
 
+# Test files in every supported language: .NET, Python, JS/TS, Go, Java/Kotlin, Rust.
+TEST_PATH = re.compile(r"(^|/)(tests?|__tests__|spec)/|(^|/)test_[^/]+\.py$|_test\.(py|go)$|\.(test|spec)\.[cm]?[jt]sx?$"
+                       r"|/src/test/(java|kotlin)/|Tests?\.(java|kt|cs)$")
+
+
 def kind_of(path: str) -> str:
     if "/Resources/" in path and path.startswith("tests/"):
         return "generated"
     if path.endswith((".md", ".txt")) and "PublicAPI" not in path:
         return "doc"
-    if path.startswith("tests/"):
+    if TEST_PATH.search(path):
         return "test"
     if path.endswith((".props", ".targets", ".csproj", ".json", ".yml", ".yaml")):
         return "build"
@@ -173,10 +179,15 @@ def test_methods(files: list[dict]) -> list[str]:
             continue
         cls = Path(f["path"]).stem
         lines = [l["text"] for h in f["hunks"] for l in h["lines"] if l["t"] != "-"]
-        for i, text in enumerate(lines):
-            if re.search(r"\[(Fact|Theory)", text):
+        for text in lines:  # Python, Go, JS/TS, Rust test declarations
+            m = (re.match(r"\s*(?:async\s+)?def (test_\w+)\s*\(", text) or re.match(r"\s*func (Test\w+)\s*\(", text)
+                 or re.match(r"""\s*(?:it|test)\s*\(\s*["'`]([^"'`]+)["'`]""", text) or re.match(r"\s*(?:pub\s+)?fn (\w+)\s*\(\)", text))
+            if m:
+                found.append(f"{cls}.{m[1]}")
+        for i, text in enumerate(lines):  # .NET [Fact]/[Theory] and Java/Kotlin @Test
+            if re.search(r"\[(Fact|Theory)|@Test\b", text):
                 for nxt in lines[i + 1:i + 4]:
-                    m = re.search(r"\b(?:public|private|internal)\s+(?:async\s+)?\w[\w<>]*\s+(\w+)\s*\(", nxt)
+                    m = re.search(r"\b(?:public|private|internal|protected|fun|void)\s+(?:async\s+)?(?:\w[\w<>]*\s+)?(\w+)\s*\(", nxt)
                     if m:
                         found.append(f"{cls}.{m[1]}")
                         break
@@ -252,6 +263,8 @@ def generated_check(files: list[dict]) -> dict | None:
 
 def guard(base: str, head: str, files: list[dict], use_tests: bool) -> dict:
     projects = sorted({p for f in files for src, p in TEST_PROJECTS.items() if f["path"].startswith(src)})
+    if use_tests and not projects:  # not the .NET map: detect the language and run its own test tool
+        return guard_any(base, head)
     if not use_tests or not projects:
         return {"ran": False, "why": "Tests were not run." if not use_tests else "No test project covers these files.", "projects": projects}
     before, after = {}, {}
@@ -272,6 +285,17 @@ def guard(base: str, head: str, files: list[dict], use_tests: bool) -> dict:
     return {"ran": True, "projects": projects, "existing": len(rows), "kept": count("kept"), "regression": count("regression"),
             "fixed": count("fixed"), "already_broken": count("already_broken"), "new_tests": len(set(after) - set(before)),
             "regressions": [r for r in rows if r["verdict"] == "regression"], "head_results": after}
+
+
+def guard_any(base: str, head: str) -> dict:
+    """Python, JS/TS, Go, Java/Kotlin, Rust: the whole existing suite on base and on head, same verdict as .NET."""
+    langs, before = runners.run_all(worktree(base))
+    _, after = runners.run_all(worktree(head))
+    if not langs:
+        return {"ran": False, "why": "No supported test setup found in this repository.", "projects": []}
+    if before is None or after is None:
+        return {"ran": False, "why": f"The {', '.join(langs)} tests did not run on both commits.", "projects": langs}
+    return {"ran": True, "projects": langs, **runners.compare(before, after), "head_results": after}
 
 
 # ---------------------------------------------------------------- the review
