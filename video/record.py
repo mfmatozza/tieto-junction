@@ -224,13 +224,16 @@ def review(b, pr="mfmatozza~vouch-demo~5"):
     finish(c, "review"); luca.close()
 
 
-def sign(b, pr="mfmatozza~vouch-demo~5", number=5):
+RISK = "Small change; all existing tests kept. A person read the line mutation proof could not prove."
+
+
+def sign(b, pr="mfmatozza~vouch-demo~4", number=4):
     c = ctx(b, "sign"); p = c.new_page()
     p.goto(f"{SITE}/review#/pr/{pr}", wait_until="networkidle"); time.sleep(2)
     p.locator(".step").last.click(); time.sleep(2.5)
     glide(p, "#risk")
     assert p.evaluate("document.activeElement && document.activeElement.id") == "risk", "risk box not focused"
-    p.keyboard.type("Small, isolated change; all existing tests kept and every proven line survived mutation.", delay=28)
+    p.keyboard.type(RISK, delay=26)
     time.sleep(.8)
     glide(p, ".actbar button:has-text('Approve and merge')")
     t0 = time.time()
@@ -242,16 +245,26 @@ def sign(b, pr="mfmatozza~vouch-demo~5", number=5):
     finish(c, "sign")
 
 
+def merged(b):
+    """GitHub's page for the merged PR, scrolled to the review record Vouch posted."""
+    c = b.new_context(viewport=SIZE, record_video_dir=str(RAW / "_merged"), record_video_size=SIZE); c.add_init_script(CURSOR)
+    p = c.new_page()
+    p.goto("https://github.com/mfmatozza/vouch-demo/pull/4", wait_until="domcontentloaded"); time.sleep(2.5)
+    y = p.evaluate("(() => { const h = [...document.querySelectorAll('h2,h3')].find(e => e.textContent.includes('Vouch review')); return h ? h.getBoundingClientRect().top + scrollY - 90 : 600; })()")
+    smooth_scroll(p, y, 2200); time.sleep(4)
+    finish(c, "merged")
+
+
 def results(b):
     c = ctx(b, "results", cookie=False); p = c.new_page()
-    p.goto(SITE + "/#results", wait_until="networkidle"); time.sleep(1)
+    p.goto(SITE + "/", wait_until="networkidle"); time.sleep(1)
     p.evaluate("document.querySelectorAll('.reveal').forEach(e => e.classList.add('in'))")
-    p.evaluate("document.querySelector('#results').scrollIntoView()"); time.sleep(4)
-    smooth_scroll(p, p.evaluate("document.querySelector('.e2e').getBoundingClientRect().top + scrollY - 120"), 2500); time.sleep(4)
+    p.evaluate("window.scrollTo(0, document.querySelector('#results').getBoundingClientRect().top + scrollY - 70)"); time.sleep(4.5)
+    smooth_scroll(p, p.evaluate("document.querySelector('#bench').getBoundingClientRect().top + scrollY - 90"), 2200); time.sleep(5)
     finish(c, "results")
 
 
-BLOCKS = {"hero": hero, "lanes": lanes, "run": run, "github": github, "review": review, "sign": sign, "results": results}
+BLOCKS = {"hero": hero, "lanes": lanes, "run": run, "github": github, "review": review, "sign": sign, "merged": merged, "results": results}
 
 if __name__ == "__main__":
     with sync_playwright() as pw:
