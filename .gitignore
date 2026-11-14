@@ -6,3 +6,5 @@ __pycache__/
 .work/
 target-repo/
 ca.pem
+.cache/
+data/

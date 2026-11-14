@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vouch</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #fff; --ink: #1d2430; --muted: #5d6675; --line: #dfe3e8;
+    --blue: #1f4e8c; --blue-soft: #e8eef7; --green: #1e7b45; --green-soft: #e7f4ec;
+    --red: #a8322d; --red-soft: #fbeceb; --amber: #8a5a00; --amber-soft: #fdf4e0;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 "Segoe UI", system-ui, sans-serif; }
+  header { background: var(--card); border-bottom: 1px solid var(--line); padding: 14px 28px; display: flex; align-items: center; gap: 16px; }
+  header b { font-size: 20px; letter-spacing: .5px; }
+  header .tag { color: var(--muted); }
+  header .me { margin-left: auto; color: var(--muted); cursor: pointer; }
+  main { max-width: 1280px; margin: 0 auto; padding: 24px 28px 80px; }
+  a { color: var(--blue); }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 20px; margin: 0 0 12px; }
+  .muted { color: var(--muted); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 20px 24px; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 13px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+  tr.row { cursor: pointer; } tr.row:hover td { background: var(--blue-soft); }
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .p-ok { background: var(--green-soft); color: var(--green); } .p-bad { background: var(--red-soft); color: var(--red); }
+  .p-warn { background: var(--amber-soft); color: var(--amber); } .p-info { background: var(--blue-soft); color: var(--blue); }
+
+  .numbers { display: flex; gap: 12px; margin: 18px 0; flex-wrap: wrap; }
+  .num { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 14px 18px; min-width: 180px; flex: 1; }
+  .num .v { font-size: 30px; font-weight: 700; line-height: 1.1; }
+  .num .l { color: var(--muted); font-size: 14px; }
+  .num.key { border-color: var(--blue); }
+  .num.key .v { color: var(--blue); }
+
+  .layout { display: grid; grid-template-columns: 320px 1fr; gap: 20px; align-items: start; }
+  .steps { position: sticky; top: 16px; padding: 8px 0; }
+  .step { display: flex; gap: 10px; padding: 10px 16px; cursor: pointer; border-left: 4px solid transparent; align-items: flex-start; }
+  .step:hover { background: var(--bg); }
+  .step.on { background: var(--blue-soft); border-left-color: var(--blue); }
+  .step .mark { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); flex: none; display: grid; place-items: center; font-size: 13px; font-weight: 700; margin-top: 1px; }
+  .mark.ok { background: var(--green); border-color: var(--green); color: #fff; }
+  .mark.problem { background: var(--red); border-color: var(--red); color: #fff; }
+  .mark.question { background: var(--amber); border-color: var(--amber); color: #fff; }
+  .step .t { font-size: 14px; line-height: 1.35; }
+  .who { display: inline-flex; gap: 3px; margin-left: 6px; }
+  .av { width: 22px; height: 22px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 11px; font-weight: 700; display: inline-grid; place-items: center; }
+  .progress { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin: 6px 16px 12px; }
+  .progress div { height: 100%; background: var(--green); transition: width .4s; }
+
+  .claim-text { font-size: 21px; font-weight: 600; margin: 4px 0 12px; }
+  .quote { border-left: 4px solid var(--line); padding: 4px 14px; color: var(--muted); margin: 0 0 14px; font-style: italic; }
+  .checks { list-style: none; padding: 0; margin: 0 0 14px; }
+  .checks li { padding: 4px 0; display: flex; gap: 10px; }
+  .checks .y { color: var(--green); font-weight: 700; } .checks .n { color: var(--red); font-weight: 700; }
+  .conf { color: var(--muted); font-size: 14px; margin-bottom: 14px; }
+  .conf s { opacity: .7; }
+
+  .file { border: 1px solid var(--line); border-radius: 6px; margin: 12px 0; overflow: hidden; }
+  .file .fh { background: var(--bg); padding: 8px 12px; font: 13px var(--mono); display: flex; gap: 10px; align-items: center; }
+  .code { font: 13px/1.55 var(--mono); overflow-x: auto; }
+  .ln { display: grid; grid-template-columns: 54px 18px 1fr; white-space: pre; opacity: 0; animation: in .25s forwards; }
+  @keyframes in { to { opacity: 1; } }
+  .ln .n { color: #9aa3ae; text-align: right; padding-right: 8px; user-select: none; }
+  .ln.add { background: #eef8f1; } .ln.del { background: #fcf0ef; color: #8b6b69; text-decoration: line-through; text-decoration-color: #d9a9a5; }
+  .ln.read { background: #fff6d6; box-shadow: inset 4px 0 0 #e0a800; }
+  .gap { color: var(--muted); font-size: 12px; padding: 2px 12px; background: var(--bg); }
+  .fold { padding: 12px 14px; background: var(--green-soft); color: var(--green); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .legend { font-size: 13px; color: var(--muted); display: flex; gap: 16px; margin: 6px 0; }
+  .legend i { display: inline-block; width: 12px; height: 12px; vertical-align: -1px; margin-right: 4px; border-radius: 2px; }
+
+  .actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; align-items: center; border-top: 1px solid var(--line); padding-top: 16px; }
+  button { font: inherit; padding: 10px 18px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); cursor: pointer; }
+  button:hover { border-color: var(--blue); }
+  button.primary { background: var(--green); border-color: var(--green); color: #fff; font-weight: 600; }
+  button.blue { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 600; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .spacer { flex: 1; }
+  .box { padding: 14px 18px; border-radius: 6px; margin: 12px 0; }
+  .box.red { background: var(--red-soft); color: var(--red); } .box.green { background: var(--green-soft); color: var(--green); }
+  .box.amber { background: var(--amber-soft); color: var(--amber); } .box.blue { background: var(--blue-soft); color: var(--blue); }
+  .big { font-size: 22px; font-weight: 700; }
+  .thread { margin-top: 14px; }
+  .msg { border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; margin: 8px 0; background: var(--card); }
+  .msg .h { font-size: 13px; color: var(--muted); }
+  textarea, input[type=text] { font: inherit; width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; }
+  details summary { cursor: pointer; color: var(--blue); }
+  pre.req { white-space: pre-wrap; font: 13px/1.5 var(--mono); background: var(--bg); padding: 14px; border-radius: 6px; max-height: 360px; overflow: auto; }
+  .kbd { font-size: 12px; color: var(--muted); }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .steps { position: static; } }
+</style>
+</head>
+<body>
+<header>
+  <b>Vouch</b><span class="tag">Review AI-written changes in minutes, without breaking anything.</span>
+  <span class="me" id="me" title="Change your name"></span>
+</header>
+<main id="app"></main>
+
+<script>
+window.onerror = (m, u, l) => { document.getElementById("app").insertAdjacentHTML("afterbegin", `<div class="box red">Error: ${m} (line ${l})</div>`); };
+window.onunhandledrejection = (e) => window.onerror(e.reason && e.reason.stack || e.reason, "", 0);
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const initials = (n) => n.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+let me = new URLSearchParams(location.search).get("as") || localStorage.getItem("vouch-name");
+if (!me) me = (prompt("Your name (teammates will see it)") || "").trim() || "Reviewer";
+localStorage.setItem("vouch-name", me);
+$("#me").textContent = "Signed in as " + me;
+$("#me").onclick = () => { const n = prompt("Your name", me); if (n) { localStorage.setItem("vouch-name", n.trim()); location.reload(); } };
+
+const api = async (path, body) => {
+  const r = await fetch(path, body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {});
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.detail || "Request failed");
+  return j;
+};
+
+const ROUTE = {
+  blocked: ["Blocked: something broke", "p-bad"],
+  full: ["Read everything", "p-warn"],
+  focused: ["Focused review", "p-info"],
+  light: ["Quick check", "p-ok"],
+};
+
+// ------------------------------------------------------------ list
+async function showList() {
+  stopLive();
+  const prs = await api("/api/prs");
+  $("#app").innerHTML = `
+    <h1>Changes waiting for review</h1>
+    <p class="muted">Each change was written by an AI agent from a backlog issue. Vouch has already run the tests and checked the AI's explanation. You only read what is not proven.</p>
+    <div class="card" style="padding:0">
+    <table>
+      <tr><th>Issue</th><th>Written by</th><th>Lines changed</th><th>You read</th><th>Existing tests</th><th>Review</th><th>Status</th></tr>
+      ${prs.map((p) => {
+        const g = p.guard;
+        const guard = !g.ran ? `<span class="pill p-warn">not run</span>`
+          : g.regression ? `<span class="pill p-bad">${g.regression} broken</span>`
+          : `<span class="pill p-ok">${g.kept} of ${g.existing} still pass</span>`;
+        const status = p.signed ? `<span class="pill p-ok">Signed</span>` : `<span class="pill ${ROUTE[p.route][1]}">${ROUTE[p.route][0]}</span>`;
+        return `<tr class="row" onclick="location.hash='#/pr/${p.id}'">
+          <td><b>#${p.id}</b><br><span class="muted">${esc(p.title.replace(/^#?\d+\s*/, ""))}</span></td>
+          <td>AI agent<br><span class="muted">for ${esc(p.author)}</span></td>
+          <td>${p.stats.changed_lines}</td>
+          <td><b>${p.stats.lines_to_read}</b> <span class="muted">(~${p.stats.minutes} min)</span></td>
+          <td>${guard}</td>
+          <td>${p.done} of ${p.total} steps ${p.reviewers.map((r) => `<span class="av" title="${esc(r)}">${initials(r)}</span>`).join("")}</td>
+          <td>${status}</td></tr>`;
+      }).join("")}
+    </table></div>`;
+}
+
+// ------------------------------------------------------------ review
+let P, S, cur = 0, live, beat, prId;
+
+function stopLive() { live && live.close(); clearInterval(beat); live = beat = null; }
+
+async function showPR(id) {
+  stopLive();
+  prId = id;
+  const r = await api(`/api/prs/${id}`);
+  P = r.pack; S = r.state;
+  cur = Math.min(cur, P.steps.length - 1);
+  render();
+  live = new EventSource(`/api/prs/${id}/stream`);
+  live.onmessage = async (e) => { if (e.data === "changed") { S = (await api(`/api/prs/${id}`)).state; render(false); } };
+  const ping = () => api(`/api/prs/${id}/presence`, { user: me, step: P.steps[cur].id }).catch(() => {});
+  ping(); beat = setInterval(ping, 5000);
+}
+
+function go(i) {
+  cur = Math.max(0, Math.min(P.steps.length - 1, i));
+  history.replaceState(null, "", `#/pr/${prId}/${cur + 1}`);
+  render();
+  api(`/api/prs/${prId}/presence`, { user: me, step: P.steps[cur].id }).catch(() => {});
+  window.scrollTo({ top: 0 });
+}
+
+function render(animate = true) {
+  const st = P.stats, g = P.guard;
+  const guardNum = !g.ran ? ["—", "existing tests not run"]
+    : g.regression ? [`${g.regression}`, `existing tests now FAIL`] : [`${g.kept} / ${g.existing}`, "existing tests still pass"];
+  const here = (sid) => Object.entries(S.presence).filter(([, s]) => s === sid).map(([u]) => `<span class="av" title="${esc(u)} is here">${initials(u)}</span>`).join("");
+  $("#app").innerHTML = `
+    <p><a href="#/">← All changes</a></p>
+    <h1>#${P.id} ${esc(P.requirement.title.replace(/^#?\d+\s*/, ""))}</h1>
+    <div class="muted">Written by an AI agent, committed by ${esc(P.author)} · <span class="pill ${ROUTE[P.route][1]}">${ROUTE[P.route][0]}</span>
+      ${S.signoff ? ` · <span class="pill p-ok">Signed by ${esc(S.signoff.user)}</span>` : ""}</div>
+    <div class="numbers">
+      <div class="num"><div class="v">${st.changed_lines}</div><div class="l">lines changed · ~${st.minutes_full} min to read all</div></div>
+      <div class="num key"><div class="v">${st.lines_to_read}</div><div class="l">lines you need to read · ~${st.minutes} min</div></div>
+      <div class="num"><div class="v" style="color:${g.regression ? "var(--red)" : "var(--green)"}">${guardNum[0]}</div><div class="l">${guardNum[1]}</div></div>
+      <div class="num"><div class="v">${S.done} / ${S.total}</div><div class="l">steps approved by the team</div></div>
+    </div>
+    <div class="layout">
+      <div class="card steps">
+        <div class="muted" style="padding:4px 16px 0;font-size:13px">REVIEW STEPS</div>
+        <div class="progress"><div style="width:${(100 * S.done) / S.total}%"></div></div>
+        ${P.steps.map((s, i) => {
+          const m = S.status[s.id];
+          const mark = { ok: "✓", problem: "!", question: "?" }[m] || i + 1;
+          return `<div class="step ${i === cur ? "on" : ""}" onclick="go(${i})">
+            <span class="mark ${m || ""}">${mark}</span>
+            <span class="t">${esc(s.title)}<span class="who">${here(s.id)}</span></span></div>`;
+        }).join("")}
+      </div>
+      <div class="card" id="pane">${stepView(P.steps[cur], animate)}</div>
+    </div>`;
+}
+
+// ------------------------------------------------------------ step views
+function stepView(s, animate) {
+  const body = { guard: vGuard, story: vStory, claim: vClaim, refusal: vRefusal, generated: vGenerated, leftovers: vLeftovers, sign: vSign }[s.kind](s, animate);
+  return body + (s.kind === "sign" ? "" : actions(s));
+}
+
+function vGuard() {
+  const g = P.guard;
+  if (!g.ran) return `<h2>Nothing that worked before is broken?</h2><div class="box amber big">Not checked</div><p>${esc(g.why)} Treat this change as unproven: read all of it.</p>`;
+  if (g.regression) return `<h2>Something that worked before is now broken</h2>
+    <div class="box red big">${g.regression} existing test${g.regression > 1 ? "s" : ""} passed before this change and fail after it.</div>
+    <p>Vouch blocks this change. No one needs to review it until this is fixed.</p>
+    <table><tr><th>Test</th><th>Before</th><th>After</th></tr>${g.regressions.map((r) => `<tr><td><code>${esc(r.test)}</code></td><td>${r.before}</td><td>${r.after}</td></tr>`).join("")}</table>`;
+  return `<h2>Nothing that worked before is broken</h2>
+    <div class="box green big">${g.kept} of ${g.existing} existing tests pass before and after this change.</div>
+    <table>
+      <tr><td>Existing tests run on the code <b>before</b> the change</td><td><b>${g.existing}</b></td></tr>
+      <tr><td>The same tests run on the code <b>after</b> the change</td><td><b>${g.kept}</b> still pass</td></tr>
+      <tr><td>Broken by this change</td><td><b style="color:${g.regression ? "var(--red)" : "var(--green)"}">${g.regression}</b></td></tr>
+      <tr><td>New tests added by the AI</td><td><b>${g.new_tests}</b></td></tr>
+    </table>
+    <p class="muted">Test project: ${g.projects.map(esc).join(", ")}. Run by Vouch, not by the AI.</p>`;
+}
+
+function vStory() {
+  const st = P.stats;
+  return `<h2>What this change does</h2>
+    <p style="font-size:18px">${esc(P.summary || "The AI gave no explanation. Read every line.")}</p>
+    <div class="box blue">${st.changed_lines} lines changed in ${st.files} files. Lines backed by a passing test are folded away. <b>You read ${st.lines_to_read}.</b></div>
+    ${P.missing.length ? `<div class="box amber">Part of the review is missing: ${P.missing.map(esc).join(", ")}. Nothing was folded away for that part.</div>` : ""}
+    <details><summary>Read the original issue (${esc(P.requirement.key)})</summary><pre class="req">${esc(P.requirement.text)}</pre></details>
+    <h2 style="margin-top:18px">Files</h2>
+    <table>${P.files.filter((f) => f.kind !== "generated").map((f) => `<tr><td><code>${esc(f.path)}</code></td><td class="muted">${f.kind}</td><td>${f.hunks.reduce((n, h) => n + h.lines.filter((l) => l.t === "+").length, 0)} lines</td></tr>`).join("")}
+    ${P.generated ? `<tr><td>${P.generated.files} generated files</td><td class="muted">generated</td><td>${P.generated.lines} lines</td></tr>` : ""}</table>`;
+}
+
+function vClaim(s, animate) {
+  const c = P.claims.find((x) => x.id === s.claim);
+  const label = { proven: ["Proven by a passing test", "p-ok"], unproven: ["Not proven: read it", "p-warn"], disputed: ["Check failed: read it", "p-bad"] }[c.status];
+  const folded = c.status === "proven";
+  return `<div><span class="pill ${label[1]}">${label[0]}</span></div>
+    <div class="claim-text">${esc(c.text)}</div>
+    <div class="quote">From the issue: “${esc(c.requirement_quote)}”</div>
+    <ul class="checks">${c.checks.map((k) => `<li><span class="${k.ok ? "y" : "n"}">${k.ok ? "✓" : "✗"}</span><span>${esc(k.msg)}</span></li>`).join("")}</ul>
+    ${c.tests.length ? `<div class="muted" style="margin-bottom:10px">Tests: ${c.tests.map((t) => `<code>${esc(t)}</code>`).join(", ")}</div>` : ""}
+    <div class="conf">The AI says it is ${Math.round(c.confidence * 100)}% sure. <s>Not used.</s> Only the checks above count.</div>
+    ${legend()}
+    ${[...new Set(c.cites.map((x) => x.path))].map((path) => fileView(path, c.cites.filter((x) => x.path === path).map((x) => [x.start, x.end]), folded, animate)).join("")}`;
+}
+
+function vRefusal(s, animate) {
+  const r = P.refusals[s.refusal];
+  return `<h2>A person must decide this</h2>
+    <div class="box red"><b>${esc(r.why)}</b><br>Vouch never folds this away, even if every test passes.</div>
+    ${legend()}${fileView(r.path, r.ranges, false, animate)}`;
+}
+
+function vGenerated(s, animate) {
+  const g = P.generated;
+  return `<h2>${g.files} generated files</h2>
+    <div class="box ${g.ok ? "green" : "amber"}">${g.ok ? `<b>${g.same} of ${g.files}</b> files got exactly the same edit. Checked by code. Nothing to read there.` : "These generated files all differ. Read them."}</div>
+    <p>The shared edit:</p><pre class="req">${g.distinct_edits.map(esc).join("
+")}</pre>
+    ${g.odd.length && g.ok ? `<div class="box amber">${g.odd.length} file${g.odd.length > 1 ? "s differ" : " differs"} from the others. Read ${g.odd.length > 1 ? "them" : "it"}:</div>${legend()}${g.odd.map((p) => fileView(p, [[1, 99999]], false, animate)).join("")}` : ""}`;
+}
+
+function vLeftovers(s, animate) {
+  return `<h2>Changes nobody explained</h2>
+    <div class="box amber">The AI did not mention these lines. They may be outside the issue. Read them.</div>
+    ${legend()}${s.items.map((it) => fileView(it.path, it.ranges, false, animate)).join("")}`;
+}
+
+function vSign() {
+  if (S.signoff) return `<h2>Signed</h2><div class="box green big">${S.signoff.decision === "accept" ? "Accepted" : "Rejected"} by ${esc(S.signoff.user)}</div>
+    <p><b>Risk accepted:</b> ${esc(S.signoff.risk)}</p><button onclick="resetReview()">Start the review again (demo)</button>`;
+  const left = S.total - S.done;
+  return `<h2>Sign off</h2>
+    ${P.route === "blocked" ? `<div class="box red">This change broke an existing test. It cannot be accepted.</div>` : ""}
+    ${left ? `<div class="box amber">${left} step${left > 1 ? "s" : ""} still need${left > 1 ? "" : "s"} a ✓ from someone on the team.</div>` : `<div class="box green">Every step has been approved by the team.</div>`}
+    <p>Who reviewed what:</p>
+    <table>${P.steps.filter((x) => x.kind !== "sign").map((x) => {
+      const v = Object.values(S.votes[x.id] || {});
+      return `<tr><td>${esc(x.title)}</td><td>${v.map((y) => `${esc(y.user)}: ${{ ok: "✓", question: "?", problem: "✗" }[y.vote]}`).join(", ") || '<span class="muted">nobody yet</span>'}</td></tr>`;
+    }).join("")}</table>
+    <p style="margin-top:16px"><b>The risk you accept</b>, in one sentence:</p>
+    <textarea id="risk" rows="2" placeholder="e.g. Only tested on .NET 8; the third crash site in the issue is unchanged."></textarea>
+    <div class="actions">
+      <button class="primary" ${left || P.route === "blocked" ? "disabled" : ""} onclick="sign('accept')">Accept and sign as ${esc(me)}</button>
+      <button onclick="sign('reject')">Reject</button>
+    </div>`;
+}
+
+function actions(s) {
+  const mine = (S.votes[s.id] || {})[me];
+  const asks = S.asks.filter((a) => a.step === s.id);
+  const notes = Object.values(S.votes[s.id] || {}).filter((v) => v.note);
+  return `<div class="thread">
+      ${notes.map((v) => `<div class="msg"><div class="h">${esc(v.user)} · ${{ ok: "approved", question: "question", problem: "problem" }[v.vote]}</div>${esc(v.note)}</div>`).join("")}
+      ${asks.map((a) => `<div class="msg"><div class="h">${esc(a.user)} asked</div>${esc(a.question)}</div>
+        <div class="msg" style="background:var(--bg)"><div class="h">AI answer · this is not evidence</div>${esc(a.answer)}</div>`).join("")}
+    </div>
+    <div class="actions">
+      <button class="primary" onclick="vote('ok')">${mine?.vote === "ok" ? "✓ You approved this" : "Looks right"}</button>
+      <button onclick="askAI()">Ask a question</button>
+      <button onclick="vote('problem')">Report a problem</button>
+      <span class="spacer"></span>
+      <span class="kbd">Keys: A approve · → next</span>
+      <button class="blue" onclick="go(cur+1)">Next step →</button>
+    </div>`;
+}
+
+function legend() {
+  return `<div class="legend"><span><i style="background:#fff6d6;box-shadow:inset 3px 0 0 #e0a800"></i>Read this</span><span><i style="background:#eef8f1"></i>Added</span><span><i style="background:#fcf0ef"></i>Removed</span></div>`;
+}
+
+// Shows a file's changed lines in the given ranges (plus 3 lines around). Proven code starts folded.
+function fileView(path, rngs, folded, animate) {
+  const f = P.files.find((x) => x.path === path);
+  if (!f) return `<div class="box amber">The AI cited <code>${esc(path)}</code>, which this change does not touch.</div>`;
+  const want = (n) => n != null && rngs.some(([a, b]) => n >= a - 3 && n <= b + 3);
+  const reading = new Set((P.reading[path] || []).flatMap(([a, b]) => Array.from({ length: b - a + 1 }, (_, i) => a + i)));
+  let rows = [], last = null, k = 0, count = 0, toRead = 0;
+  for (const h of f.hunks) for (const l of h.lines) {
+    const n = l.new ?? l.old;
+    const keep = want(l.t === "-" ? nearNew(h, l) : l.new);
+    if (!keep) continue;
+    if (last !== null && n > last + 1 && l.t !== "-") rows.push(`<div class="gap">⋯</div>`);
+    if (l.t === "+") { count++; if (reading.has(l.new)) toRead++; }
+    const cls = l.t === "+" ? (reading.has(l.new) ? "add read" : "add") : l.t === "-" ? "del" : "";
+    rows.push(`<div class="ln ${cls}" style="animation-delay:${animate ? Math.min(k++ * 12, 600) : 0}ms${animate ? "" : ";opacity:1;animation:none"}"><span class="n">${l.new ?? ""}</span><span>${l.t === " " ? "" : l.t}</span><span>${esc(l.text)}</span></div>`);
+    if (l.t !== "-") last = l.new;
+  }
+  const id = "f" + Math.random().toString(36).slice(2);
+  const head = `<div class="fh"><span>${esc(path)}</span><span class="muted">${count} line${count === 1 ? "" : "s"}${toRead ? ` · ${toRead} to read` : ""}</span></div>`;
+  if (folded && !toRead) return `<div class="file">${head}<div class="fold"><span>✓ ${count} line${count === 1 ? "" : "s"} backed by passing tests. No need to read.</span>
+    <button onclick="document.getElementById('${id}').hidden=false;this.parentElement.remove()">Show anyway</button></div>
+    <div class="code" id="${id}" hidden>${rows.join("")}</div></div>`;
+  return `<div class="file">${head}<div class="code">${rows.join("")}</div></div>`;
+}
+function nearNew(h, l) { const i = h.lines.indexOf(l); for (let j = i; j < h.lines.length; j++) if (h.lines[j].new != null) return h.lines[j].new; return null; }
+
+// ------------------------------------------------------------ actions
+async function vote(v) {
+  let note = "";
+  if (v === "problem") { note = prompt("What is the problem?") || ""; if (!note.trim()) return; }
+  try { await api(`/api/prs/${prId}/vote`, { user: me, step: P.steps[cur].id, vote: v, note }); if (v === "ok") go(cur + 1); } catch (e) { alert(e.message); }
+}
+async function askAI() {
+  const q = prompt("Your question about this step");
+  if (!q) return;
+  $("#pane").insertAdjacentHTML("beforeend", `<div class="box blue">Asking the AI…</div>`);
+  try { await api(`/api/prs/${prId}/ask`, { user: me, step: P.steps[cur].id, question: q }); } catch (e) { alert(e.message); }
+}
+async function sign(decision) {
+  const risk = $("#risk").value;
+  try { await api(`/api/prs/${prId}/signoff`, { user: me, decision, risk }); } catch (e) { alert(e.message); }
+}
+async function resetReview() { if (confirm("Clear all votes for this change?")) await api(`/api/prs/${prId}/reset`, {}); }
+
+document.addEventListener("keydown", (e) => {
+  if (!P || !location.hash.startsWith("#/pr/") || e.target.closest("textarea,input")) return;
+  if (e.key === "ArrowRight") go(cur + 1);
+  if (e.key === "ArrowLeft") go(cur - 1);
+  if (e.key === "a") vote("ok");
+});
+
+function route() {
+  const m = location.hash.match(/^#\/pr\/(\w+)(?:\/(\d+))?/);
+  if (m) { cur = m[2] ? +m[2] - 1 : m[1] !== prId ? 0 : cur; showPR(m[1]); } else { prId = null; showList(); }
+}
+window.addEventListener("hashchange", route);
+route();
+</script>
+</body>
+</html>
