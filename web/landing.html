@@ -58,36 +58,40 @@ nav.top .right { margin-left: auto; }
 .hero .ctas { margin-top: 30px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
 /* Simulation: flat, quiet, the moving parts carry it */
-.sim { margin: 40px auto 0; text-align: left; border: 1px solid var(--line); border-radius: 16px; background: var(--bg-2); overflow: hidden; }
+.sim { margin: 40px auto 0; text-align: left; border: 1px solid var(--line-2); border-radius: 16px; background: #fff; overflow: hidden; }
 .sim-top { display: flex; align-items: center; gap: 28px; padding: 16px 22px; border-bottom: 1px solid var(--line); flex-wrap: wrap; font-size: 14px; color: var(--muted); }
 .sim-top b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
 .sim-top .acts { margin-left: auto; display: flex; gap: 18px; }
-.textbtn { font-size: 14px; color: var(--muted); border-bottom: 1px solid var(--line-2); padding-bottom: 1px; transition: color .2s, border-color .2s; }
+.textbtn { font-size: 14px; font-weight: 500; color: var(--text); border-bottom: 1px solid var(--text); padding-bottom: 1px; transition: color .2s, border-color .2s; }
 .textbtn:hover { color: var(--text); border-color: var(--text); }
-.textbtn.bug:hover { color: var(--red); border-color: var(--red); }
+.textbtn.bug { color: var(--red); border-color: var(--red); }
+.textbtn.bug:hover { color: #991b1b; border-color: #991b1b; }
 .sim-body { display: grid; grid-template-columns: minmax(0,1fr) 280px; }
 .sim-road { padding: 12px 10px 6px 18px; }
 .sim-road svg { display: block; width: 100%; height: auto; }
 .log { border-left: 1px solid var(--line); padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; height: 300px; overflow: hidden; }
-.ev { font-size: 13px; line-height: 1.45; color: var(--muted); animation: evin .4s var(--ease) both; }
-.ev:nth-child(n+4) { opacity: .55; } .ev:nth-child(n+7) { opacity: .3; }
-.ev b { color: var(--text); font-weight: 500; }
-.ev.bad b { color: var(--red); }
+.ev { font-size: 13px; line-height: 1.45; color: var(--text); padding-left: 10px; border-left: 3px solid var(--line-2); animation: evin .4s var(--ease) both; }
+.ev:nth-child(n+5) { opacity: .7; } .ev:nth-child(n+8) { opacity: .5; }
+.ev b { color: var(--text); font-weight: 600; }
+.ev.ok { border-left-color: var(--green); } .ev.ok b { color: var(--green); }
+.ev.warn { border-left-color: #d97706; } .ev.warn b { color: var(--amber); }
+.ev.bad { border-left-color: var(--red); } .ev.bad b { color: var(--red); }
+.ev.start { border-left-color: var(--navy); }
 @keyframes evin { from { opacity: 0; } }
 
-.lane-edge { stroke: rgba(15,31,77,0.077); stroke-width: 1; fill: none; }
-.lane-mid { stroke: rgba(15,31,77,0.11); stroke-width: 1; stroke-dasharray: 4 8; fill: none; }
-.trunk-edge { stroke: rgba(15,31,77,0.132); stroke-width: 1; fill: none; }
-.trunk-mid { stroke: rgba(15,31,77,0.121); stroke-width: 1; stroke-dasharray: 4 8; fill: none; }
-.ramp { stroke: rgba(220,38,38,0.3); stroke-width: 1; stroke-dasharray: 4 6; fill: none; }
-.lane-label { font: 12px var(--sans); fill: var(--dim); }
-.gate .post { stroke: rgba(15,31,77,0.193); stroke-width: 2; transition: stroke .2s; }
+.lane-edge { stroke: #b8c0d0; stroke-width: 1.5; fill: none; }
+.lane-mid { stroke: #8b95ab; stroke-width: 1.5; stroke-dasharray: 5 7; fill: none; }
+.trunk-edge { stroke: #8b95ab; stroke-width: 1.5; fill: none; }
+.trunk-mid { stroke: #8b95ab; stroke-width: 1.5; stroke-dasharray: 5 7; fill: none; }
+.ramp { stroke: #dc2626; stroke-width: 1.5; stroke-dasharray: 5 6; fill: none; }
+.lane-label { font: 500 12px var(--sans); fill: var(--muted); }
+.gate .post { stroke: #4b5675; stroke-width: 3; stroke-linecap: round; transition: stroke .2s; }
 .gate.pass .post { stroke: var(--green); } .gate.fail .post { stroke: var(--red); } .gate.warn .post { stroke: var(--amber); }
-.gate .nm { font: 500 13px var(--sans); fill: var(--text); }
-.gate .res { font: 12px var(--sans); fill: var(--dim); transition: fill .2s; }
+.gate .nm { font: 600 13.5px var(--sans); fill: var(--text); }
+.gate .res { font: 500 12.5px var(--sans); fill: var(--muted); transition: fill .2s; }
 .gate.pass .res { fill: var(--green); } .gate.fail .res { fill: var(--red); } .gate.warn .res { fill: var(--amber); }
-.pit text { font: 12px var(--sans); fill: var(--red); }
-.main-end text { font: 500 13px var(--sans); fill: var(--text); }
+.pit text { font: 600 12.5px var(--sans); fill: var(--red); }
+.main-end text { font: 600 13.5px var(--sans); fill: var(--green); }
 .car text { font: 600 10px var(--sans); fill: #ffffff; }
 .car { transition: opacity .4s; }
 
@@ -767,7 +771,7 @@ function paint() {
   $("#sRead").textContent = fmt(S.read); $("#sChanged").textContent = fmt(S.changed); pitT.textContent = `Blocked: ${S.blocked}`;
 }
 function log(_icon, cls, html) {
-  const d = document.createElement("div"); d.className = "ev" + (cls === "r" ? " bad" : "");
+  const d = document.createElement("div"); d.className = "ev " + ({ r: "bad", g: "ok", a: "warn" }[cls] || "start");
   d.innerHTML = html;
   $("#log").prepend(d);
   const evs = $$("#log .ev"); if (evs.length > 9) evs.at(-1).remove();
@@ -799,7 +803,7 @@ function makeCar(pr) {
   const c = { pr, g, body, lane, x: LANE_X0, y: LANES_Y[lane], phase: "lane", u: 0, gate: 0, wait: 0 };
   g.setAttribute("transform", `translate(${c.x} ${c.y})`);
   cars.push(c); S.lanes++; paint();
-  log(pr.bug ? "ph-bug" : "ph-robot", pr.bug ? "r" : "a", pr.bug
+  log(pr.bug ? "ph-bug" : "ph-robot", pr.bug ? "r" : "s", pr.bug
     ? `<b>Planted bug</b> in lane ${lane + 1}: this change breaks an existing test`
     : `<b>${pr.agent}</b> starts <b>#${pr.id}</b> in lane ${lane + 1}`);
   return true;
