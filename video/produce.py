@@ -19,9 +19,10 @@ HERE = Path(__file__).parent
 RAW, OUT = HERE / "raw", HERE / "out"
 W, H, FPS = 1920, 1080, 30
 SW, SH = 1440, 810                      # source frame size (recordings)
-CW, CH = 1536, 864                      # screen size on stage (16:9)
+MIN_ZOOM = 0.66                         # tightest camera framing, as a share of the screen
+CW, CH = 1440, 810                      # screen size on stage: the recordings' native size, so no upscaling blur
 BAR = 44                                # browser bar height
-WX, WY = (W - CW) // 2, 120             # window position
+WX, WY = (W - CW) // 2, 92              # window position; subtitles live in the band below it
 NAVY, GREEN, TEXT, MUTED = (15, 31, 77), (21, 128, 61), (11, 21, 51), (75, 86, 117)
 FONT = "C:/Windows/Fonts/segoeui.ttf"
 FONT_SB = "C:/Windows/Fonts/seguisb.ttf"
@@ -62,18 +63,18 @@ BLOCKS = [
     dict(name="review", chapter="03  ·  Checkpoint  ·  EasyReview", url="vouch-review-hazel.vercel.app/review#/pr/5",
          segments=[(1.8, 8.6, 3.5), (10.2, 17.4, 5), (17.4, 28.4, 9.5), (28.4, 41.8, 6)],
          zooms=[(0, .6, .45, .78), (3.2, .6, .45, .78), (4.4, .62, .5, .8), (8.2, .62, .5, .8), (9.2, .62, .6, .78), (16.5, .62, .6, .78),
-                (18.2, .5, .5, 1), (20.4, .5, .5, 1), (21.6, .66, .26, .66), (24, .66, .26, .64)],
+                (18.2, .5, .5, 1), (24, .5, .5, .96)],
          callouts=[(4.6, 8.4, "Lanes records which agent wrote it"), (9.6, 17.4, "Vouch broke this line on purpose. No test noticed: a person reads it."),
                    (21.6, 24, "Your team reviews together, live")]),
     dict(name="sign", chapter="04  ·  Sign and merge", url="vouch-review-hazel.vercel.app/review#/pr/4",
-         segments=[(3.4, 15.4, 4.6), (15.4, 21, 3.4)], zooms=[(0, .6, .62, .72), (4.4, .6, .62, .72), (5, .55, .42, .76), (8, .55, .42, .74)],
-         callouts=[(0.4, 4.4, "A named owner signs and writes down the risk")]),
+         segments=[(6.2, 15.4, 4.6), (15.4, 21, 3.4)], zooms=[(0, .6, .62, .72), (4.4, .6, .62, .72), (5, .55, .42, .76), (8, .55, .42, .74)],
+         callouts=[(0.4, 4.4, "A named owner signs and writes down the risk", "top")]),
     dict(name="merged", chapter="04  ·  Sign and merge", url="github.com/mfmatozza/vouch-demo/pull/4",
          segments=[(5.6, 10.1, 4)], zooms=[(0, .42, .4, .7), (4, .42, .4, .64)],
          callouts=[(0.3, 4, "Review record on GitHub. Merged.")]),
     dict(name="results", chapter="05  ·  Results", url="vouch-review-hazel.vercel.app/#results",
-         segments=[(0.8, 5.4, 4.6), (5.4, 15.4, 7.4)],
-         zooms=[(0, .5, .62, .9), (1.4, .58, .86, .56), (4.6, .58, .86, .56), (6.2, .5, .32, .74), (8.2, .5, .32, .74), (9.6, .78, .3, .42), (12, .78, .3, .42)],
+         segments=[(3.3, 8.2, 4.6), (8.2, 15.4, 7.4)],
+         zooms=[(0, .5, .5, 1), (1.4, .5, .5, .76), (4.6, .5, .5, .74), (6.2, .5, .34, .86), (8.6, .5, .34, .86), (9.8, .7, .32, .68), (12, .7, .32, .66)],
          callouts=[(1.6, 4.6, "76% fewer lines to read  ·  every existing test kept"), (9.4, 12, "10 of 10 planted bugs stopped")]),
     dict(name="FACE_B", seconds=12, lines=["AI writes the code. Vouch makes sure a human can stand behind it.", "Built on Lanes, Claude and Aiven."]),
 ]
@@ -208,7 +209,7 @@ def zoom_at(blk, t):
                 k = (t, lerp(k0[1], k1[1], u), lerp(k0[2], k1[2], u), lerp(k0[3], k1[3], u))
                 break
     _, cx, cy, s = k
-    s *= 1 - 0.012 * math.sin(t * 0.6)  # a slow breath, so the frame is never dead still
+    s = max(s, MIN_ZOOM)  # never closer than this: close-ups stay comfortable
     w, h = SW * s, SH * s
     x = min(max(cx * SW - w / 2, 0), SW - w)
     y = min(max(cy * SH - h / 2, 0), SH - h)
@@ -233,7 +234,7 @@ def render(enc, faces):
         for i, frame in enumerate(retimed(blk)):
             t = i / FPS
             x, y, w, h = zoom_at(blk, t)
-            screen = frame.crop((int(x), int(y), int(x + w), int(y + h))).resize((CW, CH), Image.BILINEAR)
+            screen = frame.resize((CW, CH), Image.BICUBIC, box=(x, y, x + w, y + h))  # sub-pixel: no stepping, no shake
             win = Image.new("RGB", (CW, BAR + CH))
             win.paste(url_bar, (0, 0)); win.paste(screen, (0, BAR))
             canvas = stage.copy()
@@ -248,13 +249,13 @@ def render(enc, faces):
                 bi, bm = badge(f"sped up  ×{sp:.0f}")
                 canvas.paste(bi, (WX + CW - bi.width - 18, WY + 7), bm)
             # callouts
-            for a, b, text in blk.get("callouts", []):
+            for a, b, text, *where in blk.get("callouts", []):
                 if a <= t <= b:
                     fin, fout = min(1, (t - a) / .35), min(1, (b - t) / .3)
                     al = ease(min(fin, fout))
                     img, m, _ = callout(text, al, 0)
                     cx = (W - img.width) // 2
-                    cy = WY + BAR + CH - 120 + int((1 - ease(fin)) * 24)
+                    cy = (WY + BAR + 24 if where == ["top"] else WY + BAR + CH - 120) + int((1 - ease(fin)) * 24)
                     canvas.paste(img, (cx, cy), m)
             enc.stdin.write(canvas.tobytes())
 
