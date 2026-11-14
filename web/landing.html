@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="color-scheme" content="light">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vouch · Review AI code in minutes</title>
 <meta name="description" content="AI agents build backlog issues in parallel lanes. Vouch blocks anything that breaks and turns the rest into a five-minute team review.">
@@ -13,15 +14,16 @@
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
 <style>
 :root {
-  --bg: #060b1c; --bg-2: #0a1230; --surface: #0d1736; --surface-2: #111d42;
-  --line: rgba(160,178,230,.12); --line-2: rgba(160,178,230,.2);
-  --text: #eef2fb; --muted: #94a0c2; --dim: #66719a;
-  --green: #86efac; --green-ink: #052e16; --green-soft: rgba(134,239,172,.12);
-  --red: #fda4af; --red-soft: rgba(253,164,175,.12); --amber: #fcd34d; --amber-soft: rgba(252,211,77,.12);
-  --blue: #93c5fd;
+  --bg: #ffffff; --bg-2: #f7f8fb; --surface: #f3f5f9; --surface-2: #eceff5;
+  --line: #e6e9ef; --line-2: #d3d9e3;
+  --text: #0b1533; --muted: #4b5675; --dim: #7c869e;
+  --green: #15803d; --green-ink: #ffffff; --green-soft: #dcfce7;
+  --red: #dc2626; --red-soft: #fee2e2; --amber: #b45309; --amber-soft: #fef3c7;
+  --blue: #1d4ed8;
   --r: 14px;
   --sans: "Geist", ui-sans-serif, system-ui, sans-serif; --mono: "Geist Mono", ui-monospace, monospace;
   --ease: cubic-bezier(.16,1,.3,1);
+  --navy: #0f1f4d; --navy-2: #1b2f6b; --hl: #bbf7d0;
 }
 * { box-sizing: border-box; margin: 0; }
 html { scroll-behavior: smooth; }
@@ -31,7 +33,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
 .g { color: var(--green); } .r { color: var(--red); } .a { color: var(--amber); }
 
-nav.top { position: sticky; top: 0; z-index: 20; background: rgba(6,11,28,.72); backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%); border-bottom: 1px solid transparent; transition: border-color .3s; }
+nav.top { position: sticky; top: 0; z-index: 20; background: rgba(255,255,255,0.72); backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%); border-bottom: 1px solid transparent; transition: border-color .3s; }
 nav.top.scrolled { border-bottom-color: var(--line); }
 nav.top .wrap { height: 64px; display: flex; align-items: center; gap: 32px; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 17px; letter-spacing: -.01em; }
@@ -41,16 +43,16 @@ nav.top .right { margin-left: auto; }
 
 .btn { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; height: 40px; padding: 0 18px; border-radius: 999px; font: 500 14px/1 var(--sans); cursor: pointer; border: 1px solid transparent; transition: transform .15s var(--ease), background .2s, border-color .2s; }
 .btn:active { transform: scale(.97); }
-.btn-primary { background: var(--green); color: var(--green-ink); }
-.btn-primary:hover { background: #a7f3c0; }
+.btn-primary { background: var(--navy); color: #fff; }
+.btn-primary:hover { background: var(--navy-2); }
 .btn-ghost { color: var(--text); border-color: var(--line-2); }
-.btn-ghost:hover { border-color: rgba(160,178,230,.4); background: rgba(160,178,230,.06); }
+.btn-ghost:hover { border-color: rgba(15,31,77,0.22); background: rgba(15,31,77,0.033); }
 .btn-lg { height: 48px; padding: 0 24px; font-size: 15px; }
 .btn-sm { height: 32px; padding: 0 12px; font-size: 13px; }
 .btn i { font-size: 17px; }
 
 .hero { position: relative; padding: 80px 0 24px; text-align: center; isolation: isolate; }
-.hero::before { content: ""; position: absolute; inset: -120px 0 auto; height: 640px; z-index: -1; background: radial-gradient(55% 45% at 50% 0%, rgba(56,89,196,.2), transparent 70%); }
+.hero::before { content: ""; position: absolute; inset: -120px 0 auto; height: 640px; z-index: -1; background: radial-gradient(55% 45% at 50% 0%, rgba(56,89,196,0.06), transparent 70%); }
 .hero h1 { font-size: clamp(38px, 5.6vw, 62px); line-height: 1.05; letter-spacing: -.035em; font-weight: 600; max-width: 17ch; margin: 0 auto; }
 .hero p.sub { max-width: 580px; margin: 20px auto 0; color: var(--muted); font-size: 18px; line-height: 1.55; }
 .hero .ctas { margin-top: 30px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
@@ -73,20 +75,20 @@ nav.top .right { margin-left: auto; }
 .ev.bad b { color: var(--red); }
 @keyframes evin { from { opacity: 0; } }
 
-.lane-edge { stroke: rgba(160,178,230,.14); stroke-width: 1; fill: none; }
-.lane-mid { stroke: rgba(160,178,230,.2); stroke-width: 1; stroke-dasharray: 4 8; fill: none; }
-.trunk-edge { stroke: rgba(160,178,230,.24); stroke-width: 1; fill: none; }
-.trunk-mid { stroke: rgba(160,178,230,.22); stroke-width: 1; stroke-dasharray: 4 8; fill: none; }
-.ramp { stroke: rgba(253,164,175,.3); stroke-width: 1; stroke-dasharray: 4 6; fill: none; }
+.lane-edge { stroke: rgba(15,31,77,0.077); stroke-width: 1; fill: none; }
+.lane-mid { stroke: rgba(15,31,77,0.11); stroke-width: 1; stroke-dasharray: 4 8; fill: none; }
+.trunk-edge { stroke: rgba(15,31,77,0.132); stroke-width: 1; fill: none; }
+.trunk-mid { stroke: rgba(15,31,77,0.121); stroke-width: 1; stroke-dasharray: 4 8; fill: none; }
+.ramp { stroke: rgba(220,38,38,0.3); stroke-width: 1; stroke-dasharray: 4 6; fill: none; }
 .lane-label { font: 12px var(--sans); fill: var(--dim); }
-.gate .post { stroke: rgba(160,178,230,.35); stroke-width: 2; transition: stroke .2s; }
+.gate .post { stroke: rgba(15,31,77,0.193); stroke-width: 2; transition: stroke .2s; }
 .gate.pass .post { stroke: var(--green); } .gate.fail .post { stroke: var(--red); } .gate.warn .post { stroke: var(--amber); }
 .gate .nm { font: 500 13px var(--sans); fill: var(--text); }
 .gate .res { font: 12px var(--sans); fill: var(--dim); transition: fill .2s; }
 .gate.pass .res { fill: var(--green); } .gate.fail .res { fill: var(--red); } .gate.warn .res { fill: var(--amber); }
 .pit text { font: 12px var(--sans); fill: var(--red); }
 .main-end text { font: 500 13px var(--sans); fill: var(--text); }
-.car text { font: 600 10px var(--sans); fill: #0a1230; }
+.car text { font: 600 10px var(--sans); fill: #ffffff; }
 .car { transition: opacity .4s; }
 
 section { padding: 112px 0; }
@@ -94,7 +96,7 @@ section { padding: 112px 0; }
 .lead { color: var(--muted); font-size: 17px; max-width: 60ch; margin-top: 14px; }
 
 .proof { padding: 56px 0 24px; }
-.proof-grid { display: grid; grid-template-columns: 1.3fr 1fr 1fr; border: 1px solid var(--line); border-radius: var(--r); background: rgba(13,23,54,.5); }
+.proof-grid { display: grid; grid-template-columns: 1.3fr 1fr 1fr; border: 1px solid var(--line); border-radius: var(--r); background: rgba(15,31,77,0.025); }
 .proof-grid > div { padding: 26px 28px 24px; }
 .proof-grid > div + div { border-left: 1px solid var(--line); }
 .big { font: 500 38px/1 var(--mono); letter-spacing: -.03em; }
@@ -127,26 +129,26 @@ section { padding: 112px 0; }
 .pv-cap { color: var(--muted); font-size: 13.5px; margin-bottom: 16px; }
 
 .agents { display: grid; gap: 10px; }
-.agent { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px; align-items: center; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(13,23,54,.6); }
+.agent { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px; align-items: center; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(15,31,77,0.025); }
 .agent .av { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: 18px; background: var(--surface-2); color: var(--blue); }
-.agent .who { font-size: 14px; font-weight: 500; }
+.agent .who { font-size: 14px; font-weight: 500; margin: 0; display: block; color: var(--text); }
 .agent .file { font: 12px var(--mono); color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tag { display: inline-flex; align-items: center; gap: 5px; font: 500 11.5px var(--mono); padding: 4px 9px; border-radius: 999px; white-space: nowrap; transition: all .3s; }
 .tag.ok { background: var(--green-soft); color: var(--green); }
 .tag.wait { background: var(--amber-soft); color: var(--amber); }
 .tag.bad { background: var(--red-soft); color: var(--red); }
-.tag.dim { background: rgba(160,178,230,.08); color: var(--dim); }
+.tag.dim { background: rgba(15,31,77,0.044); color: var(--dim); }
 .trailer { margin-top: 16px; padding: 12px 14px; border-radius: 12px; border: 1px dashed var(--line-2); font: 12px/1.8 var(--mono); color: var(--muted); }
 .trailer b { color: var(--green); font-weight: 500; }
 
 .gr-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.gr-col { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: rgba(13,23,54,.6); }
+.gr-col { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: rgba(15,31,77,0.025); }
 .gr-col > span { font-size: 12.5px; color: var(--muted); }
 .gr-col b { display: block; font: 500 30px/1.2 var(--mono); margin-top: 4px; transition: color .3s; }
 .tests { margin-top: 12px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
 .trow { display: grid; grid-template-columns: minmax(0,1fr) 64px 64px; gap: 10px; padding: 9px 14px; font: 12px var(--mono); color: var(--muted); align-items: center; }
 .trow + .trow { border-top: 1px solid var(--line); }
-.trow.h { color: var(--dim); font-size: 11px; background: rgba(13,23,54,.6); }
+.trow.h { color: var(--dim); font-size: 11px; background: rgba(15,31,77,0.025); }
 .trow .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .verdict { margin-top: 14px; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; font-size: 14px; background: var(--green-soft); color: var(--green); }
 .verdict.bad { background: var(--red-soft); color: var(--red); }
@@ -154,11 +156,11 @@ section { padding: 112px 0; }
 .verdict button { margin-left: auto; }
 
 .claims { display: grid; gap: 10px; }
-.claim { padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(13,23,54,.6); }
+.claim { padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(15,31,77,0.025); }
 .claim .t { font-size: 14px; font-weight: 500; display: flex; gap: 10px; align-items: center; }
 .claim .t .tag { margin-left: auto; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.chip { font: 11.5px var(--mono); padding: 3px 8px; border-radius: 6px; background: rgba(160,178,230,.08); color: var(--dim); transition: all .3s; }
+.chip { font: 11.5px var(--mono); padding: 3px 8px; border-radius: 6px; background: rgba(15,31,77,0.044); color: var(--dim); transition: all .3s; }
 .chip.ok { background: var(--green-soft); color: var(--green); }
 .chip.wait { background: var(--amber-soft); color: var(--amber); }
 .chip.bad { background: var(--red-soft); color: var(--red); }
@@ -173,11 +175,11 @@ section { padding: 112px 0; }
 .blk { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .6s var(--ease), opacity .4s; }
 .blk > div { overflow: hidden; }
 .blk.fold { grid-template-rows: 0fr; opacity: 0; }
-.ln { display: grid; grid-template-columns: 44px minmax(0,1fr); padding: 0 12px; color: #c8d2f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ln { display: grid; grid-template-columns: 44px minmax(0,1fr); padding: 0 12px; color: #1f2a44; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ln em { font-style: normal; color: var(--dim); }
-.ln.add { background: rgba(134,239,172,.06); }
-.ln.read { background: rgba(252,211,77,.08); }
-.foldrow { display: none; gap: 8px; align-items: center; padding: 7px 12px; color: var(--green); background: rgba(134,239,172,.05); border-bottom: 1px solid var(--line); }
+.ln.add { background: rgba(22,163,74,0.06); }
+.ln.read { background: rgba(217,119,6,0.08); }
+.foldrow { display: none; gap: 8px; align-items: center; padding: 7px 12px; color: var(--green); background: rgba(22,163,74,0.05); border-bottom: 1px solid var(--line); }
 .foldrow.show { display: flex; animation: pvin .4s var(--ease); }
 .er-foot { margin-top: 14px; display: flex; align-items: center; gap: 10px; }
 .avs { display: flex; }
@@ -187,17 +189,17 @@ section { padding: 112px 0; }
 /* Stack */
 .arch { margin-top: 56px; display: grid; grid-template-columns: 1fr 48px 1fr 48px 1fr; }
 .col { display: flex; flex-direction: column; gap: 12px; }
-.col h3 { font: 400 12.5px var(--mono); color: var(--dim); display: flex; align-items: baseline; gap: 10px; }
+.col h3 { font: 400 13px var(--sans); color: var(--dim); display: flex; align-items: baseline; gap: 10px; }
 .col h3 b { color: var(--text); font-family: var(--sans); font-size: 17px; font-weight: 600; letter-spacing: -.01em; }
-.box { border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; background: rgba(13,23,54,.6); flex: 1; }
+.box { border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; background: rgba(15,31,77,0.025); flex: 1; }
 .box .k { display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 15px; }
 .box .k i { font-size: 19px; color: var(--green); }
 .box p { color: var(--muted); font-size: 13.5px; margin-top: 6px; }
-.box code { font: 12px var(--mono); color: var(--text); background: rgba(160,178,230,.08); padding: 1px 6px; border-radius: 5px; }
-.box.aiven { background: linear-gradient(135deg, rgba(56,89,196,.24), rgba(13,23,54,.6) 60%); border-color: var(--line-2); }
+.box code { font: 12px var(--mono); color: var(--text); background: rgba(15,31,77,0.044); padding: 1px 6px; border-radius: 5px; }
+.box.aiven { background: linear-gradient(135deg, rgba(56,89,196,0.072), rgba(15,31,77,0.025) 60%); border-color: var(--line-2); }
 .box .k .tag { margin-left: auto; }
 .wire { position: relative; display: flex; align-items: center; justify-content: center; }
-.wire::before { content: ""; position: absolute; left: 4px; right: 4px; top: 50%; height: 2px; background: repeating-linear-gradient(90deg, rgba(134,239,172,.6) 0 8px, transparent 8px 16px); animation: wire 1s linear infinite; }
+.wire::before { content: ""; position: absolute; left: 4px; right: 4px; top: 50%; height: 2px; background: repeating-linear-gradient(90deg, rgba(22,163,74,0.6) 0 8px, transparent 8px 16px); animation: wire 1s linear infinite; }
 .wire i { position: relative; color: var(--green); background: var(--bg); font-size: 16px; padding: 3px; }
 @keyframes wire { from { background-position: 0 0; } to { background-position: 16px 0; } }
 .arch-foot { margin-top: 28px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; padding-top: 28px; border-top: 1px solid var(--line); }
@@ -220,7 +222,7 @@ section { padding: 112px 0; }
 .faq details[open] summary i { transform: rotate(45deg); }
 .faq details p { color: var(--muted); padding: 0 0 22px; max-width: 62ch; }
 
-.final { text-align: center; border: 1px solid var(--line); border-radius: 24px; padding: 80px 24px; background: radial-gradient(70% 90% at 50% 100%, rgba(56,89,196,.35), transparent 70%), var(--bg-2); }
+.final { text-align: center; border: 1px solid var(--line); border-radius: 24px; padding: 80px 24px; background: radial-gradient(70% 90% at 50% 100%, rgba(56,89,196,0.105), transparent 70%), var(--bg-2); }
 .final .h2, .final .lead { margin-left: auto; margin-right: auto; }
 .final .btn { margin-top: 30px; }
 footer { padding: 48px 0 56px; color: var(--dim); font-size: 13.5px; }
@@ -260,7 +262,7 @@ footer .sp { margin-left: auto; }
 .bars div { display: grid; grid-template-columns: 52px 1fr 92px; gap: 12px; align-items: center; font-size: 12.5px; }
 .bars span { color: var(--muted); }
 .bars em { font-style: normal; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
-.bars i { grid-column: 2; grid-row: 1; height: 8px; width: var(--w); background: rgba(160,178,230,.18); border-radius: 2px; }
+.bars i { grid-column: 2; grid-row: 1; height: 8px; width: var(--w); background: rgba(15,31,77,0.099); border-radius: 2px; }
 .bars i.read { background: var(--green); min-width: 2px; }
 .res-cell.soon .res-num { color: var(--dim); }
 
@@ -344,7 +346,7 @@ footer .sp { margin-left: auto; }
   .panel { position: relative; top: 0; }
   .arch { grid-template-columns: 1fr; }
   .wire { height: 40px; }
-  .wire::before { left: 50%; right: auto; top: 4px; bottom: 4px; width: 2px; height: auto; background: repeating-linear-gradient(180deg, rgba(134,239,172,.6) 0 8px, transparent 8px 16px); animation: none; }
+  .wire::before { left: 50%; right: auto; top: 4px; bottom: 4px; width: 2px; height: auto; background: repeating-linear-gradient(180deg, rgba(22,163,74,0.6) 0 8px, transparent 8px 16px); animation: none; }
   .wire i { transform: rotate(90deg); }
   .arch-foot { grid-template-columns: 1fr; }
   .show { grid-template-columns: 1fr; gap: 40px; }
@@ -359,6 +361,10 @@ footer .sp { margin-left: auto; }
   .trow { grid-template-columns: minmax(0,1fr) 48px 48px; }
   .er-num { font-size: 36px; }
 }
+
+/* light theme */
+html { color-scheme: light; }
+.hero h1 .g, h1 .hl { color: inherit; background: linear-gradient(180deg, transparent 60%, var(--hl) 60%); padding: 0 .06em; }
 </style>
 </head>
 <body>
@@ -366,7 +372,7 @@ footer .sp { margin-left: auto; }
 <nav class="top" id="nav">
   <div class="wrap">
     <a class="brand" href="/" aria-label="Vouch home">
-      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" fill="#111d42" stroke="rgba(160,178,230,.25)"/><path d="M7 7.5 13 18.5 19 7.5" fill="none" stroke="#86efac" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" fill="#0f1f4d" stroke="rgba(15,31,77,0.138)"/><path d="M7 7.5 13 18.5 19 7.5" fill="none" stroke="#86efac" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Vouch
     </a>
     <div class="links">
@@ -565,7 +571,7 @@ footer .sp { margin-left: auto; }
       <div class="wire"><i class="ph ph-arrow-right"></i></div>
       <div class="col">
         <h3><b>Vouch</b>code is checked</h3>
-        <div class="box"><div class="k"><i class="ph ph-shield-check"></i>Guardrail</div><p>Runs your existing .NET tests on the base and on the branch, in separate git worktrees.</p></div>
+        <div class="box"><div class="k"><i class="ph ph-shield-check"></i>Guardrail</div><p>Runs your existing tests on the base and on the branch, in separate git worktrees. .NET, Python, JavaScript and TypeScript, Go, Java, Kotlin and Rust.</p></div>
         <div class="box"><div class="k"><i class="ph ph-seal-check"></i>Checkpoint</div><p>Claude writes the claims. Plain code verifies cited lines, quotes and test results.</p></div>
         <div class="box"><div class="k"><i class="ph ph-eye"></i>EasyReview</div><p>The web app your team reviews in, with GitHub sign-in.</p></div>
       </div>
@@ -600,7 +606,7 @@ footer .sp { margin-left: auto; }
     <div class="box reveal" style="padding:0;overflow:hidden;border-color:var(--line-2)">
       <div class="panel-top"><i class="ph ph-git-pull-request g"></i><b>#2129 Formatter for a type in a referenced assembly</b><span class="right">1,034 lines</span></div>
       <div style="padding:20px 22px;display:grid;gap:12px">
-        <div class="claim" style="border-color:rgba(253,164,175,.4)"><div class="t">Changes the public API that every user depends on<span class="tag bad">never folds</span></div><div class="chips"><span class="chip bad">PublicAPI.Unshipped.txt</span><span class="chip">needs an explicit yes from a person</span></div></div>
+        <div class="claim" style="border-color:rgba(220,38,38,0.4)"><div class="t">Changes the public API that every user depends on<span class="tag bad">never folds</span></div><div class="chips"><span class="chip bad">PublicAPI.Unshipped.txt</span><span class="chip">needs an explicit yes from a person</span></div></div>
         <div class="claim"><div class="t">Adds or changes analyzer warnings users will see<span class="tag wait">6 files open</span></div><div class="chips"><span class="chip wait">doc/analyzers/MsgPack019.md</span><span class="chip">and 5 more</span></div></div>
         <div class="claim"><div class="t">8 of 10 claims not proven by a test<span class="tag wait">read</span></div><div class="chips"><span class="chip">named tests did not run</span></div></div>
         <div style="display:flex;gap:8px;margin-top:4px"><span class="tag ok"><i class="ph ph-check"></i>Looks right</span><span class="tag dim">Ask</span><span class="tag dim">Problem</span></div>
@@ -666,9 +672,9 @@ footer .sp { margin-left: auto; }
   <div class="wrap">
     <h2 class="h2 reveal">Roadmap.</h2>
     <div class="road-map reveal">
-      <div><h3>Working today</h3><ul><li>.NET test runner for Guardrail</li><li>AI claims checked by code</li><li>EasyReview with live team review</li><li>Lanes agent provenance</li><li>GitHub sign-in, live presence on Aiven Valkey, events on Aiven Kafka</li></ul></div>
-      <div><h3>Next</h3><ul><li>Coverage proof: fold only lines the named test actually runs</li><li>GitHub Actions check that blocks merge until signed</li><li>TypeScript and Python test runners</li><li>Slack and Teams alerts from the Kafka stream</li><li>Published planted-bug benchmark</li></ul></div>
-      <div><h3>Later</h3><ul><li>Java, Kotlin and Go</li><li>GitLab CI and Azure DevOps</li><li>Trust that grows per agent and per code area</li><li>Self-hosted install</li></ul></div>
+      <div><h3>Working today</h3><ul><li>Guardrail for .NET, Python, JavaScript and TypeScript</li><li>AI claims checked by code</li><li>EasyReview with live team review</li><li>Lanes agent provenance</li><li>GitHub sign-in, live presence on Aiven Valkey, events on Aiven Kafka</li></ul></div>
+      <div><h3>Next</h3><ul><li>Coverage proof: fold only lines the named test actually runs</li><li>GitHub Actions check that blocks merge until signed</li><li>Go, Java, Kotlin and Rust runners tested end to end on real repositories</li><li>Slack and Teams alerts from the Kafka stream</li><li>Published planted-bug benchmark</li></ul></div>
+      <div><h3>Later</h3><ul><li>Ruby, PHP and Swift</li><li>GitLab CI and Azure DevOps</li><li>Trust that grows per agent and per code area</li><li>Self-hosted install</li></ul></div>
     </div>
   </div>
 </section>
@@ -682,7 +688,7 @@ footer .sp { margin-left: auto; }
       <details><summary>Who built Lanes?<i class="ph ph-plus"></i></summary><p>We did. Lanes is built in house, like the rest of Vouch. The source is on <a class="g" href="https://github.com/mfmatozza/lanes" target="_blank" rel="noopener">GitHub</a>.</p></details>
       <details><summary>Do I need Lanes to use Vouch?<i class="ph ph-plus"></i></summary><p>No. Without Lanes, every change counts as written by an unknown agent, so nothing is trusted by default. With Lanes, agents work in parallel without collisions and trust is earned per agent and per area of the code.</p></details>
       <details><summary>Why Aiven?<i class="ph ph-plus"></i></summary><p>A review is shared and live. Postgres keeps the record, Kafka lets other tools react to each vote and sign-off, and Valkey holds who is reviewing right now. Aiven runs all three as managed services.</p></details>
-      <details><summary>Which stacks does it run on today?<i class="ph ph-plus"></i></summary><p>.NET repositories on GitHub. Guardrail runs your existing test projects on the base and the branch in separate worktrees.</p></details>
+      <details><summary>Which languages does it support?<i class="ph ph-plus"></i></summary><p>Guardrail runs your existing tests with each language's own tool: .NET, Python (pytest), JavaScript and TypeScript (Vitest, Jest or node --test), Go, Java and Kotlin (Maven or Gradle) and Rust (cargo). .NET, Python and JavaScript are tested end to end today. Repositories are on GitHub.</p></details>
     </div>
   </div>
 </section>
@@ -699,7 +705,7 @@ footer .sp { margin-left: auto; }
 
 <footer>
   <div class="wrap">
-    <span class="brand"><svg width="20" height="20" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" fill="#111d42" stroke="rgba(160,178,230,.25)"/><path d="M7 7.5 13 18.5 19 7.5" fill="none" stroke="#86efac" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Vouch</span>
+    <span class="brand"><svg width="20" height="20" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" fill="#0f1f4d" stroke="rgba(15,31,77,0.138)"/><path d="M7 7.5 13 18.5 19 7.5" fill="none" stroke="#86efac" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Vouch</span>
     <span>Lanes and Vouch, built in house.</span>
     <span class="sp"></span>
     <a href="https://github.com/mfmatozza/lanes" target="_blank" rel="noopener">Lanes on GitHub</a><a href="#roadmap">Roadmap</a><a href="#faq">FAQ</a>
@@ -752,7 +758,7 @@ const gateEls = GATES.map((g) => {
   return { G, res, q: g.q };
 });
 const endG = mk("g", { class: "main-end" }, base);
-mk("line", { x1: END_X + 14, y1: TRUNK_Y - 26, x2: END_X + 14, y2: TRUNK_Y + 26, stroke: "#86efac", "stroke-width": 2 }, endG);
+mk("line", { x1: END_X + 14, y1: TRUNK_Y - 26, x2: END_X + 14, y2: TRUNK_Y + 26, stroke: "#15803d", "stroke-width": 2 }, endG);
 mk("text", { x: END_X + 14, y: TRUNK_Y - 40, "text-anchor": "middle" }, endG).textContent = "main";
 
 const S = { lanes: 0, blocked: 0, merged: 0, read: 0, changed: 0 };
@@ -788,7 +794,7 @@ function freeLane() { // the lane whose last car is furthest along
 function makeCar(pr) {
   const lane = freeLane(); if (lane < 0) return false;
   const g = mk("g", { class: "car" }, $("#cars"));
-  const body = mk("rect", { x: -23, y: -8, width: 46, height: 16, rx: 3, fill: pr.bug ? "#fda4af" : "#dbe4ff" }, g);
+  const body = mk("rect", { x: -23, y: -8, width: 46, height: 16, rx: 3, fill: pr.bug ? "#dc2626" : "#0f1f4d" }, g);
   mk("text", { x: 0, y: 3.5, "text-anchor": "middle" }, g).textContent = pr.bug ? "bug" : "#" + pr.id;
   const c = { pr, g, body, lane, x: LANE_X0, y: LANES_Y[lane], phase: "lane", u: 0, gate: 0, wait: 0 };
   g.setAttribute("transform", `translate(${c.x} ${c.y})`);
@@ -841,7 +847,7 @@ function arrive(c) {
     log("ph-eye", p.risky ? "a" : "g", p.risky
       ? `<b>#${p.id}</b> EasyReview: public API change stays open, team reads ${fmt(p.read)} of ${fmt(p.changed)} lines`
       : `<b>#${p.id}</b> EasyReview: team reads ${fmt(p.read)} of ${fmt(p.changed)} lines`);
-    c.body.setAttribute("fill", "#86efac");
+    c.body.setAttribute("fill", "#15803d");
   }
 }
 function finish(c) {
