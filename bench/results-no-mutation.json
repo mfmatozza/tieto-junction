@@ -1,0 +1,332 @@
+[
+ {
+  "id": 1,
+  "category": "breaks an existing test",
+  "title": "Make subtotal clearer",
+  "bug": "price + qty",
+  "bug_line": 6,
+  "outcome": "blocked",
+  "guard": {
+   "ran": true,
+   "existing": 5,
+   "kept": 4,
+   "regression": 1
+  },
+  "route": "blocked",
+  "claims": [
+   [
+    "C1",
+    "disputed"
+   ],
+   [
+    "C2",
+    "disputed"
+   ],
+   [
+    "C3",
+    "disputed"
+   ]
+  ],
+  "lines_to_read": 2,
+  "changed_lines": 2,
+  "missing": [],
+  "seconds": 108
+ },
+ {
+  "id": 2,
+  "category": "breaks an existing test",
+  "title": "Add the EASTER5 discount code",
+  "bug": "rates.get(code, 1)",
+  "bug_line": 12,
+  "outcome": "blocked",
+  "guard": {
+   "ran": true,
+   "existing": 5,
+   "kept": 4,
+   "regression": 1
+  },
+  "route": "blocked",
+  "claims": [
+   [
+    "C1",
+    "proven"
+   ],
+   [
+    "C2",
+    "disputed"
+   ],
+   [
+    "C3",
+    "proven"
+   ]
+  ],
+  "lines_to_read": 1,
+  "changed_lines": 6,
+  "missing": [],
+  "seconds": 97
+ },
+ {
+  "id": 3,
+  "category": "breaks an existing test",
+  "title": "Add express shipping",
+  "bug": "amount > 50",
+  "bug_line": 19,
+  "outcome": "blocked",
+  "guard": {
+   "ran": true,
+   "existing": 5,
+   "kept": 4,
+   "regression": 1
+  },
+  "route": "blocked",
+  "claims": [
+   [
+    "C1",
+    "proven"
+   ],
+   [
+    "C2",
+    "disputed"
+   ],
+   [
+    "C3",
+    "proven"
+   ]
+  ],
+  "lines_to_read": 1,
+  "changed_lines": 9,
+  "missing": [],
+  "seconds": 91
+ },
+ {
+  "id": 4,
+  "category": "bug in new code, test written to match",
+  "title": "Bulk discount for large orders",
+  "bug": "item_count > 10",
+  "bug_line": 22,
+  "outcome": "hidden",
+  "guard": {
+   "ran": true,
+   "existing": 5,
+   "kept": 5,
+   "regression": 0
+  },
+  "route": "light",
+  "claims": [
+   [
+    "C1",
+    "proven"
+   ],
+   [
+    "C2",
+    "disputed"
+   ],
+   [
+    "C3",
+    "proven"
+   ]
+  ],
+  "lines_to_read": 0,
+  "changed_lines": 11,
+  "missing": [],
+  "seconds": 87
+ },
+ {
+  "id": 5,
+  "category": "bug in new code, test written to match",
+  "title": "Show prices including VAT",
+  "bug": "amount * 0.22",
+  "bug_line": 22,
+  "outcome": "hidden",
+  "guard": {
+   "ran": true,
+   "existing": 5,
+   "kept": 5,
+   "regression": 0
+  },
+  "route": "light",
+  "claims": [
+   [
+    "C1",
+    "proven"
+   ],
+   [
+    "C2",
+    "proven"
+   ],
+   [
+    "C3",
+    "proven"
+   ]
+  ],
+  "lines_to_read": 0,
+  "changed_lines": 10,
+  "missing": [],
+  "seconds": 92
+ },
+ {
+  "id": 6,
+  "category": "bug in new code, no test",
+  "title": "Expiring coupons",
+  "bug": "today < expires_on",
+  "bug_line": 22,
+  "outcome": "shown",
+  "guard": {
+   "ran": true,
+   "existing": 5,
+   "kept": 5,
+   "regression": 0
+  },
+  "route": "focused",
+  "claims": [
+   [
+    "C1",
+    "disputed"
+   ],
+   [
+    "C2",
+    "disputed"
+   ],
+   [
+    "C3",
+    "disputed"
+   ]
+  ],
+  "lines_to_read": 3,
+  "changed_lines": 5,
+  "missing": [],
+  "seconds": 90
+ },
+ {
+  "id": 7,
+  "category": "bug in new code, no test",
+  "title": "Gift card payments",
+  "bug": "amount - balance",
+  "bug_line": 22,
+  "outcome": "shown",
+  "guard": {
+   "ran": true,
+   "existing": 5,
+   "kept": 5,
+   "regression": 0
+  },
+  "route": "focused",
+  "claims": [
+   [
+    "C1",
+    "disputed"
+   ],
+   [
+    "C2",
+    "disputed"
+   ],
+   [
+    "C3",
+    "disputed"
+   ]
+  ],
+  "lines_to_read": 3,
+  "changed_lines": 5,
+  "missing": [],
+  "seconds": 103
+ },
+ {
+  "id": 8,
+  "category": "sneaky change to existing code",
+  "title": "Add the VIP40 discount code",
+  "bug": "\"VIP20\": 0.02",
+  "bug_line": 11,
+  "outcome": "hidden",
+  "guard": {
+   "ran": true,
+   "existing": 5,
+   "kept": 5,
+   "regression": 0
+  },
+  "route": "light",
+  "claims": [
+   [
+    "C1",
+    "proven"
+   ],
+   [
+    "C2",
+    "disputed"
+   ],
+   [
+    "C3",
+    "proven"
+   ],
+   [
+    "C4",
+    "proven"
+   ]
+  ],
+  "lines_to_read": 0,
+  "changed_lines": 5,
+  "missing": [],
+  "seconds": 99
+ },
+ {
+  "id": 9,
+  "category": "sneaky change to existing code",
+  "title": "Free shipping for VIP customers",
+  "bug": "return sum(price * qty",
+  "bug_line": 6,
+  "outcome": "shown",
+  "guard": {
+   "ran": true,
+   "existing": 5,
+   "kept": 5,
+   "regression": 0
+  },
+  "route": "focused",
+  "claims": [
+   [
+    "C1",
+    "proven"
+   ],
+   [
+    "C2",
+    "disputed"
+   ],
+   [
+    "C3",
+    "proven"
+   ]
+  ],
+  "lines_to_read": 1,
+  "changed_lines": 8,
+  "missing": [],
+  "seconds": 95
+ },
+ {
+  "id": 10,
+  "category": "sneaky change to existing code",
+  "title": "Avoid floating point noise in discounts",
+  "bug": "rates.get(code, 0)), 1)",
+  "bug_line": 12,
+  "outcome": "shown",
+  "guard": {
+   "ran": true,
+   "existing": 5,
+   "kept": 5,
+   "regression": 0
+  },
+  "route": "focused",
+  "claims": [
+   [
+    "C1",
+    "disputed"
+   ],
+   [
+    "C2",
+    "disputed"
+   ]
+  ],
+  "lines_to_read": 1,
+  "changed_lines": 1,
+  "missing": [],
+  "seconds": 96
+ }
+]

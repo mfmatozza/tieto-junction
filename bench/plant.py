@@ -103,8 +103,7 @@ def git(d: Path, *a: str) -> str:
 
 def run_case(case) -> dict:
     cid, cat, title, req_text, code_edits, test_edits, bug = case
-    d = WORK / f"case{cid}"
-    shutil.rmtree(d, ignore_errors=True)
+    d = WORK / f"case{cid}-{int(time.time())}"  # fresh folder: Windows will not delete git's read-only objects
     subprocess.run(["git", "clone", "-q", REPO, str(d)], check=True)
     base = git(d, "rev-parse", "HEAD").strip()
     src, tst = d / "pricing.py", d / "tests" / "test_pricing.py"

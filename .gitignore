@@ -11,3 +11,8 @@ data/
 
 .vercel
 .env*
+video/raw/
+video/out/
+video/.sid
+*.webm
+*.mp4

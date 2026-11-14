@@ -101,7 +101,7 @@ def lanes_agents(d: Path, head: str) -> str:
     import re
     direct = git(d, "log", "-1", "--format=%(trailers:key=Lanes-Agent,valueonly)", head).strip()
     if direct:
-        return direct
+        return re.sub(r"\s*\(session.*", "", direct).strip()
     m = re.search(r"Lanes checkpoint commits on (\S+) \(([0-9a-f]{7,40})\.\.([0-9a-f]{7,40})\)", git(d, "log", "-1", "--format=%B", head))
     if not m:
         return ""

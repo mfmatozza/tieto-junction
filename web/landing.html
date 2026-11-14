@@ -380,6 +380,15 @@ footer .sp { margin-left: auto; }
   .e2e-rows .tag { grid-row: auto; }
 }
 
+.bench { margin-top: 16px; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.bench > div { padding: 18px 20px 18px 0; display: flex; flex-direction: column; gap: 6px; }
+.bench > div + div { padding-left: 20px; border-left: 1px solid var(--line); }
+.bench b { font: 600 28px/1.1 var(--sans); letter-spacing: -.02em; color: var(--muted); }
+.bench .win b { color: var(--green); }
+.bench span { color: var(--muted); font-size: 13.5px; }
+.bench-note { color: var(--dim); font-size: 13px; margin-top: 12px; max-width: 90ch; }
+@media (max-width: 760px) { .bench { grid-template-columns: 1fr; } .bench > div + div { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); } }
+
 .reveal { opacity: 0; transform: translateY(18px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
 .reveal.in { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
@@ -549,9 +558,19 @@ html { color-scheme: light; }
       <div class="res-cell"><span class="res-k">Estimated review time</span><div class="res-num">4 h <span class="x">→</span> <span class="g">1 h</span></div><p>242 minutes to read every changed line, 59 to read only what is not proven, at the same reading pace.</p></div>
       <div class="res-cell"><span class="res-k">Existing tests kept</span><div class="res-num"><span class="g">167</span>/167</div><p>On every change, run before and after. Regressions merged: 0.</p></div>
       <div class="res-cell"><span class="res-k">AI claims proven by code</span><div class="res-num"><span class="g">21</span>/33</div><p>The other 12 were not backed by a passing test, so they stayed open for a person.</p></div>
-      <div class="res-cell soon"><span class="res-k">Planted bugs caught</span><div class="res-num">Running</div><p>We are planting known bugs in copies of these changes and counting what Guardrail and Checkpoint catch. The number goes here, good or bad.</p></div>
+      <div class="res-cell"><span class="res-k">Planted bugs stopped</span><div class="res-num"><span class="g">10</span>/10</div><p>3 blocked by Guardrail, 7 put in front of a person. Without mutation proof: 7/10.</p></div>
     </div>
     <p class="proof-note reveal">4 changes is a small sample. We will add repositories and publish every run.</p>
+    <div class="e2e reveal" id="bench">
+      <h3>The planted-bug benchmark</h3>
+      <p>We wrote 10 realistic agent changes to our demo repository, each hiding one known bug, and ran Vouch exactly as in production, without the answer key. Stopped means the bug was blocked, or its line was on the reading list in front of a person.</p>
+      <div class="bench">
+        <div><b>7/10</b><span>Guardrail and Checkpoint alone. Missed: a wrong boundary with a test written to match, a wrong VAT formula with a matching test, and a silent rate change on a tested line.</span></div>
+        <div><b>8/10</b><span>With mutation proof, first version: breaking the code exposed the boundary test that checked nothing.</span></div>
+        <div class="win"><b>10/10</b><span>Mutating every constant on a line separately, as standard mutation tools do: the silent rate change and the VAT line went to a person too.</span></div>
+      </div>
+      <p class="bench-note">Honest notes: 10 bugs we wrote ourselves, in a small repository, is a small sample. The VAT line reached a reviewer because its rounding was untested, not because the formula was detected: a wrong value with a test that agrees is still the hardest case.</p>
+    </div>
     <div class="e2e reveal">
       <h3>Seen end to end on GitHub</h3>
       <p>Three agent pull requests in our public demo repository, run from the website, checked by the worker, decided on GitHub.</p>
@@ -657,7 +676,7 @@ html { color-scheme: light; }
       <div><b>Sign-off</b><p>Refused by code unless every step is approved by someone, nothing regressed, and the owner wrote the risk they accept. Then the decision goes to GitHub.</p></div>
       <div><b>Fail closed</b><p>If any part does not finish (tests, AI, a check), nothing is folded away. You see more code, never less.</p></div>
     </div>
-    <p class="proof-note reveal">Known limit: mutation proof shows a test pins a line down, not that it expects the right value. If an agent writes a wrong function and a test that agrees with it, both are consistent. The benchmark below measures exactly this.</p>
+    <p class="proof-note reveal">Known limit: mutation proof shows a test pins a line down, not that it expects the right value. If an agent writes a wrong function and a test that agrees with it, both are consistent. The benchmark above measures exactly this.</p>
   </div>
 </section>
 
