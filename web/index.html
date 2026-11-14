@@ -173,7 +173,9 @@ textarea:focus, input:focus { outline: none; border-color: rgba(22,163,74,0.55);
   .stats2 { grid-template-columns: 1fr 1fr; }
   .stats2 > div:nth-child(3) { border-left: 0; }
   .stats2 > div:nth-child(n+3) { border-top: 1px solid var(--line); }
-  .crumb .repo { display: none; }
+  .crumb .repo, .crumb .repo + span { display: none; }
+  .pane { order: -1; }
+  .rail { border-bottom: 0; border-top: 1px solid var(--line); padding-top: 12px; }
   .keys { display: none; }
 }
 @media (max-width: 560px) { .page { padding: 20px 16px 120px; } header.bar .in { padding: 0 16px; } .right .name { display: none; } }
