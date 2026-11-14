@@ -6,11 +6,14 @@ PostgreSQL (review_events) when AIVEN_PG_URL is set. Presence lives in memory wi
 import asyncio
 import json
 import os
+import secrets
+import urllib.parse
 import time
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, StreamingResponse
+import httpx
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel
 
 import vouch  # noqa: F401  (loads .env)
@@ -174,8 +177,122 @@ def state(pr: str, steps: list[dict]) -> dict:
 
 
 @app.get("/")
-def index():
+def landing():
+    return FileResponse(ROOT / "web" / "landing.html")
+
+
+@app.get("/review")
+def review_page():
     return FileResponse(ROOT / "web" / "index.html")
+
+
+@app.get("/app")
+def app_page(request: Request):
+    if not session_of(request):
+        return RedirectResponse("/")
+    return FileResponse(ROOT / "web" / "app.html")
+
+
+# ---------------------------------------------------------------- GitHub login (sessions in Valkey, else memory)
+
+SESSIONS: dict[str, dict] = {}
+COOKIE = "vouch_session"
+CONNECTED_REPO = "te-industry-tech-office/junction26-messagepack-csharp"
+
+
+def session_of(request: Request) -> dict | None:
+    sid = request.cookies.get(COOKIE)
+    if not sid:
+        return None
+    if kv():
+        try:
+            raw = kv().get(f"session:{sid}")
+            return json.loads(raw) if raw else None
+        except Exception:
+            pass
+    return SESSIONS.get(sid)
+
+
+def start_session(user: dict) -> RedirectResponse:
+    sid = secrets.token_urlsafe(32)
+    SESSIONS[sid] = user
+    if kv():
+        try:
+            kv().set(f"session:{sid}", json.dumps(user), ex=7 * 86400)
+        except Exception:
+            pass
+    r = RedirectResponse("/app", status_code=303)
+    r.set_cookie(COOKIE, sid, max_age=7 * 86400, httponly=True, samesite="lax")
+    r.delete_cookie("oauth_state")
+    return r
+
+
+@app.get("/auth/github")
+def gh_login(request: Request):
+    cid = os.environ.get("GITHUB_CLIENT_ID")
+    if not cid:  # no OAuth app configured: demo identity, so the flow still works offline
+        return start_session({"login": "demo", "name": "Demo reviewer", "avatar": "", "token": "", "demo": True})
+    state = secrets.token_urlsafe(16)
+    q = urllib.parse.urlencode({"client_id": cid, "scope": "read:user", "state": state,
+                                "redirect_uri": os.environ.get("GITHUB_REDIRECT_URI") or str(request.url_for("gh_callback"))})
+    r = RedirectResponse(f"https://github.com/login/oauth/authorize?{q}")
+    r.set_cookie("oauth_state", state, max_age=600, httponly=True, samesite="lax")
+    return r
+
+
+@app.get("/auth/github/callback")
+def gh_callback(request: Request, code: str = "", state: str = ""):
+    if not code or not state or state != request.cookies.get("oauth_state"):
+        raise HTTPException(400, "GitHub login failed: state mismatch. Start again from the home page.")
+    tok = httpx.post("https://github.com/login/oauth/access_token", headers={"Accept": "application/json"}, timeout=15,
+                     data={"client_id": os.environ["GITHUB_CLIENT_ID"], "client_secret": os.environ["GITHUB_CLIENT_SECRET"],
+                           "code": code}).json().get("access_token")
+    if not tok:
+        raise HTTPException(400, "GitHub did not return a token. Start again from the home page.")
+    u = httpx.get("https://api.github.com/user", headers={"Authorization": f"Bearer {tok}"}, timeout=15).json()
+    return start_session({"login": u["login"], "name": u.get("name") or u["login"], "avatar": u.get("avatar_url", ""), "token": tok})
+
+
+@app.get("/auth/logout")
+def logout(request: Request):
+    sid = request.cookies.get(COOKIE)
+    if sid:
+        SESSIONS.pop(sid, None)
+        if kv():
+            try:
+                kv().delete(f"session:{sid}")
+            except Exception:
+                pass
+    r = RedirectResponse("/")
+    r.delete_cookie(COOKIE)
+    return r
+
+
+@app.get("/api/me")
+def me(request: Request):
+    s = session_of(request)
+    if not s:
+        raise HTTPException(401, "Not signed in")
+    return {k: v for k, v in s.items() if k != "token"}
+
+
+@app.get("/api/repos")
+def repos(request: Request):
+    s = session_of(request)
+    if not s:
+        raise HTTPException(401, "Not signed in")
+    out = [{"full_name": CONNECTED_REPO, "connected": True, "language": "C#", "private": False,
+            "prs": len(list(PACKS.glob("*.json")))}]
+    if s.get("token"):
+        try:
+            for r in httpx.get("https://api.github.com/user/repos?sort=updated&per_page=12",
+                               headers={"Authorization": f"Bearer {s['token']}"}, timeout=15).json():
+                if r["full_name"] != CONNECTED_REPO:
+                    out.append({"full_name": r["full_name"], "connected": False, "language": r.get("language"),
+                                "private": r["private"], "prs": 0})
+        except Exception:
+            pass  # GitHub down: still show the connected repo
+    return out
 
 
 @app.get("/api/prs")
@@ -187,7 +304,28 @@ def list_prs():
         g = p["guard"]
         out.append({"id": p["id"], "title": p["requirement"]["title"], "author": p["author"], "route": p["route"],
                     "stats": p["stats"], "guard": {k: g.get(k) for k in ("ran", "existing", "kept", "regression", "new_tests")},
-                    "done": st["done"], "total": st["total"], "signed": bool(st["signoff"]), "reviewers": sorted(st["presence"])})
+                    "done": st["done"], "total": st["total"], "signed": bool(st["signoff"]), "reviewers": sorted(st["presence"]),
+                    "agent": p.get("agent", "unknown"), "decision": (st["signoff"] or {}).get("decision"),
+                    "signed_by": (st["signoff"] or {}).get("user"), "flags": flags(p),
+                    "proven": sum(c["status"] == "proven" for c in p["claims"]), "claims": len(p["claims"])})
+    return out
+
+
+def flags(p: dict) -> list[dict]:
+    """Potential problems a reviewer should know before opening the PR. level: danger | warn."""
+    out = []
+    if p["guard"].get("regression"):
+        out.append({"level": "danger", "text": f"{p['guard']['regression']} existing tests now fail"})
+    by_rule: dict[str, set] = {}
+    for r in p["refusals"]:
+        by_rule.setdefault(r["why"], set()).add(r["path"])
+    out += [{"level": "warn", "text": f"{why.rstrip('.')} ({len(paths)} file{'s' * (len(paths) > 1)})"} for why, paths in by_rule.items()]
+    open_claims = sum(c["status"] != "proven" for c in p["claims"])
+    if open_claims:
+        out.append({"level": "warn", "text": f"{open_claims} of {len(p['claims'])} claims not proven by a test"})
+    odd = (p.get("generated") or {}).get("odd") or []
+    if odd:
+        out.append({"level": "warn", "text": f"{len(odd)} generated file{'s differ' if len(odd) > 1 else ' differs'} from the rest"})
     return out
 
 

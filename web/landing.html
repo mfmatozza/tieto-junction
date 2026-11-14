@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vouch · Review AI code in minutes</title>
+<meta name="description" content="AI agents build backlog issues in parallel lanes. Vouch proves nothing broke and turns the diff into a five-minute team review.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 26 26%27%3E%3Crect width=%2726%27 height=%2726%27 rx=%277%27 fill=%27%23111d42%27/%3E%3Cpath d=%27M7 7.5 13 18.5 19 7.5%27 fill=%27none%27 stroke=%27%2386efac%27 stroke-width=%272.4%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<style>
+:root {
+  --bg: #060b1c;
+  --bg-2: #0a1230;
+  --surface: #0d1736;
+  --surface-2: #111d42;
+  --line: rgba(160, 178, 230, .12);
+  --line-2: rgba(160, 178, 230, .2);
+  --text: #eef2fb;
+  --muted: #94a0c2;
+  --dim: #66719a;
+  --green: #86efac;
+  --green-ink: #052e16;
+  --green-soft: rgba(134, 239, 172, .12);
+  --red: #fda4af;
+  --amber: #fcd34d;
+  --r: 14px;
+  --sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+}
+* { box-sizing: border-box; margin: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.6 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+a { color: inherit; text-decoration: none; }
+.wrap { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+.mono { font-family: var(--mono); }
+
+/* Nav */
+nav.top {
+  position: sticky; top: 0; z-index: 20;
+  background: rgba(6, 11, 28, .72);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border-bottom: 1px solid transparent;
+  transition: border-color .3s;
+}
+nav.top.scrolled { border-bottom-color: var(--line); }
+nav.top .wrap { height: 64px; display: flex; align-items: center; gap: 32px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 17px; letter-spacing: -.01em; }
+.brand svg { display: block; }
+nav.top .links { display: flex; gap: 28px; font-size: 14px; color: var(--muted); }
+nav.top .links a:hover { color: var(--text); }
+nav.top .right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+  height: 40px; padding: 0 18px; border-radius: 999px;
+  font: 500 14px/1 var(--sans); cursor: pointer; border: 1px solid transparent;
+  transition: transform .15s cubic-bezier(.16,1,.3,1), background .2s, border-color .2s;
+}
+.btn:active { transform: scale(.98); }
+.btn-primary { background: var(--green); color: var(--green-ink); }
+.btn-primary:hover { background: #a7f3c0; }
+.btn-ghost { color: var(--text); border-color: var(--line-2); }
+.btn-ghost:hover { border-color: rgba(160,178,230,.4); background: rgba(160,178,230,.06); }
+.btn-lg { height: 48px; padding: 0 24px; font-size: 15px; }
+.btn i { font-size: 18px; }
+
+/* Hero */
+.hero { position: relative; padding: 88px 0 40px; text-align: center; isolation: isolate; }
+.hero::before {
+  content: ""; position: absolute; inset: -120px 0 auto; height: 720px; z-index: -1;
+  background:
+    radial-gradient(60% 50% at 50% 0%, rgba(56, 89, 196, .34), transparent 70%),
+    radial-gradient(30% 30% at 50% 30%, rgba(134, 239, 172, .07), transparent 70%);
+}
+.hero h1 {
+  font-size: clamp(40px, 6vw, 68px); line-height: 1.04; letter-spacing: -.035em; font-weight: 600;
+  max-width: 14ch; margin: 0 auto;
+}
+.hero h1 span { color: var(--green); }
+.hero p.sub { max-width: 560px; margin: 22px auto 0; color: var(--muted); font-size: 18px; line-height: 1.55; }
+.hero .ctas { margin-top: 34px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+/* Road visual */
+.road-card {
+  margin: 64px auto 0; max-width: 1100px; border: 1px solid var(--line); border-radius: 20px;
+  background: linear-gradient(180deg, rgba(17, 29, 66, .7), rgba(10, 18, 48, .5));
+  box-shadow: 0 40px 120px -40px rgba(20, 40, 120, .6), inset 0 1px 0 rgba(255,255,255,.04);
+  padding: 8px; overflow: hidden;
+}
+.road-card svg { display: block; width: 100%; height: auto; }
+.road-legend { display: flex; justify-content: space-between; padding: 6px 16px 10px; font: 12px var(--mono); color: var(--dim); }
+.lane-edge { stroke: rgba(160,178,230,.16); stroke-width: 1.2; fill: none; }
+.lane-mid { stroke: rgba(160,178,230,.22); stroke-width: 1.2; stroke-dasharray: 6 10; fill: none; animation: dash 1.4s linear infinite; }
+.trunk-edge { stroke: rgba(160,178,230,.28); stroke-width: 1.4; fill: none; }
+.trunk-mid { stroke: rgba(134,239,172,.45); stroke-width: 1.4; stroke-dasharray: 10 12; fill: none; animation: dash 1s linear infinite; }
+@keyframes dash { to { stroke-dashoffset: -32; } }
+.gate rect { fill: var(--surface-2); stroke: var(--line-2); }
+.gate text { font: 500 12px var(--sans); fill: var(--text); }
+.gate .sub { font: 11px var(--mono); fill: var(--dim); }
+.gate .post { stroke: rgba(134,239,172,.6); stroke-width: 2; }
+.lane-label { font: 12px var(--mono); fill: var(--muted); }
+.car { fill: #dbe4ff; }
+.car.ok { fill: var(--green); }
+.end text { font: 600 13px var(--sans); fill: var(--green); }
+
+/* Sections */
+section { padding: 120px 0; }
+.h2 { font-size: clamp(30px, 4vw, 44px); line-height: 1.1; letter-spacing: -.03em; font-weight: 600; max-width: 22ch; }
+.lead { color: var(--muted); font-size: 17px; max-width: 58ch; margin-top: 16px; }
+.center { text-align: center; }
+.center .h2, .center .lead { margin-left: auto; margin-right: auto; }
+
+/* Proof numbers */
+.proof { padding: 72px 0 40px; }
+.proof-grid {
+  display: grid; grid-template-columns: 1.3fr 1fr 1fr; border: 1px solid var(--line); border-radius: var(--r);
+  background: rgba(13, 23, 54, .5);
+}
+.proof-grid > div { padding: 28px 28px 26px; }
+.proof-grid > div + div { border-left: 1px solid var(--line); }
+.big { font: 500 40px/1 var(--mono); letter-spacing: -.03em; }
+.big .arrow { color: var(--dim); font-size: 28px; margin: 0 6px; }
+.big .to { color: var(--green); }
+.proof-grid p { color: var(--muted); font-size: 14px; margin-top: 12px; max-width: 34ch; }
+.proof-note { color: var(--dim); font-size: 13px; margin-top: 16px; }
+
+/* Route: 4 processes */
+.route { margin-top: 64px; position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.route::before {
+  content: ""; position: absolute; left: 28px; right: 28px; top: 27px; height: 2px;
+  background: repeating-linear-gradient(90deg, rgba(160,178,230,.28) 0 10px, transparent 10px 20px);
+}
+.stop { position: relative; }
+.stop .badge {
+  width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center;
+  background: var(--surface-2); border: 1px solid var(--line-2); font-size: 26px; color: var(--green);
+  position: relative; z-index: 1;
+}
+.stop:last-child .badge { background: var(--green); color: var(--green-ink); border-color: var(--green); }
+.stop h3 { margin-top: 22px; font-size: 20px; letter-spacing: -.02em; font-weight: 600; }
+.stop .what { color: var(--text); font-size: 15px; margin-top: 4px; font-weight: 500; }
+.stop p { color: var(--muted); font-size: 14.5px; margin-top: 10px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; padding: 6px 10px; border-radius: 8px;
+  background: var(--surface); border: 1px solid var(--line); font: 12px var(--mono); color: var(--muted);
+}
+.chip i { color: var(--green); font-size: 14px; }
+
+/* EasyReview showcase */
+.show { display: grid; grid-template-columns: 1fr 1.25fr; gap: 64px; align-items: center; }
+.points { margin-top: 32px; display: grid; gap: 22px; }
+.points div { display: grid; grid-template-columns: 36px 1fr; gap: 14px; }
+.points i { font-size: 22px; color: var(--green); margin-top: 2px; }
+.points b { font-weight: 500; display: block; }
+.points span { color: var(--muted); font-size: 14.5px; }
+
+.ui {
+  border: 1px solid var(--line-2); border-radius: 18px; overflow: hidden;
+  background: var(--bg-2); box-shadow: 0 50px 120px -50px rgba(30, 60, 160, .7);
+}
+.ui-bar { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--line); font-size: 13px; }
+.ui-bar .title { font-weight: 500; }
+.ui-bar .meta { margin-left: auto; font: 12px var(--mono); color: var(--muted); }
+.ui-bar .meta b { color: var(--green); font-weight: 500; }
+.ui-body { display: grid; grid-template-columns: 200px minmax(0, 1fr); min-height: 340px; }
+.ui-steps { border-right: 1px solid var(--line); padding: 10px; display: grid; gap: 2px; align-content: start; }
+.ui-steps div { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; font-size: 12.5px; color: var(--muted); }
+.ui-steps div.on { background: var(--surface-2); color: var(--text); }
+.ui-steps i { font-size: 15px; }
+.i-ok { color: var(--green); }
+.i-warn { color: var(--amber); }
+.ui-main { padding: 20px 22px; }
+.ui-main h4 { font-size: 16px; font-weight: 600; letter-spacing: -.01em; }
+.ui-main .claim { color: var(--muted); font-size: 13.5px; margin-top: 6px; }
+.evid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.evid span { font: 11.5px var(--mono); padding: 4px 8px; border-radius: 6px; background: var(--green-soft); color: var(--green); }
+.evid span.ai { background: rgba(160,178,230,.08); color: var(--dim); }
+.code { margin-top: 16px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; font: 12px/1.75 var(--mono); }
+.code .fold { padding: 8px 12px; color: var(--muted); background: rgba(134,239,172,.05); display: flex; gap: 8px; align-items: center; }
+.code .fold i { color: var(--green); }
+.code .ln { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 12px; display: grid; grid-template-columns: 38px 1fr; color: #c8d2f0; }
+.code .ln em { font-style: normal; color: var(--dim); }
+.code .add { background: rgba(134,239,172,.07); }
+.code .add::before { content: none; }
+.votes { display: flex; gap: 8px; margin-top: 16px; }
+.votes span { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--muted); }
+.votes span.yes { background: var(--green); color: var(--green-ink); border-color: var(--green); }
+.who { display: flex; align-items: center; margin-left: auto; }
+.who b {
+  width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font: 600 11px var(--sans);
+  border: 2px solid var(--bg-2); margin-left: -6px; color: #0a1230;
+}
+
+/* Infra bento */
+.bento { margin-top: 56px; display: grid; grid-template-columns: 1.15fr 1fr; grid-template-rows: repeat(3, auto); gap: 16px; }
+.cell { border: 1px solid var(--line); border-radius: var(--r); padding: 26px; background: rgba(13, 23, 54, .55); }
+.cell.tall { grid-row: span 3; display: flex; flex-direction: column; background:
+  radial-gradient(120% 80% at 0% 0%, rgba(56, 89, 196, .28), transparent 60%), var(--surface); }
+.cell .k { display: flex; align-items: center; gap: 10px; font-weight: 500; }
+.cell .k i { font-size: 20px; color: var(--green); }
+.cell p { color: var(--muted); font-size: 14.5px; margin-top: 8px; }
+.cell .tag { margin-left: auto; font: 11.5px var(--mono); color: var(--dim); }
+.flow { margin-top: auto; padding-top: 28px; display: grid; gap: 10px; font: 12.5px var(--mono); }
+.flow div { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(6, 11, 28, .5); border: 1px solid var(--line); color: var(--muted); }
+.flow div b { color: var(--text); font-weight: 500; }
+.flow .ok { margin-left: auto; color: var(--green); }
+.flow .no { margin-left: auto; color: var(--red); }
+
+/* FAQ */
+.faq { max-width: 760px; margin: 48px auto 0; }
+.faq details { border-bottom: 1px solid var(--line); }
+.faq summary { list-style: none; cursor: pointer; padding: 22px 0; font-size: 17px; font-weight: 500; display: flex; justify-content: space-between; gap: 24px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary i { color: var(--muted); transition: transform .25s cubic-bezier(.16,1,.3,1); }
+.faq details[open] summary i { transform: rotate(45deg); }
+.faq details p { color: var(--muted); padding: 0 0 22px; max-width: 62ch; }
+
+/* Final CTA */
+.final {
+  margin: 0 auto; text-align: center; border: 1px solid var(--line); border-radius: 24px; padding: 80px 24px;
+  background: radial-gradient(70% 90% at 50% 100%, rgba(56, 89, 196, .35), transparent 70%), var(--bg-2);
+}
+.final .h2 { margin: 0 auto; }
+.final .lead { margin: 16px auto 0; }
+.final .btn { margin-top: 32px; }
+
+footer { padding: 48px 0 56px; color: var(--dim); font-size: 13.5px; }
+footer .wrap { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+footer .brand { color: var(--muted); font-size: 15px; }
+footer .sp { margin-left: auto; }
+
+/* Reveal */
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity .8s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1); }
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .lane-mid, .trunk-mid { animation: none; }
+  html { scroll-behavior: auto; }
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  nav.top .links { display: none; }
+  .hero { padding-top: 56px; }
+  .proof-grid { grid-template-columns: 1fr; }
+  .proof-grid > div + div { border-left: 0; border-top: 1px solid var(--line); }
+  .route { grid-template-columns: 1fr 1fr; gap: 40px 20px; }
+  .route::before { display: none; }
+  .show { grid-template-columns: 1fr; gap: 40px; }
+  .bento { grid-template-columns: 1fr; }
+  .cell.tall { grid-row: auto; }
+  section { padding: 88px 0; }
+}
+@media (max-width: 600px) {
+  .wrap { padding: 0 16px; }
+  .route { grid-template-columns: 1fr; }
+  .ui-body { grid-template-columns: 1fr; }
+  .ui-steps { display: none; }
+  .ui-bar .meta { display: none; }
+  .road-legend { display: none; }
+  .big { font-size: 34px; }
+  nav.top .right .btn-ghost { display: none; }
+}
+</style>
+</head>
+<body>
+
+<nav class="top" id="nav">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="Vouch home">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" fill="#111d42" stroke="rgba(160,178,230,.25)"/><path d="M7 7.5 13 18.5 19 7.5" fill="none" stroke="#86efac" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Vouch
+    </a>
+    <div class="links">
+      <a href="#how">How it works</a>
+      <a href="#easyreview">EasyReview</a>
+      <a href="#infra">Infrastructure</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <div class="right">
+      <a class="btn btn-primary" href="/auth/github"><i class="ph ph-github-logo"></i>Connect GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Ship AI code you can <span>actually review</span>.</h1>
+    <p class="sub">Agents build backlog issues in parallel lanes. Vouch proves nothing broke and turns the diff into a five-minute team review.</p>
+    <div class="ctas">
+      <a class="btn btn-primary btn-lg" href="/auth/github"><i class="ph ph-github-logo"></i>Connect GitHub</a>
+      <a class="btn btn-ghost btn-lg" href="#how">See how it works</a>
+    </div>
+
+    <div class="road-card" role="img" aria-label="Four agent lanes merge into one road that passes Guardrail, Checkpoint and EasyReview before reaching main.">
+      <svg viewBox="0 0 1100 300" id="road">
+        <defs>
+          <path id="p0" d="M10 40 C 220 40, 250 150, 420 150 L 1040 150"/>
+          <path id="p1" d="M10 110 C 220 110, 260 150, 420 150 L 1040 150"/>
+          <path id="p2" d="M10 190 C 220 190, 260 150, 420 150 L 1040 150"/>
+          <path id="p3" d="M10 260 C 220 260, 250 150, 420 150 L 1040 150"/>
+        </defs>
+        <g>
+          <path class="lane-edge" d="M10 28 C 220 28, 250 138, 420 138"/>
+          <path class="lane-edge" d="M10 272 C 220 272, 250 162, 420 162"/>
+          <path class="lane-mid" d="M10 40 C 220 40, 250 150, 420 150"/>
+          <path class="lane-mid" d="M10 110 C 220 110, 260 150, 420 150"/>
+          <path class="lane-mid" d="M10 190 C 220 190, 260 150, 420 150"/>
+          <path class="lane-mid" d="M10 260 C 220 260, 250 150, 420 150"/>
+          <line class="trunk-edge" x1="420" y1="132" x2="1040" y2="132"/>
+          <line class="trunk-edge" x1="420" y1="168" x2="1040" y2="168"/>
+          <line class="trunk-mid" x1="420" y1="150" x2="1040" y2="150"/>
+        </g>
+        <text class="lane-label" x="16" y="30">#2283</text>
+        <text class="lane-label" x="16" y="100">#2297</text>
+        <text class="lane-label" x="16" y="180">#2234</text>
+        <text class="lane-label" x="16" y="250">#2129</text>
+
+        <g class="gate" transform="translate(540 0)">
+          <line class="post" x1="0" y1="122" x2="0" y2="178"/>
+          <rect x="-62" y="196" width="124" height="46" rx="10"/>
+          <text x="0" y="215" text-anchor="middle">Guardrail</text>
+          <text class="sub" x="0" y="232" text-anchor="middle">167/167 pass</text>
+        </g>
+        <g class="gate" transform="translate(720 0)">
+          <line class="post" x1="0" y1="122" x2="0" y2="178"/>
+          <rect x="-62" y="196" width="124" height="46" rx="10"/>
+          <text x="0" y="215" text-anchor="middle">Checkpoint</text>
+          <text class="sub" x="0" y="232" text-anchor="middle">claims checked</text>
+        </g>
+        <g class="gate" transform="translate(900 0)">
+          <line class="post" x1="0" y1="122" x2="0" y2="178"/>
+          <rect x="-62" y="196" width="124" height="46" rx="10"/>
+          <text x="0" y="215" text-anchor="middle">EasyReview</text>
+          <text class="sub" x="0" y="232" text-anchor="middle">read 6 of 225</text>
+        </g>
+        <g class="end"><circle cx="1052" cy="150" r="7" fill="#86efac"/><text x="1052" y="122" text-anchor="middle">main</text></g>
+
+        <g id="cars">
+          <circle class="car" r="5"><animateMotion dur="8s" repeatCount="indefinite" begin="0s"><mpath href="#p0"/></animateMotion><animate attributeName="fill" values="#dbe4ff;#dbe4ff;#86efac" keyTimes="0;.86;1" dur="8s" repeatCount="indefinite" begin="0s"/></circle>
+          <circle class="car" r="5"><animateMotion dur="8s" repeatCount="indefinite" begin="-6s"><mpath href="#p1"/></animateMotion><animate attributeName="fill" values="#dbe4ff;#dbe4ff;#86efac" keyTimes="0;.86;1" dur="8s" repeatCount="indefinite" begin="-6s"/></circle>
+          <circle class="car" r="5"><animateMotion dur="8s" repeatCount="indefinite" begin="-4s"><mpath href="#p2"/></animateMotion><animate attributeName="fill" values="#dbe4ff;#dbe4ff;#86efac" keyTimes="0;.86;1" dur="8s" repeatCount="indefinite" begin="-4s"/></circle>
+          <circle class="car" r="5"><animateMotion dur="8s" repeatCount="indefinite" begin="-2s"><mpath href="#p3"/></animateMotion><animate attributeName="fill" values="#dbe4ff;#dbe4ff;#86efac" keyTimes="0;.86;1" dur="8s" repeatCount="indefinite" begin="-2s"/></circle>
+        </g>
+      </svg>
+      <div class="road-legend"><span>Lanes: agents work in parallel</span><span>One road to main, three checks on the way</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="proof">
+  <div class="wrap">
+    <div class="proof-grid reveal">
+      <div>
+        <div class="big">1,383<span class="arrow">→</span><span class="to">17</span></div>
+        <p>Lines changed in issue #2297, and the lines a human actually had to read.</p>
+      </div>
+      <div>
+        <div class="big">167<span class="arrow">/</span><span class="to">167</span></div>
+        <p>Existing tests that passed before every change and still pass after it.</p>
+      </div>
+      <div>
+        <div class="big"><span class="to">0</span></div>
+        <p>Regressions reached a reviewer. Vouch blocks them first.</p>
+      </div>
+    </div>
+    <p class="proof-note">Measured on four real AI-written changes in Tieto's MessagePack-CSharp challenge repository.</p>
+  </div>
+</div>
+
+<section id="how">
+  <div class="wrap">
+    <h2 class="h2 reveal">From backlog to main in four stops.</h2>
+    <p class="lead reveal">Each stop answers one question a reviewer would otherwise answer by reading everything.</p>
+
+    <div class="route">
+      <div class="stop reveal">
+        <div class="badge"><i class="ph ph-road-horizon"></i></div>
+        <h3>Lanes</h3>
+        <div class="what">Every agent gets its own lane.</div>
+        <p>Agents claim files before they edit, so parallel work never collides. Each commit records which agent and which issue wrote it.</p>
+        <span class="chip"><i class="ph ph-git-commit"></i>Lanes-Agent: claude-code</span>
+      </div>
+      <div class="stop reveal">
+        <div class="badge"><i class="ph ph-shield-check"></i></div>
+        <h3>Guardrail</h3>
+        <div class="what">Nothing that worked can break.</div>
+        <p>Existing tests run on the base and on the branch. Passed before and failed after means blocked, before anyone reads a line.</p>
+        <span class="chip"><i class="ph ph-check"></i>167/167 still pass</span>
+      </div>
+      <div class="stop reveal">
+        <div class="badge"><i class="ph ph-seal-check"></i></div>
+        <h3>Checkpoint</h3>
+        <div class="what">The AI's story is checked by code.</div>
+        <p>Every claim must cite real lines, quote the real issue and name a test that passed. A made-up claim turns red.</p>
+        <span class="chip"><i class="ph ph-quotes"></i>7 of 8 claims proven</span>
+      </div>
+      <div class="stop reveal">
+        <div class="badge"><i class="ph-fill ph-flag-checkered"></i></div>
+        <h3>EasyReview</h3>
+        <div class="what">Read only what isn't proven.</div>
+        <p>Proven code folds away. The team splits what's left, reviews it live together, and a named owner signs.</p>
+        <span class="chip"><i class="ph ph-eye"></i>225 lines, you read 6</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="easyreview" style="padding-top: 40px">
+  <div class="wrap show">
+    <div class="reveal">
+      <h2 class="h2">A review your team can finish before lunch.</h2>
+      <p class="lead">No file-by-file diff. The change plays as a short story, one claim per step, with the evidence next to the code.</p>
+      <div class="points">
+        <div><i class="ph ph-arrows-in-line-vertical"></i><p><b>Proven code collapses</b><span>Lines backed by a passing test fold to one row. Risky lines, like public API, never fold.</span></p></div>
+        <div><i class="ph ph-users-three"></i><p><b>Reviewed together, live</b><span>Steps are split by who knows the code. Everyone sees who is where, and every vote, as it happens.</span></p></div>
+        <div><i class="ph ph-signature"></i><p><b>A person signs, not a model</b><span>The owner writes the risk they accept. The AI's own confidence is shown, never used.</span></p></div>
+      </div>
+    </div>
+
+    <div class="ui reveal" aria-label="Preview of an EasyReview step for issue 2283">
+      <div class="ui-bar">
+        <i class="ph ph-git-pull-request" style="color:var(--green)"></i>
+        <span class="title">#2283 Crash on generic struct from another assembly</span>
+        <span class="meta">225 lines · you read <b>6</b></span>
+      </div>
+      <div class="ui-body">
+        <div class="ui-steps">
+          <div><i class="ph-fill ph-check-circle i-ok"></i>Guardrail</div>
+          <div><i class="ph-fill ph-check-circle i-ok"></i>What this changes</div>
+          <div class="on"><i class="ph-fill ph-check-circle i-ok"></i>Foreign diagnostics dropped</div>
+          <div><i class="ph-fill ph-check-circle i-ok"></i>FirstOrDefault fix</div>
+          <div><i class="ph-fill ph-check-circle i-ok"></i>Repro test</div>
+          <div><i class="ph-fill ph-warning-circle i-warn"></i>Docs: AI only</div>
+          <div><i class="ph ph-signature"></i>Sign off</div>
+        </div>
+        <div class="ui-main">
+          <h4>Diagnostics from other assemblies are dropped</h4>
+          <p class="claim">Every diagnostic the type collector reports now goes through a filter that only passes locations in the project being compiled.</p>
+          <div class="evid">
+            <span>cited lines exist</span><span>quote is in the issue</span><span>test passed</span><span class="ai">AI confidence 0.85 · not used</span>
+          </div>
+          <div class="code">
+            <div class="fold"><i class="ph ph-caret-right"></i>TypeCollector.cs folded, backed by a passing test</div>
+            <div class="ln add"><em>1446</em>if (diagnostic.Location.IsInSource &amp;&amp;</div>
+            <div class="ln add"><em></em>    compilation.ContainsSyntaxTree(...))</div>
+            <div class="ln add"><em>1448</em>    report(diagnostic);</div>
+          </div>
+          <div class="votes">
+            <span class="yes"><i class="ph ph-check"></i>Looks right</span>
+            <span><i class="ph ph-question"></i>Ask</span>
+            <span><i class="ph ph-x"></i>Problem</span>
+            <span class="who"><b style="background:#86efac">MV</b><b style="background:#93c5fd">LK</b></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="infra" style="padding-top: 40px">
+  <div class="wrap">
+    <h2 class="h2 reveal">Plain code decides. AI only explains.</h2>
+    <p class="lead reveal">Claude writes the story. Every claim it makes is checked by deterministic code, and the review runs on Aiven.</p>
+    <div class="bento">
+      <div class="cell tall reveal">
+        <div class="k"><i class="ph ph-brain"></i>Claude writes, code verifies</div>
+        <p>The model turns the diff into claims. Vouch accepts a claim only when every check passes. Anything it cannot prove stays open for a human.</p>
+        <div class="flow">
+          <div><b>cite</b> TypeCollector.cs:239 exists<span class="ok">pass</span></div>
+          <div><b>quote</b> found in issue #2283<span class="ok">pass</span></div>
+          <div><b>test</b> ClosedGenericStruct_FromMetadataReference<span class="ok">pass</span></div>
+          <div><b>test</b> none named for the docs change<span class="no">read it</span></div>
+        </div>
+      </div>
+      <div class="cell reveal">
+        <div class="k"><i class="ph ph-database"></i>PostgreSQL<span class="tag">Aiven</span></div>
+        <p>Every vote, question and sign-off, kept as an audit trail of who accepted which risk.</p>
+      </div>
+      <div class="cell reveal">
+        <div class="k"><i class="ph ph-flow-arrow"></i>Kafka<span class="tag">Aiven</span></div>
+        <p>Each review event streams to review.events, so CI, chat and dashboards can follow along.</p>
+      </div>
+      <div class="cell reveal">
+        <div class="k"><i class="ph ph-lightning"></i>Valkey<span class="tag">Aiven</span></div>
+        <p>Live presence: who is on which step right now, gone 15 seconds after they leave.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq" style="padding-top: 40px">
+  <div class="wrap">
+    <h2 class="h2 center reveal" style="margin:0 auto;text-align:center">Questions reviewers ask</h2>
+    <div class="faq">
+      <details><summary>Does the AI decide what is safe to merge?<i class="ph ph-plus"></i></summary><p>No. The AI only explains the change. Code checks each claim against the diff, the issue and the test results. A named person signs every merge and writes down the risk they accept.</p></details>
+      <details><summary>What if the tests are weak?<i class="ph ph-plus"></i></summary><p>Then less folds away. Code that no passing test covers stays open, and risky areas like public API, wire formats and generated files are always shown, even when tests pass.</p></details>
+      <details><summary>Do I need Lanes to use Vouch?<i class="ph ph-plus"></i></summary><p>No. Without Lanes, every change is reviewed as written by an unknown agent, so nothing is trusted by default. With Lanes, trust is earned per agent and per area of the code.</p></details>
+      <details><summary>Which stacks does it run on today?<i class="ph ph-plus"></i></summary><p>.NET repositories on GitHub. The Guardrail runs your existing test projects on the base and the branch in separate worktrees.</p></details>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top: 40px">
+  <div class="wrap">
+    <div class="final reveal">
+      <h2 class="h2">Put your next AI pull request in the right lane.</h2>
+      <p class="lead">Connect a repository and review your first change in minutes.</p>
+      <a class="btn btn-primary btn-lg" href="/auth/github"><i class="ph ph-github-logo"></i>Connect GitHub</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span class="brand">
+      <svg width="20" height="20" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" fill="#111d42" stroke="rgba(160,178,230,.25)"/><path d="M7 7.5 13 18.5 19 7.5" fill="none" stroke="#86efac" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Vouch
+    </span>
+    <span>Built at Junction 2026 for the Tieto challenge.</span>
+    <span class="sp"></span>
+    <a href="#how">How it works</a>
+    <a href="#faq">FAQ</a>
+  </div>
+</footer>
+
+<script>
+const nav = document.getElementById("nav");
+new IntersectionObserver(([e]) => nav.classList.toggle("scrolled", !e.isIntersecting)).observe(document.querySelector(".hero h1"));
+
+const io = new IntersectionObserver((es) => es.forEach((e) => {
+  if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+}), { threshold: 0.15 });
+document.querySelectorAll(".reveal").forEach((el, i) => { el.style.transitionDelay = (i % 4) * 70 + "ms"; io.observe(el); });
+
+if (matchMedia("(prefers-reduced-motion: reduce)").matches) document.getElementById("road").pauseAnimations();
+</script>
+</body>
+</html>

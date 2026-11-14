@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vouch</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 26 26%27%3E%3Crect width=%2726%27 height=%2726%27 rx=%277%27 fill=%27%23111d42%27/%3E%3Cpath d=%27M7 7.5 13 18.5 19 7.5%27 fill=%27none%27 stroke=%27%2386efac%27 stroke-width=%272.4%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<style>
+:root {
+  --bg: #060b1c; --bg-2: #0a1230; --surface: #0d1736; --surface-2: #111d42;
+  --line: rgba(160,178,230,.12); --line-2: rgba(160,178,230,.2);
+  --text: #eef2fb; --muted: #94a0c2; --dim: #66719a;
+  --green: #86efac; --green-ink: #052e16; --green-soft: rgba(134,239,172,.12);
+  --red: #fda4af; --red-soft: rgba(253,164,175,.1); --amber: #fcd34d; --amber-soft: rgba(252,211,77,.1);
+  --sans: "Geist", ui-sans-serif, system-ui, sans-serif; --mono: "Geist Mono", ui-monospace, monospace;
+}
+* { box-sizing: border-box; margin: 0; }
+body { background: var(--bg); color: var(--text); font: 15px/1.55 var(--sans); -webkit-font-smoothing: antialiased; min-height: 100dvh; }
+a { color: inherit; text-decoration: none; }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.mono { font-family: var(--mono); }
+
+header.bar { border-bottom: 1px solid var(--line); background: rgba(6,11,28,.8); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 10; }
+header.bar .wrap { height: 60px; display: flex; align-items: center; gap: 14px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.crumb { color: var(--dim); display: flex; align-items: center; gap: 14px; font-size: 14px; }
+.crumb a { color: var(--muted); }
+.crumb a:hover { color: var(--text); }
+.me { margin-left: auto; display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--muted); }
+.me img, .me .av { width: 28px; height: 28px; border-radius: 50%; background: var(--surface-2); display: grid; place-items: center; font: 600 12px var(--sans); color: var(--text); }
+.me a { color: var(--dim); font-size: 13px; }
+.me a:hover { color: var(--text); }
+
+main { padding: 48px 0 96px; }
+h1 { font-size: 30px; letter-spacing: -.025em; font-weight: 600; }
+.sub { color: var(--muted); margin-top: 6px; }
+
+.btn { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px; border-radius: 999px; font: 500 13.5px/1 var(--sans); white-space: nowrap; border: 1px solid transparent; cursor: pointer; transition: transform .15s, background .2s; }
+.btn:active { transform: scale(.98); }
+.btn-primary { background: var(--green); color: var(--green-ink); }
+.btn-primary:hover { background: #a7f3c0; }
+.btn-ghost { border-color: var(--line-2); color: var(--text); background: transparent; }
+.btn-ghost:hover { background: rgba(160,178,230,.06); }
+
+/* Repo picker */
+.repos { margin-top: 32px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.repo { display: grid; grid-template-columns: 36px 1fr auto; gap: 14px; align-items: center; padding: 18px 20px; }
+.repo + .repo { border-top: 1px solid var(--line); }
+.repo i.ic { font-size: 22px; color: var(--dim); }
+.repo.on { background: linear-gradient(90deg, rgba(134,239,172,.06), transparent 60%); }
+.repo.on i.ic { color: var(--green); }
+.repo .name { font-weight: 500; }
+.repo .meta { color: var(--dim); font-size: 13px; margin-top: 2px; }
+.state { font: 12px var(--mono); color: var(--dim); }
+.skel { height: 64px; background: linear-gradient(90deg, var(--surface) 0%, var(--surface-2) 50%, var(--surface) 100%); background-size: 200% 100%; animation: sh 1.4s infinite; }
+.skel + .skel { border-top: 1px solid var(--line); }
+@keyframes sh { to { background-position: -200% 0; } }
+
+/* Repo overview */
+.head { display: flex; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
+.head .btn { margin-left: auto; }
+.tiles { margin-top: 28px; display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); border-radius: 14px; background: rgba(13,23,54,.5); }
+.tile { padding: 20px 22px; }
+.tile + .tile { border-left: 1px solid var(--line); }
+.tile .n { font: 500 28px/1 var(--mono); letter-spacing: -.02em; }
+.tile .n .g { color: var(--green); }
+.tile .n .x { color: var(--dim); font-size: 20px; margin: 0 4px; }
+.tile .l { color: var(--muted); font-size: 13px; margin-top: 8px; }
+
+.list-h { margin-top: 44px; display: flex; align-items: baseline; gap: 12px; }
+.list-h h2 { font-size: 18px; font-weight: 600; letter-spacing: -.01em; }
+.list-h span { color: var(--dim); font-size: 13px; }
+
+.pr { margin-top: 14px; border: 1px solid var(--line); border-radius: 16px; background: rgba(13,23,54,.45); padding: 22px 24px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px 28px; transition: border-color .2s; }
+.pr:hover { border-color: var(--line-2); }
+.pr .t { font-weight: 500; font-size: 16px; letter-spacing: -.01em; }
+.pr .t .id { color: var(--dim); font-family: var(--mono); font-weight: 400; margin-right: 8px; font-size: 14px; }
+.pr .m { color: var(--dim); font-size: 13px; margin-top: 4px; }
+.pr .act { display: flex; align-items: center; gap: 12px; }
+.avs { display: flex; }
+.avs b { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--bg); margin-left: -6px; display: grid; place-items: center; font: 600 10.5px var(--sans); color: #0a1230; background: #93c5fd; }
+
+/* Road progress */
+.road { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(5, 1fr); position: relative; padding-top: 4px; }
+.road::before { content: ""; position: absolute; left: 14px; right: 14px; top: 17px; height: 2px; background: repeating-linear-gradient(90deg, rgba(160,178,230,.22) 0 8px, transparent 8px 16px); }
+.road .fill { position: absolute; left: 14px; top: 17px; height: 2px; background: var(--green); border-radius: 2px; transform-origin: left; animation: grow .9s cubic-bezier(.16,1,.3,1) both; }
+@keyframes grow { from { transform: scaleX(0); } }
+.stop { position: relative; z-index: 1; }
+.stop .dot { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; font-size: 15px; background: var(--surface-2); border: 1px solid var(--line-2); color: var(--dim); }
+.stop.ok .dot { background: var(--green); border-color: var(--green); color: var(--green-ink); }
+.stop.now .dot { background: var(--bg-2); border-color: var(--green); color: var(--green); box-shadow: 0 0 0 4px rgba(134,239,172,.12); }
+.stop.bad .dot { background: var(--red); border-color: var(--red); color: #4c0519; }
+.stop.skip .dot { border-style: dashed; }
+.stop .nm { font-size: 13px; font-weight: 500; margin-top: 10px; }
+.stop .vl { font: 12px var(--mono); color: var(--muted); margin-top: 2px; }
+.stop.bad .vl { color: var(--red); }
+
+.flags { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; }
+.flag { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 5px 10px; border-radius: 8px; background: var(--amber-soft); color: var(--amber); }
+.flag.danger { background: var(--red-soft); color: var(--red); }
+.flag.clean { background: var(--green-soft); color: var(--green); }
+
+.empty { margin-top: 32px; border: 1px dashed var(--line-2); border-radius: 14px; padding: 48px 24px; text-align: center; color: var(--muted); }
+.empty i { font-size: 32px; color: var(--dim); display: block; margin-bottom: 10px; }
+.err { margin-top: 24px; padding: 14px 16px; border-radius: 12px; background: var(--red-soft); color: var(--red); font-size: 14px; }
+
+@media (prefers-reduced-motion: reduce) { .road .fill, .skel { animation: none; } }
+@media (max-width: 860px) {
+  .tiles { grid-template-columns: 1fr 1fr; }
+  .tile:nth-child(3) { border-left: 0; }
+  .tile:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .pr { grid-template-columns: 1fr; }
+  .road { grid-template-columns: repeat(5, minmax(0,1fr)); }
+  .stop .vl { display: none; }
+  .crumb .repo-name { display: none; }
+}
+@media (max-width: 520px) { .wrap { padding: 0 16px; } .stop .nm { font-size: 11px; } .me .name { display: none; } }
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="/app#/">
+      <svg width="24" height="24" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" fill="#111d42" stroke="rgba(160,178,230,.25)"/><path d="M7 7.5 13 18.5 19 7.5" fill="none" stroke="#86efac" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Vouch
+    </a>
+    <div class="crumb" id="crumb"></div>
+    <div class="me" id="me"></div>
+  </div>
+</header>
+<main><div class="wrap" id="view"></div></main>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const n = (x) => Number(x).toLocaleString("en-US");
+const initials = (s) => String(s).split(/[\s._-]+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
+let ME = null, REPOS = null;
+
+async function api(path) {
+  const r = await fetch(path, { credentials: "same-origin" });
+  if (r.status === 401) { location.href = "/"; throw new Error("signed out"); }
+  if (!r.ok) throw new Error(`${path}: ${r.status}`);
+  return r.json();
+}
+
+function renderMe() {
+  $("#me").innerHTML = `${ME.avatar ? `<img src="${esc(ME.avatar)}" alt="">` : `<span class="av">${esc(initials(ME.name))}</span>`}
+    <span class="name">${esc(ME.name)}</span><a href="/auth/logout">Sign out</a>`;
+}
+
+async function showRepos() {
+  $("#crumb").innerHTML = "";
+  $("#view").innerHTML = `<h1>Choose a repository</h1><p class="sub">Vouch reviews pull requests written by AI agents in connected repositories.</p>
+    <div class="repos" id="repos"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>`;
+  try { REPOS = REPOS || await api("/api/repos"); }
+  catch (e) { $("#repos").outerHTML = `<div class="err">Could not load repositories. ${esc(e.message)}</div>`; return; }
+  $("#repos").innerHTML = REPOS.map((r) => r.connected ? `
+    <a class="repo on" href="#/repo">
+      <i class="ph ph-git-branch ic"></i>
+      <div><div class="name">${esc(r.full_name)}</div><div class="meta">${esc(r.language || "")} · ${r.prs} pull requests waiting for review</div></div>
+      <span class="btn btn-primary">Open<i class="ph ph-arrow-right"></i></span>
+    </a>` : `
+    <div class="repo">
+      <i class="ph ph-git-branch ic"></i>
+      <div><div class="name">${esc(r.full_name)}</div><div class="meta">${esc(r.language || "No language")}${r.private ? " · private" : ""}</div></div>
+      <span class="state">Not connected</span>
+    </div>`).join("");
+}
+
+function road(p) {
+  const g = p.guard, blocked = g.regression > 0;
+  const lanes = p.agent && p.agent !== "unknown";
+  const merged = p.decision === "accept", rejected = p.decision === "reject";
+  const started = p.done > 0;
+  const stops = [
+    { nm: "Lanes", ic: "ph-road-horizon", cls: lanes ? "ok" : "skip", vl: lanes ? p.agent : "agent unknown" },
+    { nm: "Guardrail", ic: blocked ? "ph-x" : "ph-shield-check", cls: blocked ? "bad" : "ok", vl: g.ran ? `${g.kept}/${g.existing} pass` : "not run" },
+    { nm: "Checkpoint", ic: "ph-seal-check", cls: blocked ? "" : "ok", vl: `${p.proven}/${p.claims} proven` },
+    { nm: "EasyReview", ic: "ph-eye", cls: blocked ? "" : merged || rejected ? "ok" : "now", vl: `${p.done}/${p.total} steps` },
+    { nm: rejected ? "Rejected" : "Merged", ic: rejected ? "ph-x" : "ph-flag-checkered", cls: merged ? "ok" : rejected ? "bad" : "", vl: p.signed_by ? `by ${p.signed_by}` : "waiting" },
+  ];
+  const reached = blocked ? 1 : merged || rejected ? 4 : 3;
+  return `<div class="road">
+    <span class="fill" style="width:${reached * 20}%"></span>
+    ${stops.map((s) => `<div class="stop ${s.cls}"><div class="dot"><i class="ph ${s.ic}"></i></div><div class="nm">${s.nm}</div><div class="vl">${esc(s.vl)}</div></div>`).join("")}
+  </div>`;
+}
+
+async function showRepo() {
+  const repo = (REPOS || []).find((r) => r.connected)?.full_name || "te-industry-tech-office/junction26-messagepack-csharp";
+  $("#crumb").innerHTML = `<span>/</span><a class="repo-name" href="#/repo">${esc(repo)}</a>`;
+  $("#view").innerHTML = `<div class="skel" style="height:160px;border-radius:14px"></div>`;
+  let prs;
+  try { prs = await api("/api/prs"); }
+  catch (e) { $("#view").innerHTML = `<div class="err">Could not load pull requests. ${esc(e.message)}</div>`; return; }
+  if (!prs.length) { $("#view").innerHTML = `<div class="empty"><i class="ph ph-road-horizon"></i>No AI pull requests yet. When an agent opens one, it shows up here.</div>`; return; }
+
+  const changed = prs.reduce((a, p) => a + p.stats.changed_lines, 0);
+  const read = prs.reduce((a, p) => a + p.stats.lines_to_read, 0);
+  const regress = prs.reduce((a, p) => a + (p.guard.regression || 0), 0);
+  const waiting = prs.filter((p) => !p.decision);
+  const done = prs.filter((p) => p.decision);
+  const card = (p) => `
+    <div class="pr">
+      <div>
+        <div class="t"><span class="id">#${esc(p.id)}</span>${esc(p.title.replace(/^\d+\s+/, ""))}</div>
+        <div class="m">${n(p.stats.changed_lines)} lines in ${p.stats.files} files · you read <span style="color:var(--green)">${n(p.stats.lines_to_read)}</span> · about ${p.stats.minutes} min</div>
+      </div>
+      <div class="act">
+        ${p.reviewers.length ? `<div class="avs" title="Reviewing now: ${esc(p.reviewers.join(", "))}">${p.reviewers.map((u) => `<b>${esc(initials(u))}</b>`).join("")}</div>` : ""}
+        <a class="btn ${p.decision ? "btn-ghost" : "btn-primary"}" href="/review?as=${encodeURIComponent(ME.login)}#/pr/${encodeURIComponent(p.id)}">${p.decision ? "Open" : p.done ? "Continue review" : "Start EasyReview"}<i class="ph ph-arrow-right"></i></a>
+      </div>
+      ${road(p)}
+      <div class="flags">${p.flags.length ? p.flags.map((f) => `<span class="flag ${f.level}"><i class="ph ${f.level === "danger" ? "ph-warning-octagon" : "ph-warning"}"></i>${esc(f.text)}</span>`).join("")
+        : `<span class="flag clean"><i class="ph ph-check"></i>Nothing flagged</span>`}</div>
+    </div>`;
+
+  $("#view").innerHTML = `
+    <div class="head"><div><h1>Pull requests</h1><p class="sub">Every change below was written by an AI agent from a backlog issue.</p></div></div>
+    <div class="tiles">
+      <div class="tile"><div class="n">${prs.length}</div><div class="l">AI pull requests</div></div>
+      <div class="tile"><div class="n">${n(changed)}<span class="x">→</span><span class="g">${n(read)}</span></div><div class="l">Lines changed, lines to read</div></div>
+      <div class="tile"><div class="n"><span class="${regress ? "" : "g"}" style="${regress ? "color:var(--red)" : ""}">${regress}</span></div><div class="l">Regressions caught by Guardrail</div></div>
+      <div class="tile"><div class="n">${done.length}<span class="x">/</span>${prs.length}</div><div class="l">Signed off by an owner</div></div>
+    </div>
+    <div class="list-h"><h2>Waiting for review</h2><span>${waiting.length}</span></div>
+    ${waiting.length ? waiting.map(card).join("") : `<div class="empty"><i class="ph ph-flag-checkered"></i>All caught up. Every pull request has been signed.</div>`}
+    ${done.length ? `<div class="list-h"><h2>Signed</h2><span>${done.length}</span></div>${done.map(card).join("")}` : ""}`;
+}
+
+function route() {
+  if (location.hash.startsWith("#/repo")) showRepo(); else showRepos();
+}
+
+(async () => {
+  try { ME = await api("/api/me"); } catch { return; }
+  renderMe();
+  window.addEventListener("hashchange", route);
+  route();
+})();
+</script>
+</body>
+</html>
