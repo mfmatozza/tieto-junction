@@ -616,6 +616,13 @@ def gh_run(owner: str, name: str, number: int, request: Request):
     pid = jobs.pack_id(repo, number)
     jobs.set_status(pid, repo, number, "queued", by=s["login"])
     job = {"repo": repo, "number": number, "by": s["login"]}
+    if os.environ.get("VOUCH_DISPATCH_TOKEN"):  # a fresh GitHub Actions runner per review: no machine of ours has to stay on
+        r = gh_call("POST", "/repos/mfmatozza/tieto-junction/actions/workflows/review.yml/dispatches", os.environ["VOUCH_DISPATCH_TOKEN"],
+                    {"ref": "main", "inputs": {"repo": repo, "number": str(number)}})
+        if r.status_code == 204:
+            publish("review.events", {"type": "review.queued", **job})
+            return {"queued": pid, "via": "actions"}
+        print("Actions dispatch failed:", r.status_code, r.text[:200])
     if publish("review.jobs", job):
         return {"queued": pid, "via": "kafka"}
     if not SERVERLESS:  # no queue reachable but we are on a machine that can run tests: do it here

@@ -1,0 +1,36 @@
+name: vouch-review
+run-name: Vouch ${{ inputs.repo }}#${{ inputs.number }}
+
+# Started by the website (POST /api/gh/.../run) through workflow_dispatch: a fresh GitHub runner per review,
+# with Python, Node, .NET, Go, Java and Rust preinstalled. Nothing runs on anyone's laptop.
+on:
+  workflow_dispatch:
+    inputs:
+      repo: { description: "owner/name", required: true }
+      number: { description: "pull request number", required: true }
+
+concurrency:
+  group: vouch-${{ inputs.repo }}-${{ inputs.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - name: Review the pull request
+        env:  # inputs go through env, never into the shell text
+          REPO: ${{ inputs.repo }}
+          NUMBER: ${{ inputs.number }}
+          VOUCH_WORK: ${{ runner.temp }}/vw
+          AIVEN_PG_URL: ${{ secrets.AIVEN_PG_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.VOUCH_GH_TOKEN }}
+        run: python -m vouch.jobs run "$REPO" "$NUMBER"

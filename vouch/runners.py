@@ -67,12 +67,18 @@ def parse_cargo(text: str) -> dict[str, str]:
 
 # ---------------------------------------------------------------- runners
 
+# A pull request's tests never see our keys.
+# ponytail: same OS user, so a hostile test could still read the parent process; a container per run if that matters.
+CLEAN_ENV = {k: v for k, v in os.environ.items()
+             if not (k.startswith(("AIVEN_", "ANTHROPIC_", "VOUCH_")) or k in ("GITHUB_TOKEN", "GH_TOKEN"))}
+
+
 def _run(cmd: list[str], cwd: Path, env: dict | None = None) -> subprocess.CompletedProcess | None:
     if not shutil.which(cmd[0]):
         return None
     try:
         return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace",
-                              timeout=TIMEOUT, env={**os.environ, **(env or {})})
+                              timeout=TIMEOUT, env={**CLEAN_ENV, **(env or {})})
     except subprocess.TimeoutExpired:
         return None
 
