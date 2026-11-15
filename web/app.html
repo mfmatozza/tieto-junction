@@ -168,10 +168,10 @@ const n = (x) => Number(x).toLocaleString("en-US");
 const initials = (s) => String(s).split(/[\s._-]+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
 let ME = null, REPOS = null;
 
-async function api(path) {
-  const r = await fetch(path, { credentials: "same-origin" });
+async function api(path, opt = {}) {
+  const r = await fetch(path, { credentials: "same-origin", ...opt });
   if (r.status === 401) { location.href = "/"; throw new Error("signed out"); }
-  if (!r.ok) throw new Error(`${path}: ${r.status}`);
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `${path}: ${r.status}`);
   return r.json();
 }
 
@@ -198,6 +198,12 @@ async function showRepos() {
         <div><div class="name">${esc(r.full_name)}</div><div class="meta">Public challenge repository from Tieto. ${r.prs} AI-written pull requests, already checked by Vouch.</div></div>
         <span class="btn btn-primary">Open<i class="ph ph-arrow-right"></i></span>
       </a>`).join("")}</div>
+    ${ME.demo ? "" : `<div class="list-h"><h2>Try it end to end</h2><span>Run, review and merge as yourself</span></div>
+    <div class="repos"><div class="repo on">
+      <i class="ph ph-robot ic"></i>
+      <div><div class="name">Copy the demo repo to your GitHub</div><div class="meta">A small shop with two AI-written pull requests: one clean, one that breaks an existing test. Vouch copies it into your account so you can run Vouch, review and merge under your own login.</div></div>
+      <button class="btn btn-primary" onclick="tryDemo(this)">Copy and open<i class="ph ph-arrow-right"></i></button>
+    </div></div>`}
     <div class="list-h"><h2>Your repositories</h2><span>${ME.demo ? "Sign in with GitHub to see yours" : "Public repositories on your GitHub account"}</span></div>
     ${mine.length ? `<div class="repos">${mine.map((r, i) => {
       const lang = SUPPORTED[r.language];
@@ -216,6 +222,18 @@ python -m vouch.runners ${esc(r.full_name.split("/")[1])} main &lt;agent-branch&
         </div>
       </div>`; }).join("")}</div>`
     : `<div class="empty"><i class="ph ph-github-logo"></i>${ME.demo ? `You are using the demo login. <a class="link" href="/auth/logout">Sign out</a> and connect GitHub to see your repositories.` : "No public repositories found on your account."}</div>`}`;
+}
+async function tryDemo(btn) {
+  btn.disabled = true;
+  try {
+    for (let i = 0; i < 20; i++) {  // GitHub copies the repo in a few seconds; the call is safe to repeat
+      btn.innerHTML = i ? "Copying on GitHub…" : "Copying…";
+      const r = await api("/api/demo", { method: "POST" });
+      if (r.ready) { REPOS = null; location.hash = "#/gh/" + r.repo; return; }
+      await new Promise((ok) => setTimeout(ok, 3000));
+    }
+    throw new Error("GitHub is slow to copy the repo. Try again in a minute.");
+  } catch (e) { btn.disabled = false; btn.innerHTML = "Try again"; alert(e.message); }
 }
 function toggleConnect(i) { const el = $("#c" + i); el.hidden = !el.hidden; }
 

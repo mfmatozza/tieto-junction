@@ -361,6 +361,37 @@ def repos(request: Request):
     return out
 
 
+DEMO_SRC = "mfmatozza/vouch-demo"
+DEMO_PRS = [("agent/student-discount", 1), ("agent/shipping-threshold", 2)]  # one clean change, one that breaks a test
+
+
+@app.post("/api/demo")
+def demo_copy(request: Request):
+    """Copy the demo repo and its AI pull requests into the visitor's own GitHub account, so they run and merge as themselves.
+    Idempotent: the page calls it until it answers ready (forking takes a few seconds on GitHub's side)."""
+    s = session_of(request) or {}
+    if not s.get("token"):
+        raise HTTPException(403, "Sign in with GitHub first: the demo is copied into your own account.")
+    tok, fork = s["token"], f"{s['login']}/vouch-demo"
+    if s["login"] == DEMO_SRC.split("/")[0]:
+        return {"ready": True, "repo": DEMO_SRC}
+    r = gh_call("GET", f"/repos/{fork}/branches/demo%2Fstart", tok)
+    if r.status_code == 404:
+        if gh_call("GET", f"/repos/{fork}", tok).status_code == 404:
+            f = gh_call("POST", f"/repos/{DEMO_SRC}/forks", tok, {"default_branch_only": False})
+            if f.status_code >= 300:
+                raise HTTPException(502, f"GitHub did not copy the demo: {f.json().get('message', f.text)[:200]}")
+        return {"ready": False}
+    for branch, n in DEMO_PRS:
+        if gh_call("GET", f"/repos/{fork}/pulls?state=all&head={s['login']}:{branch}", tok).json():
+            continue  # already opened on an earlier visit, maybe already merged
+        src = gh_call("GET", f"/repos/{DEMO_SRC}/pulls/{n}", tok).json()
+        c = gh_call("POST", f"/repos/{fork}/pulls", tok, {"title": src["title"], "body": src.get("body") or "", "head": branch, "base": "demo/start"})
+        if c.status_code >= 300 and c.status_code != 422:
+            raise HTTPException(502, f"GitHub did not open the demo pull request: {c.json().get('message', c.text)[:200]}")
+    return {"ready": True, "repo": fork}
+
+
 @app.get("/api/prs")
 def list_prs():
     out = []
